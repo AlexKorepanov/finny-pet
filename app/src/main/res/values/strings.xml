@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">FinnyPet</string>
+    <string name="app_name">Питомец Финни</string>
+    <string name="skeleton_title">Каркас проекта готов</string>
+    <string name="skeleton_subtitle">Слои: экономика, контент, данные, UI. БД на Room.</string>
 </resources>

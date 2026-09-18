@@ -1,0 +1,1 @@
+package ru.finny.petgame.economy
