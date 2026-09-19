@@ -1,5 +1,59 @@
 <resources>
     <string name="app_name">Питомец Финни</string>
-    <string name="skeleton_title">Каркас проекта готов</string>
-    <string name="skeleton_subtitle">Слои: экономика, контент, данные, UI. БД на Room.</string>
+
+    <string name="cd_back">Назад</string>
+    <string name="cd_hint">Подсказка</string>
+
+    <string name="intro_title_1">Привет!</string>
+    <string name="intro_body_1">Это твой питомец. Помоги ему: корми, играй и заботься. Твоя цель — учиться обращаться с монетами.</string>
+    <string name="intro_title_2">Три решения</string>
+    <string name="intro_body_2">Ты будешь выбирать, куда пойдут монеты:</string>
+    <string name="intro_decision_1_title">Нужное (еда и уход)</string>
+    <string name="intro_decision_1_body">Еда и уход нужны питомцу каждый день.</string>
+    <string name="intro_decision_2_title">По желанию</string>
+    <string name="intro_decision_2_body">Игрушки и украшения — если монет хватает.</string>
+    <string name="intro_decision_3_title">Копилка</string>
+    <string name="intro_decision_3_body">Откладывай монеты и копи на мечту.</string>
+    <string name="intro_page_indicator">Экран %1$d из %2$d</string>
+    <string name="next">Далее</string>
+    <string name="start">Начать игру</string>
+
+    <string name="profile_title">Кто играет?</string>
+    <string name="player_name_label">Игровое имя</string>
+    <string name="player_name_hint">Например: Аня</string>
+    <string name="profile_guest_note">Имя нужно только для игры. Регистрация не нужна.</string>
+    <string name="character_title">Выбери персонажа</string>
+
+    <string name="pet_title">Как выглядит твой питомец?</string>
+    <string name="pet_species_title">Персонаж</string>
+    <string name="pet_color_title">Цвет</string>
+    <string name="pet_name_label">Имя питомца</string>
+    <string name="pet_name_hint">Например: Финни</string>
+
+    <string name="confirm_title">Всё верно?</string>
+    <string name="confirm_player">Игрок: %1$s</string>
+    <string name="confirm_pet">Питомец: %1$s</string>
+    <string name="save">Сохранить</string>
+    <string name="edit">Изменить</string>
+
+    <string name="main_greeting">Привет, %1$s!</string>
+    <string name="main_stub_text">Главный экран появится позже.</string>
+
+    <string name="hint_title">Подсказка</string>
+    <string name="hint_body">Твоя цель — заботиться о питомце и учиться обращаться с монетами. Монеты можно:</string>
+    <string name="hint_item_1">Потратить на нужное (еда и уход)</string>
+    <string name="hint_item_2">Потратить по желанию</string>
+    <string name="hint_item_3">Отложить в копилку</string>
+    <string name="hint_close">Понятно</string>
+
+    <string-array name="pet_species_labels">
+        <item>Котёнок</item>
+        <item>Щенок</item>
+        <item>Кролик</item>
+    </string-array>
+    <string-array name="pet_color_labels">
+        <item>Рыжий</item>
+        <item>Серый</item>
+        <item>Розовый</item>
+    </string-array>
 </resources>
