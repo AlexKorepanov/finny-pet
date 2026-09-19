@@ -1,1 +1,0 @@
-package ru.finny.petgame.content

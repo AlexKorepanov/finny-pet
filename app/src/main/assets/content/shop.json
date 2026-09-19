@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "id": "food_basic",
+      "title": "Корм «Хрустик»",
+      "category": "REQUIRED",
+      "price": 10,
+      "effect": "Финни сыт и доволен",
+      "moodDelta": 10
+    },
+    {
+      "id": "food_treat",
+      "title": "Лакомство «Рыбка»",
+      "category": "OPTIONAL",
+      "price": 8,
+      "effect": "Финни лижет губы",
+      "moodDelta": 3
+    },
+    {
+      "id": "vitamins",
+      "title": "Витамины",
+      "category": "REQUIRED",
+      "price": 12,
+      "effect": "Финни бодрый",
+      "moodDelta": 5
+    },
+    {
+      "id": "bath",
+      "title": "Купание с шампунем",
+      "category": "REQUIRED",
+      "price": 15,
+      "effect": "Финни чистый",
+      "moodDelta": 5
+    },
+    {
+      "id": "bed",
+      "title": "Мягкая подстилка",
+      "category": "REQUIRED",
+      "price": 20,
+      "effect": "Финни крепко спит",
+      "moodDelta": 5
+    },
+    {
+      "id": "ball",
+      "title": "Мячик",
+      "category": "OPTIONAL",
+      "price": 18,
+      "effect": "Финни играет и веселится",
+      "moodDelta": 8
+    },
+    {
+      "id": "bow",
+      "title": "Бантик",
+      "category": "OPTIONAL",
+      "price": 12,
+      "effect": "Финни нарядный",
+      "moodDelta": 3
+    },
+    {
+      "id": "house",
+      "title": "Домик с подушкой",
+      "category": "OPTIONAL",
+      "price": 40,
+      "effect": "Финни любит свой домик",
+      "moodDelta": 10
+    }
+  ]
+}
