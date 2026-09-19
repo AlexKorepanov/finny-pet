@@ -6,7 +6,8 @@
       "category": "REQUIRED",
       "price": 10,
       "effect": "Финни сыт и доволен",
-      "moodDelta": 10
+      "moodDelta": 10,
+      "satietyDelta": 15
     },
     {
       "id": "food_treat",
@@ -14,7 +15,8 @@
       "category": "OPTIONAL",
       "price": 8,
       "effect": "Финни лижет губы",
-      "moodDelta": 3
+      "moodDelta": 3,
+      "satietyDelta": 8
     },
     {
       "id": "vitamins",

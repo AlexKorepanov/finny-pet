@@ -15,6 +15,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import ru.finny.petgame.data.PetDatabase
 import ru.finny.petgame.data.model.PeriodStatus
+import ru.finny.petgame.data.model.ShopPurchaseResult
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
@@ -190,6 +191,80 @@ class GameRepositoryTest {
         assertEquals(10L, snapshot.periodFact[BudgetDirection.REQUIRED])
         assertEquals(5L, snapshot.periodFact[BudgetDirection.OPTIONAL])
         assertEquals(7L, snapshot.periodFact[BudgetDirection.SAVINGS])
+    }
+
+    @Test
+    fun `shop purchase subtracts price and raises mood and saturation`() = runTest {
+        val result = repository.purchaseShopItem(
+            itemId = "food_basic",
+            title = "Корм",
+            category = PurchaseCategory.REQUIRED,
+            price = 10L,
+            moodDelta = 10,
+            satietyDelta = 15,
+        )
+        assertTrue(result is ShopPurchaseResult.Success)
+        val success = result as ShopPurchaseResult.Success
+        assertEquals(GameRepository.START_BUDGET_AMOUNT - 10L, success.balance)
+        assertEquals(80, success.mood)
+        assertEquals(85, success.saturation)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(GameRepository.START_BUDGET_AMOUNT - 10L, snapshot.balance)
+        assertEquals(80, snapshot.profile.mood)
+        assertEquals(85, snapshot.profile.saturation)
+        assertEquals(1, snapshot.periodPurchases.size)
+        assertEquals(10L, snapshot.periodPurchases.first().price)
+    }
+
+    @Test
+    fun `shop purchase without funds keeps balance and returns shortfall`() = runTest {
+        repository.earn(source = "TASK", amount = 10L)
+        val result = repository.purchaseShopItem(
+            itemId = "toy_1",
+            title = "Мяч",
+            category = PurchaseCategory.OPTIONAL,
+            price = 60L,
+            moodDelta = 8,
+            satietyDelta = 0,
+        )
+        assertTrue(result is ShopPurchaseResult.InsufficientFunds)
+        val failed = result as ShopPurchaseResult.InsufficientFunds
+        assertEquals(20L, failed.shortfall)
+        assertTrue(failed.explanation.contains("20"))
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 10L, snapshot.balance)
+        assertEquals(70, snapshot.profile.mood)
+        assertEquals(0, snapshot.periodPurchases.size)
+    }
+
+    @Test
+    fun `shop purchases count in plan fact by category`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        repository.saveBudgetPlan(plan(40, 20, 25))
+        assertTrue(repository.confirmBudgetPlan())
+        repository.purchaseShopItem(
+            itemId = "food_basic",
+            title = "Корм",
+            category = PurchaseCategory.REQUIRED,
+            price = 10L,
+            moodDelta = 10,
+            satietyDelta = 15,
+        )
+        repository.purchaseShopItem(
+            itemId = "ball",
+            title = "Мяч",
+            category = PurchaseCategory.OPTIONAL,
+            price = 18L,
+            moodDelta = 8,
+            satietyDelta = 0,
+        )
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(10L, snapshot.periodFact[BudgetDirection.REQUIRED])
+        assertEquals(18L, snapshot.periodFact[BudgetDirection.OPTIONAL])
+        assertEquals(2, snapshot.periodPurchases.size)
     }
 
     @Test

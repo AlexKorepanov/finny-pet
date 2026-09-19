@@ -55,6 +55,30 @@
     <string name="section_stub_text">Раздел появится позже.</string>
     <string name="section_hint_stub">Скоро здесь появится что-то новое.</string>
 
+    <string name="shop_header_hint">Выбирай покупки для питомца.</string>
+    <string name="shop_balance_line">Монет: %1$d</string>
+    <string name="shop_tab_required">Нужное (еда и уход)</string>
+    <string name="shop_tab_optional">По желанию</string>
+    <string name="shop_category_required">Нужное</string>
+    <string name="shop_category_optional">По желанию</string>
+    <string name="shop_price">%1$d монет</string>
+    <string name="shop_buy">Купить</string>
+    <string name="shop_cancel">Отмена</string>
+    <string name="shop_confirm_price">Цена: %1$d монет</string>
+    <string name="shop_confirm_mood">Настроение: +%1$d</string>
+    <string name="shop_confirm_saturation">Сытость: +%1$d</string>
+    <string name="shop_confirm_balance_now">Монет сейчас: %1$d</string>
+    <string name="shop_confirm_after">Останется: %1$d монет</string>
+    <string name="shop_done_title">Готово!</string>
+    <string name="shop_bought">Ты купил «%1$s» за %2$d монет.</string>
+    <string name="shop_mood_line">Настроение: +%1$d.</string>
+    <string name="shop_saturation_line">Сытость: +%1$d.</string>
+    <string name="shop_left_line">Осталось %1$d монет.</string>
+    <string name="shop_not_enough_title">Не хватает монет</string>
+    <string name="shop_not_enough_balance">Сейчас у тебя %1$d монет.</string>
+    <string name="shop_history_title">Покупки за период</string>
+    <string name="shop_history_empty">Пока покупок не было.</string>
+
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
     <string name="plan_available">Доступно: %1$d монет</string>
     <string name="plan_remainder">Остаток: %1$d монет</string>

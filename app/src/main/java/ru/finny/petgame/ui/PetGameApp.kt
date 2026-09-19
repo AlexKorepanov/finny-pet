@@ -29,6 +29,7 @@ import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.PlanScreen
 import ru.finny.petgame.ui.screens.ProfileScreen
 import ru.finny.petgame.ui.screens.SectionStubScreen
+import ru.finny.petgame.ui.screens.ShopScreen
 
 enum class AppScreen {
     LOADING,
@@ -38,6 +39,7 @@ enum class AppScreen {
     PET_CONFIRM,
     MAIN,
     PLAN,
+    SHOP,
     SECTION_STUB,
 }
 
@@ -76,6 +78,7 @@ fun PetGameApp(repository: GameRepository) {
             AppScreen.PET -> screen = AppScreen.PROFILE
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
             AppScreen.PLAN -> screen = AppScreen.MAIN
+            AppScreen.SHOP -> screen = AppScreen.MAIN
             AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
@@ -145,6 +148,7 @@ fun PetGameApp(repository: GameRepository) {
             snapshot = mainSnapshot,
             onHint = { showHint = true },
             onPlan = { screen = AppScreen.PLAN },
+            onShop = { screen = AppScreen.SHOP },
             onSection = { titleRes ->
                 sectionTitleRes = titleRes
                 screen = AppScreen.SECTION_STUB
@@ -161,6 +165,22 @@ fun PetGameApp(repository: GameRepository) {
                     onBack = goBack,
                     onHint = { showHint = true },
                     onPlanConfirmed = {
+                        scope.launch { mainSnapshot = repository.loadSnapshot() }
+                    },
+                )
+            }
+        }
+        AppScreen.SHOP -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                ShopScreen(
+                    repository = repository,
+                    snapshot = currentSnapshot,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                    onShopChanged = {
                         scope.launch { mainSnapshot = repository.loadSnapshot() }
                     },
                 )

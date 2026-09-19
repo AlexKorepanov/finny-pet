@@ -141,6 +141,8 @@ class EconomyEngine {
     fun averageDeposit(deposits: List<Long>): Long =
         if (deposits.isEmpty()) 0L else deposits.sum() / deposits.size
 
+    fun applyPetEffect(current: Int, delta: Int): Int = (current + delta).coerceIn(0, 100)
+
     private companion object {
         const val EXPLANATION_SOURCE_REQUIRED = "У начисления должен быть источник."
         const val EXPLANATION_AMOUNT_POSITIVE = "Сумма должна быть больше нуля."

@@ -191,6 +191,7 @@ object ContentParser {
         val price = requirePositiveLong(obj, "price", prefix, local)
         val effect = requireString(obj, "effect", prefix, local)
         val moodDelta = optionalInt(obj, "moodDelta", prefix, local)
+        val satietyDelta = optionalInt(obj, "satietyDelta", prefix, local)
 
         problems += local
         if (local.isNotEmpty()) return null
@@ -202,6 +203,7 @@ object ContentParser {
             price = price!!,
             effect = effect!!,
             moodDelta = moodDelta,
+            satietyDelta = satietyDelta,
         )
     }
 

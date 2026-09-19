@@ -46,6 +46,7 @@ fun MainScreen(
     snapshot: GameSnapshot?,
     onHint: () -> Unit,
     onPlan: () -> Unit,
+    onShop: () -> Unit,
     onSection: (Int) -> Unit,
 ) {
     Scaffold(
@@ -147,7 +148,7 @@ fun MainScreen(
                         label = stringResource(R.string.section_shop),
                         icon = Icons.Filled.ShoppingCart,
                         accent = SectionAccent.SHOP,
-                        onClick = { onSection(R.string.section_shop) },
+                        onClick = onShop,
                         modifier = Modifier.weight(1f),
                     )
                     SectionTile(

@@ -13,6 +13,7 @@ import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.data.entity.SavingsOperationEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodStatus
+import ru.finny.petgame.data.model.ShopPurchaseResult
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.economy.EconomyState
 import ru.finny.petgame.economy.model.BudgetDirection
@@ -20,6 +21,7 @@ import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.DepositResult
 import ru.finny.petgame.economy.model.EarnResult
 import ru.finny.petgame.economy.model.PlanCheckResult
+import ru.finny.petgame.economy.model.PurchaseCategory
 import ru.finny.petgame.economy.model.PurchaseDraft
 import ru.finny.petgame.economy.model.PurchaseResult
 import ru.finny.petgame.economy.model.SavingsBucket
@@ -98,6 +100,8 @@ class GameRepository(
                 BudgetDirection.SAVINGS to deposits.sumOf { row -> row.amount },
             )
         } ?: emptyMap()
+        val historyIndex = period?.periodIndex ?: 0
+        val periodPurchases = purchaseDao().getByPeriod(profile.id, historyIndex)
         GameSnapshot(
             profile = profile,
             balance = balance,
@@ -108,6 +112,7 @@ class GameRepository(
             currentPeriod = period,
             plan = plan,
             periodFact = periodFact,
+            periodPurchases = periodPurchases,
         )
     }
 
@@ -190,6 +195,56 @@ class GameRepository(
             }
             is PurchaseResult.InsufficientFunds -> result
             is PurchaseResult.Invalid -> result
+        }
+    }
+
+    suspend fun purchaseShopItem(
+        itemId: String,
+        title: String,
+        category: PurchaseCategory,
+        price: Long,
+        moodDelta: Int,
+        satietyDelta: Int,
+    ): ShopPurchaseResult = database.withTransaction {
+        val profile = profileDao().getCurrentProfile()
+            ?: return@withTransaction ShopPurchaseResult.Invalid(NO_PROFILE)
+        val state = loadEconomyState(profile.id)
+        when (val result = engine.purchase(
+            state,
+            PurchaseDraft(itemId = itemId, title = title, category = category, price = price),
+        )) {
+            is PurchaseResult.Success -> {
+                purchaseDao().insert(
+                    PurchaseEntity(
+                        profileId = profile.id,
+                        itemId = result.purchase.itemId,
+                        title = result.purchase.title,
+                        category = result.purchase.category.name,
+                        price = result.purchase.price,
+                        periodIndex = currentPeriodIndex(profile.id),
+                        purchasedAt = now(),
+                    ),
+                )
+                balanceDao().upsert(BalanceEntity(profile.id, result.state.balance, now()))
+                val newMood = engine.applyPetEffect(profile.mood, moodDelta)
+                val newSaturation = engine.applyPetEffect(profile.saturation, satietyDelta)
+                profileDao().update(profile.copy(mood = newMood, saturation = newSaturation))
+                ShopPurchaseResult.Success(
+                    title = title,
+                    price = price,
+                    balance = result.state.balance,
+                    mood = newMood,
+                    saturation = newSaturation,
+                    moodDelta = moodDelta,
+                    satietyDelta = satietyDelta,
+                )
+            }
+            is PurchaseResult.InsufficientFunds -> ShopPurchaseResult.InsufficientFunds(
+                balance = result.balance,
+                shortfall = result.shortfall,
+                explanation = result.explanation,
+            )
+            is PurchaseResult.Invalid -> ShopPurchaseResult.Invalid(result.explanation)
         }
     }
 

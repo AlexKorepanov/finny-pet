@@ -9,4 +9,5 @@ data class ShopItemContent(
     val price: Long,
     val effect: String,
     val moodDelta: Int = 0,
+    val satietyDelta: Int = 0,
 )
