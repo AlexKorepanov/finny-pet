@@ -19,6 +19,9 @@ interface ProgressDao {
     @Query("SELECT * FROM progress WHERE profileId = :profileId AND kind = :kind")
     suspend fun getByKind(profileId: Long, kind: String): List<ProgressEntity>
 
+    @Query("DELETE FROM progress WHERE profileId = :profileId AND kind = :kind")
+    suspend fun deleteByKind(profileId: Long, kind: String)
+
     @Query("DELETE FROM progress WHERE profileId = :profileId")
     suspend fun deleteByProfileId(profileId: Long)
 }

@@ -20,6 +20,9 @@ interface SavingsDao {
     @Query("SELECT * FROM savings WHERE profileId = :profileId ORDER BY updatedAt DESC")
     fun observeByProfileId(profileId: Long): Flow<List<SavingsEntity>>
 
+    @Query("SELECT * FROM savings WHERE profileId = :profileId ORDER BY updatedAt DESC")
+    suspend fun getByProfileId(profileId: Long): List<SavingsEntity>
+
     @Query("SELECT * FROM savings WHERE profileId = :profileId AND goalId = :goalId LIMIT 1")
     suspend fun getByGoal(profileId: Long, goalId: String): SavingsEntity?
 
