@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,11 +29,13 @@ import ru.finny.petgame.R
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.components.PlayerAvatar
 
 @Composable
 fun MainScreen(
     snapshot: GameSnapshot?,
     onHint: () -> Unit,
+    onPlan: () -> Unit,
     onSection: (Int) -> Unit,
 ) {
     Scaffold(
@@ -66,10 +68,20 @@ fun MainScreen(
                     colorIndex = profile.petColor,
                     modifier = Modifier.size(120.dp),
                 )
-                Text(
-                    text = stringResource(R.string.main_greeting, profile.petName),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    PlayerAvatar(
+                        index = profile.playerAvatar,
+                        modifier = Modifier.size(48.dp),
+                        contentDescription = stringResource(R.string.cd_player_avatar),
+                    )
+                    Text(
+                        text = stringResource(R.string.main_greeting, profile.playerName),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     StatCard(
                         title = stringResource(R.string.stat_balance_label),
@@ -94,36 +106,36 @@ fun MainScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionButton(
                         labelRes = R.string.section_plan,
-                        onSection = onSection,
+                        onClick = onPlan,
                         modifier = Modifier.weight(1f),
                     )
                     SectionButton(
                         labelRes = R.string.section_tasks,
-                        onSection = onSection,
+                        onClick = { onSection(R.string.section_tasks) },
                         modifier = Modifier.weight(1f),
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionButton(
                         labelRes = R.string.section_shop,
-                        onSection = onSection,
+                        onClick = { onSection(R.string.section_shop) },
                         modifier = Modifier.weight(1f),
                     )
                     SectionButton(
                         labelRes = R.string.section_savings,
-                        onSection = onSection,
+                        onClick = { onSection(R.string.section_savings) },
                         modifier = Modifier.weight(1f),
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionButton(
                         labelRes = R.string.section_progress,
-                        onSection = onSection,
+                        onClick = { onSection(R.string.section_progress) },
                         modifier = Modifier.weight(1f),
                     )
                     SectionButton(
                         labelRes = R.string.section_adult,
-                        onSection = onSection,
+                        onClick = { onSection(R.string.section_adult) },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -201,11 +213,11 @@ private fun StatRow(label: String, value: Int) {
 @Composable
 private fun SectionButton(
     labelRes: Int,
-    onSection: (Int) -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedButton(
-        onClick = { onSection(labelRes) },
+    Button(
+        onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),
     ) {
         Text(text = stringResource(labelRes), style = MaterialTheme.typography.bodyLarge)

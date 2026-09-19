@@ -9,6 +9,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -21,8 +23,17 @@ private val ROBOT_ACCENT = Color(0xFF78909C)
 private val DARK = Color(0xFF263238)
 
 @Composable
-fun PlayerAvatar(index: Int, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
+fun PlayerAvatar(
+    index: Int,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+) {
+    val semanticsModifier = if (contentDescription != null) {
+        Modifier.semantics { this.contentDescription = contentDescription }
+    } else {
+        Modifier
+    }
+    Canvas(modifier = modifier.then(semanticsModifier)) {
         when (index.coerceIn(0, 2)) {
             0 -> drawStar()
             1 -> drawRocket()

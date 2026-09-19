@@ -58,10 +58,6 @@ fun PetConfirmScreen(
                 text = stringResource(R.string.confirm_player, playerName),
                 style = MaterialTheme.typography.bodyLarge,
             )
-            Text(
-                text = stringResource(R.string.confirm_pet, petName),
-                style = MaterialTheme.typography.bodyLarge,
-            )
             Row(
                 modifier = Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),

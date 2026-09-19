@@ -176,6 +176,23 @@ class GameRepositoryTest {
     }
 
     @Test
+    fun `period fact is computed from purchases and savings deposits`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        repository.saveBudgetPlan(plan(40, 20, 25))
+        assertTrue(repository.confirmBudgetPlan())
+        repository.selectGoal("goal_1", "Велосипед", 200L)
+        repository.purchase(PurchaseDraft("food_1", "Корм", PurchaseCategory.REQUIRED, 10L))
+        repository.purchase(PurchaseDraft("toy_1", "Мяч", PurchaseCategory.OPTIONAL, 5L))
+        repository.depositToSavings("goal_1", 7L)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+
+        assertEquals(10L, snapshot.periodFact[BudgetDirection.REQUIRED])
+        assertEquals(5L, snapshot.periodFact[BudgetDirection.OPTIONAL])
+        assertEquals(7L, snapshot.periodFact[BudgetDirection.SAVINGS])
+    }
+
+    @Test
     fun `selected goal persists`() = runTest {
         assertTrue(repository.selectGoal("goal_1", "Кормушка", 120L))
 

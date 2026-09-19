@@ -32,7 +32,6 @@
 
     <string name="confirm_title">Всё верно?</string>
     <string name="confirm_player">Игрок: %1$s</string>
-    <string name="confirm_pet">Питомец: %1$s</string>
     <string name="save">Сохранить</string>
     <string name="edit">Изменить</string>
 
@@ -54,6 +53,22 @@
     <string name="section_progress">Прогресс</string>
     <string name="section_adult">Для взрослого</string>
     <string name="section_stub_text">Раздел появится позже.</string>
+
+    <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
+    <string name="plan_available">Доступно: %1$d монет</string>
+    <string name="plan_remainder">Остаток: %1$d монет</string>
+    <string name="plan_direction_required">Нужное (еда и уход)</string>
+    <string name="plan_direction_optional">По желанию</string>
+    <string name="plan_direction_savings">Копилка</string>
+    <string name="plan_confirm">Подтвердить</string>
+    <string name="plan_confirmed_note">План подтверждён. Сравни план с фактом.</string>
+    <string name="plan_label">План</string>
+    <string name="fact_label">Факт</string>
+    <string name="plan_increase">+</string>
+    <string name="plan_decrease">−</string>
+    <string name="cd_increase">Увеличить</string>
+    <string name="cd_decrease">Уменьшить</string>
+    <string name="cd_player_avatar">Аватар игрока</string>
 
     <string name="hint_title">Подсказка</string>
     <string name="hint_body">Твоя цель — заботиться о питомце и учиться обращаться с монетами. Монеты можно:</string>

@@ -15,6 +15,7 @@ import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.economy.EconomyState
+import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.DepositResult
 import ru.finny.petgame.economy.model.EarnResult
@@ -80,6 +81,23 @@ class GameRepository(
         val selectedGoal = progressDao().getByKind(profile.id, PROGRESS_SELECTED_GOAL).firstOrNull()
         val period = periodDao().getLatest(profile.id)
         val plan = period?.let { budgetPlanItemDao().getByPeriod(it.id) }.orEmpty()
+        val periodFact = period?.let { openPeriod ->
+            val purchases = purchaseDao().getByPeriod(profile.id, openPeriod.periodIndex)
+            val deposits = savingsOperationDao().getByPeriod(
+                profile.id,
+                openPeriod.periodIndex,
+                SavingsOperationType.DEPOSIT.name,
+            )
+            mapOf(
+                BudgetDirection.REQUIRED to purchases
+                    .filter { row -> row.category == BudgetDirection.REQUIRED.name }
+                    .sumOf { row -> row.price },
+                BudgetDirection.OPTIONAL to purchases
+                    .filter { row -> row.category == BudgetDirection.OPTIONAL.name }
+                    .sumOf { row -> row.price },
+                BudgetDirection.SAVINGS to deposits.sumOf { row -> row.amount },
+            )
+        } ?: emptyMap()
         GameSnapshot(
             profile = profile,
             balance = balance,
@@ -89,6 +107,7 @@ class GameRepository(
             selectedGoalTitle = selectedGoal?.value,
             currentPeriod = period,
             plan = plan,
+            periodFact = periodFact,
         )
     }
 

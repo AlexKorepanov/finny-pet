@@ -25,6 +25,7 @@ import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
+import ru.finny.petgame.ui.screens.PlanScreen
 import ru.finny.petgame.ui.screens.ProfileScreen
 import ru.finny.petgame.ui.screens.SectionStubScreen
 
@@ -35,6 +36,7 @@ enum class AppScreen {
     PET,
     PET_CONFIRM,
     MAIN,
+    PLAN,
     SECTION_STUB,
 }
 
@@ -57,6 +59,12 @@ fun PetGameApp(repository: GameRepository) {
         screen = if (snapshot != null) AppScreen.MAIN else AppScreen.INTRO
     }
 
+    LaunchedEffect(screen) {
+        if (screen == AppScreen.MAIN) {
+            mainSnapshot = repository.loadSnapshot()
+        }
+    }
+
     val goBack: () -> Unit = {
         when (screen) {
             AppScreen.INTRO -> if (introPage > 0) introPage--
@@ -66,6 +74,7 @@ fun PetGameApp(repository: GameRepository) {
             }
             AppScreen.PET -> screen = AppScreen.PROFILE
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
+            AppScreen.PLAN -> screen = AppScreen.MAIN
             AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
@@ -134,11 +143,28 @@ fun PetGameApp(repository: GameRepository) {
         AppScreen.MAIN -> MainScreen(
             snapshot = mainSnapshot,
             onHint = { showHint = true },
+            onPlan = { screen = AppScreen.PLAN },
             onSection = { titleRes ->
                 sectionTitleRes = titleRes
                 screen = AppScreen.SECTION_STUB
             },
         )
+        AppScreen.PLAN -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                PlanScreen(
+                    repository = repository,
+                    snapshot = currentSnapshot,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                    onPlanConfirmed = {
+                        scope.launch { mainSnapshot = repository.loadSnapshot() }
+                    },
+                )
+            }
+        }
         AppScreen.SECTION_STUB -> SectionStubScreen(
             title = stringResource(sectionTitleRes),
             onBack = goBack,
