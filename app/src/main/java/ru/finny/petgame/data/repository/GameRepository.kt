@@ -46,6 +46,7 @@ class GameRepository(
         petName: String,
         petSpecies: Int,
         petColor: Int,
+        playerAvatar: Int = 0,
     ): Long = database.withTransaction {
         val profileId = profileDao().insert(
             ProfileEntity(
@@ -54,9 +55,21 @@ class GameRepository(
                 petSpecies = petSpecies,
                 petColor = petColor,
                 createdAt = now(),
+                playerAvatar = playerAvatar,
             ),
         )
-        balanceDao().upsert(BalanceEntity(profileId = profileId, amount = 0L, updatedAt = now()))
+        earningDao().insert(
+            EarningEntity(
+                profileId = profileId,
+                source = START_BUDGET_SOURCE,
+                amount = START_BUDGET_AMOUNT,
+                periodIndex = 0,
+                createdAt = now(),
+            ),
+        )
+        balanceDao().upsert(
+            BalanceEntity(profileId = profileId, amount = START_BUDGET_AMOUNT, updatedAt = now()),
+        )
         profileId
     }
 
@@ -71,7 +84,9 @@ class GameRepository(
             profile = profile,
             balance = balance,
             savings = savings,
+            savingsTotal = savings.sumOf { it.savedAmount },
             selectedGoalId = selectedGoal?.itemId,
+            selectedGoalTitle = selectedGoal?.value,
             currentPeriod = period,
             plan = plan,
         )
@@ -317,6 +332,8 @@ class GameRepository(
 
     companion object {
         const val PROGRESS_SELECTED_GOAL = "SELECTED_GOAL"
+        const val START_BUDGET_SOURCE = "START_BUDGET"
+        const val START_BUDGET_AMOUNT = 30L
         private const val NO_PROFILE = "Сначала создай профиль."
         private const val EXPLANATION_PLAN_CONFIRMED =
             "План уже подтверждён. Изменить его можно в новом периоде."

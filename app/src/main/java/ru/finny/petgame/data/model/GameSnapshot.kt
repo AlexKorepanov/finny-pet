@@ -9,7 +9,9 @@ data class GameSnapshot(
     val profile: ProfileEntity,
     val balance: Long,
     val savings: List<SavingsEntity>,
+    val savingsTotal: Long,
     val selectedGoalId: String?,
+    val selectedGoalTitle: String?,
     val currentPeriod: PeriodEntity?,
     val plan: List<BudgetPlanItemEntity>,
 )

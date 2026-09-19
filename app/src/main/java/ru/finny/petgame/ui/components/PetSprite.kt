@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -37,12 +38,11 @@ private fun DrawScope.drawPet(species: Int, color: Color) {
     val headR = u * 0.26f
     val headCenter = Offset(cx, size.height * 0.40f)
 
-    val tailRadius = when (species) {
-        0 -> u * 0.05f
-        1 -> u * 0.08f
-        else -> u * 0.10f
+    when (species) {
+        0 -> drawCatTail(color, cx, u)
+        1 -> drawDogTail(color, cx, u)
+        else -> drawRabbitTail(color, cx, u)
     }
-    drawCircle(color = color, radius = tailRadius, center = Offset(size.width * 0.82f, size.height * 0.76f))
 
     drawRoundRect(
         color = color,
@@ -58,62 +58,9 @@ private fun DrawScope.drawPet(species: Int, color: Color) {
     )
 
     when (species) {
-        0 -> {
-            drawPath(
-                path = Path().apply {
-                    moveTo(headCenter.x - headR * 0.95f, headCenter.y - headR * 0.30f)
-                    lineTo(headCenter.x - headR * 0.35f, headCenter.y - headR * 1.35f)
-                    lineTo(headCenter.x - headR * 0.10f, headCenter.y - headR * 0.50f)
-                    close()
-                },
-                color = color,
-            )
-            drawPath(
-                path = Path().apply {
-                    moveTo(headCenter.x + headR * 0.95f, headCenter.y - headR * 0.30f)
-                    lineTo(headCenter.x + headR * 0.35f, headCenter.y - headR * 1.35f)
-                    lineTo(headCenter.x + headR * 0.10f, headCenter.y - headR * 0.50f)
-                    close()
-                },
-                color = color,
-            )
-        }
-        1 -> {
-            val earW = u * 0.13f
-            val earH = u * 0.26f
-            withTransform({
-                rotate(degrees = -30f, pivot = Offset(headCenter.x - headR * 0.85f, headCenter.y))
-            }) {
-                drawOval(
-                    color = color,
-                    topLeft = Offset(headCenter.x - headR * 0.85f - earW / 2f, headCenter.y - earH * 0.55f),
-                    size = Size(earW, earH),
-                )
-            }
-            withTransform({
-                rotate(degrees = 30f, pivot = Offset(headCenter.x + headR * 0.85f, headCenter.y))
-            }) {
-                drawOval(
-                    color = color,
-                    topLeft = Offset(headCenter.x + headR * 0.85f - earW, headCenter.y - earH * 0.55f),
-                    size = Size(earW, earH),
-                )
-            }
-        }
-        else -> {
-            val earW = u * 0.11f
-            val earH = u * 0.30f
-            drawOval(
-                color = color,
-                topLeft = Offset(headCenter.x - headR * 0.55f, headCenter.y - u * 0.34f),
-                size = Size(earW, earH),
-            )
-            drawOval(
-                color = color,
-                topLeft = Offset(headCenter.x + headR * 0.10f, headCenter.y - u * 0.34f),
-                size = Size(earW, earH),
-            )
-        }
+        0 -> drawCatEars(color, headCenter, headR)
+        1 -> drawDogEars(color, headCenter, headR, u)
+        else -> drawRabbitEars(color, headCenter, headR, u)
     }
 
     drawCircle(color = color, radius = headR, center = headCenter)
@@ -167,9 +114,96 @@ private fun DrawScope.drawPet(species: Int, color: Color) {
         )
         drawLine(
             color = dark,
-            start = Offset(headCenter.x + headR * 0.55f, whiskerY),
-            end = Offset(headCenter.x + headR + u * 0.05f, whiskerY - u * 0.02f),
+            start = Offset(headCenter.x + headR * 0.55f, whiskerY + u * 0.015f),
+            end = Offset(headCenter.x + headR + u * 0.05f, whiskerY + u * 0.02f),
             strokeWidth = 1.dp.toPx(),
         )
     }
+}
+
+private fun DrawScope.drawCatTail(color: Color, cx: Float, u: Float) {
+    drawArc(
+        color = color,
+        startAngle = -90f,
+        sweepAngle = 180f,
+        useCenter = false,
+        topLeft = Offset(cx + u * 0.10f, size.height * 0.50f),
+        size = Size(u * 0.16f, u * 0.26f),
+        style = Stroke(width = u * 0.045f, cap = StrokeCap.Round),
+    )
+}
+
+private fun DrawScope.drawDogTail(color: Color, cx: Float, u: Float) {
+    drawPath(
+        path = Path().apply {
+            moveTo(cx + u * 0.20f, size.height * 0.72f)
+            lineTo(cx + u * 0.33f, size.height * 0.50f)
+            lineTo(cx + u * 0.27f, size.height * 0.78f)
+            close()
+        },
+        color = color,
+    )
+}
+
+private fun DrawScope.drawRabbitTail(color: Color, cx: Float, u: Float) {
+    drawCircle(color = color, radius = u * 0.07f, center = Offset(cx + u * 0.27f, size.height * 0.74f))
+}
+
+private fun DrawScope.drawCatEars(color: Color, headCenter: Offset, headR: Float) {
+    drawPath(
+        path = Path().apply {
+            moveTo(headCenter.x - headR * 0.95f, headCenter.y - headR * 0.30f)
+            lineTo(headCenter.x - headR * 0.35f, headCenter.y - headR * 1.35f)
+            lineTo(headCenter.x - headR * 0.10f, headCenter.y - headR * 0.50f)
+            close()
+        },
+        color = color,
+    )
+    drawPath(
+        path = Path().apply {
+            moveTo(headCenter.x + headR * 0.95f, headCenter.y - headR * 0.30f)
+            lineTo(headCenter.x + headR * 0.35f, headCenter.y - headR * 1.35f)
+            lineTo(headCenter.x + headR * 0.10f, headCenter.y - headR * 0.50f)
+            close()
+        },
+        color = color,
+    )
+}
+
+private fun DrawScope.drawDogEars(color: Color, headCenter: Offset, headR: Float, u: Float) {
+    val earW = u * 0.16f
+    val earH = u * 0.30f
+    withTransform({
+        rotate(degrees = -35f, pivot = Offset(headCenter.x - headR * 0.70f, headCenter.y - headR * 0.10f))
+    }) {
+        drawOval(
+            color = color,
+            topLeft = Offset(headCenter.x - headR * 0.70f - earW / 2f, headCenter.y - headR * 0.10f),
+            size = Size(earW, earH),
+        )
+    }
+    withTransform({
+        rotate(degrees = 35f, pivot = Offset(headCenter.x + headR * 0.70f, headCenter.y - headR * 0.10f))
+    }) {
+        drawOval(
+            color = color,
+            topLeft = Offset(headCenter.x + headR * 0.70f - earW / 2f, headCenter.y - headR * 0.10f),
+            size = Size(earW, earH),
+        )
+    }
+}
+
+private fun DrawScope.drawRabbitEars(color: Color, headCenter: Offset, headR: Float, u: Float) {
+    val earW = u * 0.085f
+    val earH = u * 0.34f
+    drawOval(
+        color = color,
+        topLeft = Offset(headCenter.x - headR * 0.52f, headCenter.y - u * 0.38f),
+        size = Size(earW, earH),
+    )
+    drawOval(
+        color = color,
+        topLeft = Offset(headCenter.x + headR * 0.02f, headCenter.y - u * 0.38f),
+        size = Size(earW, earH),
+    )
 }

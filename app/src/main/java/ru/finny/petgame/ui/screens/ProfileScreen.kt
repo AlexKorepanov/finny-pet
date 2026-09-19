@@ -24,19 +24,19 @@ import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.OptionCard
-import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.components.PlayerAvatar
 
 @Composable
 fun ProfileScreen(
     playerName: String,
-    speciesIndex: Int,
+    avatarIndex: Int,
     onPlayerNameChange: (String) -> Unit,
-    onSpeciesChange: (Int) -> Unit,
+    onAvatarChange: (Int) -> Unit,
     onBack: () -> Unit,
     onHint: () -> Unit,
     onNext: () -> Unit,
 ) {
-    val speciesLabels = stringArrayResource(R.array.pet_species_labels)
+    val avatarLabels = stringArrayResource(R.array.player_avatar_labels)
     Scaffold(
         topBar = {
             AppTopBar(
@@ -71,13 +71,13 @@ fun ProfileScreen(
                 text = stringResource(R.string.character_title),
                 style = MaterialTheme.typography.titleMedium,
             )
-            speciesLabels.forEachIndexed { index, label ->
+            avatarLabels.forEachIndexed { index, label ->
                 OptionCard(
-                    selected = index == speciesIndex,
-                    onClick = { onSpeciesChange(index) },
+                    selected = index == avatarIndex,
+                    onClick = { onAvatarChange(index) },
                     label = label,
                 ) {
-                    PetSprite(species = index, colorIndex = 0, modifier = Modifier.size(48.dp))
+                    PlayerAvatar(index = index, modifier = Modifier.size(48.dp))
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))

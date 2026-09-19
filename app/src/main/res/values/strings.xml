@@ -37,7 +37,23 @@
     <string name="edit">Изменить</string>
 
     <string name="main_greeting">Привет, %1$s!</string>
-    <string name="main_stub_text">Главный экран появится позже.</string>
+    <string name="stat_balance_label">Монеты</string>
+    <string name="stat_savings_label">Копилка</string>
+    <string name="stat_goal_label">Текущая цель</string>
+    <string name="stat_goal_none">Не выбрана</string>
+    <string name="pet_state_title">Состояние питомца</string>
+    <string name="pet_state_mood">Настроение</string>
+    <string name="pet_state_saturation">Сытость</string>
+    <string name="active_task_title">Активное задание</string>
+    <string name="active_task_stub">Задания появятся позже.</string>
+
+    <string name="section_plan">План</string>
+    <string name="section_tasks">Задания</string>
+    <string name="section_shop">Покупки</string>
+    <string name="section_savings">Копилка</string>
+    <string name="section_progress">Прогресс</string>
+    <string name="section_adult">Для взрослого</string>
+    <string name="section_stub_text">Раздел появится позже.</string>
 
     <string name="hint_title">Подсказка</string>
     <string name="hint_body">Твоя цель — заботиться о питомце и учиться обращаться с монетами. Монеты можно:</string>
@@ -45,6 +61,8 @@
     <string name="hint_item_2">Потратить по желанию</string>
     <string name="hint_item_3">Отложить в копилку</string>
     <string name="hint_close">Понятно</string>
+
+    <string name="source_start_budget">Стартовый бюджет</string>
 
     <string-array name="pet_species_labels">
         <item>Котёнок</item>
@@ -55,5 +73,10 @@
         <item>Рыжий</item>
         <item>Серый</item>
         <item>Розовый</item>
+    </string-array>
+    <string-array name="player_avatar_labels">
+        <item>Звезда</item>
+        <item>Ракета</item>
+        <item>Робот</item>
     </string-array>
 </resources>

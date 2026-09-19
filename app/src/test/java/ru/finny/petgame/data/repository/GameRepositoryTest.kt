@@ -67,7 +67,7 @@ class GameRepositoryTest {
     )
 
     @Test
-    fun `profile and zero balance are read back by fresh repository`() = runTest {
+    fun `profile with start budget is read back by fresh repository`() = runTest {
         val snapshot = freshRepository().loadSnapshot()
 
         assertTrue(snapshot != null)
@@ -76,9 +76,17 @@ class GameRepositoryTest {
         assertEquals("Финни", snapshot.profile.petName)
         assertEquals(0, snapshot.profile.petSpecies)
         assertEquals(1, snapshot.profile.petColor)
-        assertEquals(0L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT, snapshot.balance)
+        assertEquals(0L, snapshot.savingsTotal)
+        assertEquals(70, snapshot.profile.mood)
+        assertEquals(70, snapshot.profile.saturation)
         assertNull(snapshot.selectedGoalId)
         assertNull(snapshot.currentPeriod)
+
+        val earnings = db.earningDao().getByPeriod(profileId, 0)
+        assertEquals(1, earnings.size)
+        assertEquals(GameRepository.START_BUDGET_SOURCE, earnings[0].source)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT, earnings[0].amount)
     }
 
     @Test
@@ -87,12 +95,11 @@ class GameRepositoryTest {
         assertTrue(result is EarnResult.Success)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(50L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 50L, snapshot.balance)
 
         val earnings = db.earningDao().getByPeriod(profileId, 0)
-        assertEquals(1, earnings.size)
-        assertEquals("TASK", earnings[0].source)
-        assertEquals(50L, earnings[0].amount)
+        assertEquals(2, earnings.size)
+        assertTrue(earnings.any { it.source == "TASK" && it.amount == 50L })
     }
 
     @Test
@@ -104,7 +111,7 @@ class GameRepositoryTest {
         assertTrue(result is PurchaseResult.Success)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(70L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 100L - 30L, snapshot.balance)
 
         val purchases = db.purchaseDao().getByPeriod(profileId, 0)
         assertEquals(1, purchases.size)
@@ -117,13 +124,13 @@ class GameRepositoryTest {
     fun `insufficient purchase changes nothing`() = runTest {
         repository.earn(source = "TASK", amount = 10L)
         val result = repository.purchase(
-            PurchaseDraft("toy_1", "Мяч", PurchaseCategory.OPTIONAL, 30L),
+            PurchaseDraft("toy_1", "Мяч", PurchaseCategory.OPTIONAL, 60L),
         )
         assertTrue(result is PurchaseResult.InsufficientFunds)
         assertEquals(20L, (result as PurchaseResult.InsufficientFunds).shortfall)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(10L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 10L, snapshot.balance)
         assertTrue(db.purchaseDao().getByPeriod(profileId, 0).isEmpty())
     }
 
@@ -132,7 +139,7 @@ class GameRepositoryTest {
         repository.earn(source = "TASK", amount = 100L)
         val result = repository.saveBudgetPlan(plan(40, 20, 25))
         assertTrue(result is PlanCheckResult.Valid)
-        assertEquals(15L, (result as PlanCheckResult.Valid).remainder)
+        assertEquals(45L, (result as PlanCheckResult.Valid).remainder)
 
         val snapshot = freshRepository().loadSnapshot()!!
         assertEquals(PeriodStatus.PLANNED.name, snapshot.currentPeriod?.status)
@@ -197,7 +204,7 @@ class GameRepositoryTest {
         assertTrue(result is DepositResult.Success)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(70L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 100L - 30L, snapshot.balance)
         assertEquals(30L, snapshot.savings.first { it.goalId == "goal_1" }.savedAmount)
         assertEquals("goal_1", snapshot.selectedGoalId)
 
@@ -214,7 +221,7 @@ class GameRepositoryTest {
         assertTrue(result is DepositResult.InsufficientFunds)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(10L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 10L, snapshot.balance)
         assertEquals(0L, snapshot.savings.first().savedAmount)
         assertTrue(
             db.savingsOperationDao().getByPeriod(profileId, 0, SavingsOperationType.DEPOSIT.name).isEmpty(),
@@ -234,7 +241,7 @@ class GameRepositoryTest {
         assertEquals(2, preview.eta.periodsLeft)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(20L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 100L - 80L, snapshot.balance)
         assertEquals(80L, snapshot.savings.first().savedAmount)
         assertTrue(
             db.savingsOperationDao().getByPeriod(profileId, 0, SavingsOperationType.WITHDRAW.name).isEmpty(),
@@ -251,7 +258,7 @@ class GameRepositoryTest {
         assertTrue(result is WithdrawResult.Success)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(50L, snapshot.balance)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 100L - 80L + 30L, snapshot.balance)
         assertEquals(50L, snapshot.savings.first().savedAmount)
 
         val withdrawals = db.savingsOperationDao().getByPeriod(profileId, 0, SavingsOperationType.WITHDRAW.name)

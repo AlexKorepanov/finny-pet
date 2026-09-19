@@ -2,6 +2,7 @@ package ru.finny.petgame.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +24,7 @@ fun OptionCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 56.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(

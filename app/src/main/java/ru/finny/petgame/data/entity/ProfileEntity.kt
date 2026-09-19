@@ -11,4 +11,7 @@ data class ProfileEntity(
     val petSpecies: Int,
     val petColor: Int,
     val createdAt: Long,
+    val playerAvatar: Int = 0,
+    val mood: Int = 70,
+    val saturation: Int = 70,
 )

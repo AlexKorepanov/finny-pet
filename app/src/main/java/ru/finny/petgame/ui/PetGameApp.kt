@@ -15,15 +15,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
-import ru.finny.petgame.data.entity.ProfileEntity
+import ru.finny.petgame.R
+import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.screens.IntroScreen
-import ru.finny.petgame.ui.screens.MainStubScreen
+import ru.finny.petgame.ui.screens.MainScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.ProfileScreen
+import ru.finny.petgame.ui.screens.SectionStubScreen
 
 enum class AppScreen {
     LOADING,
@@ -32,6 +35,7 @@ enum class AppScreen {
     PET,
     PET_CONFIRM,
     MAIN,
+    SECTION_STUB,
 }
 
 @Composable
@@ -39,15 +43,17 @@ fun PetGameApp(repository: GameRepository) {
     var screen by remember { mutableStateOf(AppScreen.LOADING) }
     var introPage by rememberSaveable { mutableIntStateOf(0) }
     var playerName by rememberSaveable { mutableStateOf("") }
+    var avatarIndex by rememberSaveable { mutableIntStateOf(0) }
     var speciesIndex by rememberSaveable { mutableIntStateOf(0) }
     var colorIndex by rememberSaveable { mutableIntStateOf(0) }
     var petName by rememberSaveable { mutableStateOf("") }
+    var sectionTitleRes by rememberSaveable { mutableIntStateOf(R.string.section_plan) }
     var showHint by remember { mutableStateOf(false) }
-    var savedProfile by remember { mutableStateOf<ProfileEntity?>(null) }
+    var mainSnapshot by remember { mutableStateOf<GameSnapshot?>(null) }
 
     LaunchedEffect(Unit) {
         val snapshot = repository.loadSnapshot()
-        savedProfile = snapshot?.profile
+        mainSnapshot = snapshot
         screen = if (snapshot != null) AppScreen.MAIN else AppScreen.INTRO
     }
 
@@ -60,6 +66,7 @@ fun PetGameApp(repository: GameRepository) {
             }
             AppScreen.PET -> screen = AppScreen.PROFILE
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
+            AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
     }
@@ -85,9 +92,9 @@ fun PetGameApp(repository: GameRepository) {
         )
         AppScreen.PROFILE -> ProfileScreen(
             playerName = playerName,
-            speciesIndex = speciesIndex,
+            avatarIndex = avatarIndex,
             onPlayerNameChange = { playerName = it },
-            onSpeciesChange = { speciesIndex = it },
+            onAvatarChange = { avatarIndex = it },
             onBack = goBack,
             onHint = { showHint = true },
             onNext = { screen = AppScreen.PET },
@@ -117,14 +124,24 @@ fun PetGameApp(repository: GameRepository) {
                         petName = petName.trim(),
                         petSpecies = speciesIndex,
                         petColor = colorIndex,
+                        playerAvatar = avatarIndex,
                     )
-                    savedProfile = repository.loadSnapshot()?.profile
+                    mainSnapshot = repository.loadSnapshot()
                     screen = AppScreen.MAIN
                 }
             },
         )
-        AppScreen.MAIN -> MainStubScreen(
-            profile = savedProfile,
+        AppScreen.MAIN -> MainScreen(
+            snapshot = mainSnapshot,
+            onHint = { showHint = true },
+            onSection = { titleRes ->
+                sectionTitleRes = titleRes
+                screen = AppScreen.SECTION_STUB
+            },
+        )
+        AppScreen.SECTION_STUB -> SectionStubScreen(
+            title = stringResource(sectionTitleRes),
+            onBack = goBack,
             onHint = { showHint = true },
         )
     }
