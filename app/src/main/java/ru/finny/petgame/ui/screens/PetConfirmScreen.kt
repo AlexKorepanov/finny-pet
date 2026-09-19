@@ -4,14 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.components.PrimaryButton
+import ru.finny.petgame.ui.components.SecondaryButton
 
 @Composable
 fun PetConfirmScreen(
@@ -62,18 +61,16 @@ fun PetConfirmScreen(
                 modifier = Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OutlinedButton(
+                SecondaryButton(
+                    text = stringResource(R.string.edit),
                     onClick = onBack,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) {
-                    Text(text = stringResource(R.string.edit))
-                }
-                Button(
+                    modifier = Modifier.weight(1f),
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.save),
                     onClick = onSave,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) {
-                    Text(text = stringResource(R.string.save))
-                }
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }

@@ -24,6 +24,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.OptionCard
 import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.components.PrimaryButton
 
 @Composable
 fun PetScreen(
@@ -95,15 +96,12 @@ fun PetScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.next),
                 onClick = onNext,
                 enabled = petName.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-            ) {
-                Text(text = stringResource(R.string.next))
-            }
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

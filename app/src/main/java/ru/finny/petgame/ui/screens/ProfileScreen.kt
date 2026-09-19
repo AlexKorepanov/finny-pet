@@ -2,16 +2,12 @@ package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -25,6 +21,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.OptionCard
 import ru.finny.petgame.ui.components.PlayerAvatar
+import ru.finny.petgame.ui.components.PrimaryButton
 
 @Composable
 fun ProfileScreen(
@@ -80,16 +77,12 @@ fun ProfileScreen(
                     PlayerAvatar(index = index, modifier = Modifier.size(48.dp))
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.next),
                 onClick = onNext,
                 enabled = playerName.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-            ) {
-                Text(text = stringResource(R.string.next))
-            }
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

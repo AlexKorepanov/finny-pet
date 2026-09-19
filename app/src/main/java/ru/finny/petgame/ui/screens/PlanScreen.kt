@@ -6,12 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,7 +40,13 @@ import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.PlanCheckResult
+import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
+import ru.finny.petgame.ui.components.BadgeKind
+import ru.finny.petgame.ui.components.PrimaryButton
+import ru.finny.petgame.ui.components.SectionAccent
+import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.components.StatusBadge
 
 @Composable
 fun PlanScreen(
@@ -65,7 +72,7 @@ fun PlanScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.section_plan),
+                title = stringResource(R.string.app_name),
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
@@ -80,51 +87,57 @@ fun PlanScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            SectionHeader(
+                accent = SectionAccent.PLAN,
+                title = stringResource(R.string.section_plan),
+                hint = stringResource(R.string.plan_edit_hint),
+                petSpecies = snapshot.profile.petSpecies,
+                petColorIndex = snapshot.profile.petColor,
+            )
             if (editable) {
-                Text(
-                    text = stringResource(R.string.plan_edit_hint),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
                 Text(
                     text = stringResource(R.string.plan_available, available),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                DirectionRow(
-                    label = stringResource(R.string.plan_direction_required),
-                    amount = requiredAmount,
-                    canIncrease = total < available,
-                    canDecrease = requiredAmount > 0L,
-                    onIncrease = { requiredAmount += 1L },
-                    onDecrease = { requiredAmount -= 1L },
-                )
-                DirectionRow(
-                    label = stringResource(R.string.plan_direction_optional),
-                    amount = optionalAmount,
-                    canIncrease = total < available,
-                    canDecrease = optionalAmount > 0L,
-                    onIncrease = { optionalAmount += 1L },
-                    onDecrease = { optionalAmount -= 1L },
-                )
-                DirectionRow(
-                    label = stringResource(R.string.plan_direction_savings),
-                    amount = savingsAmount,
-                    canIncrease = total < available,
-                    canDecrease = savingsAmount > 0L,
-                    onIncrease = { savingsAmount += 1L },
-                    onDecrease = { savingsAmount -= 1L },
-                )
-                Text(
-                    text = stringResource(R.string.plan_remainder, remainder),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                problems.forEach { problem ->
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    DirectionRow(
+                        label = stringResource(R.string.plan_direction_required),
+                        amount = requiredAmount,
+                        canIncrease = total < available,
+                        canDecrease = requiredAmount > 0L,
+                        onIncrease = { requiredAmount += 1L },
+                        onDecrease = { requiredAmount -= 1L },
+                    )
+                    DirectionRow(
+                        label = stringResource(R.string.plan_direction_optional),
+                        amount = optionalAmount,
+                        canIncrease = total < available,
+                        canDecrease = optionalAmount > 0L,
+                        onIncrease = { optionalAmount += 1L },
+                        onDecrease = { optionalAmount -= 1L },
+                    )
+                    DirectionRow(
+                        label = stringResource(R.string.plan_direction_savings),
+                        amount = savingsAmount,
+                        canIncrease = total < available,
+                        canDecrease = savingsAmount > 0L,
+                        onIncrease = { savingsAmount += 1L },
+                        onDecrease = { savingsAmount -= 1L },
+                    )
                     Text(
-                        text = problem,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error,
+                        text = stringResource(R.string.plan_remainder, remainder),
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
-                Button(
+                problems.forEach { problem ->
+                    StatusBadge(
+                        text = problem,
+                        icon = Icons.Filled.Warning,
+                        kind = BadgeKind.ATTENTION,
+                    )
+                }
+                PrimaryButton(
+                    text = stringResource(R.string.plan_confirm),
                     onClick = {
                         scope.launch {
                             val check = repository.saveBudgetPlan(
@@ -146,45 +159,44 @@ fun PlanScreen(
                         }
                     },
                     enabled = total > 0L,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp),
-                ) {
-                    Text(text = stringResource(R.string.plan_confirm), style = MaterialTheme.typography.bodyLarge)
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                )
             } else {
-                Text(
-                    text = stringResource(R.string.plan_confirmed_note),
-                    style = MaterialTheme.typography.bodyLarge,
+                StatusBadge(
+                    text = stringResource(R.string.plan_confirmed_badge),
+                    icon = Icons.Filled.Check,
+                    kind = BadgeKind.POSITIVE,
                 )
                 val planByDirection = snapshot.plan.associate {
                     BudgetDirection.valueOf(it.direction) to it.plannedAmount
                 }
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = stringResource(R.string.plan_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.width(56.dp),
-                        textAlign = TextAlign.End,
-                    )
-                    Text(
-                        text = stringResource(R.string.fact_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.width(56.dp),
-                        textAlign = TextAlign.End,
-                    )
-                }
-                listOf(
-                    BudgetDirection.REQUIRED,
-                    BudgetDirection.OPTIONAL,
-                    BudgetDirection.SAVINGS,
-                ).forEach { direction ->
-                    PlanFactRow(
-                        label = directionLabel(direction),
-                        planAmount = planByDirection[direction] ?: 0L,
-                        factAmount = snapshot.periodFact[direction] ?: 0L,
-                    )
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = stringResource(R.string.plan_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.width(56.dp),
+                            textAlign = TextAlign.End,
+                        )
+                        Text(
+                            text = stringResource(R.string.fact_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.width(56.dp),
+                            textAlign = TextAlign.End,
+                        )
+                    }
+                    listOf(
+                        BudgetDirection.REQUIRED,
+                        BudgetDirection.OPTIONAL,
+                        BudgetDirection.SAVINGS,
+                    ).forEach { direction ->
+                        PlanFactRow(
+                            label = directionLabel(direction),
+                            planAmount = planByDirection[direction] ?: 0L,
+                            factAmount = snapshot.periodFact[direction] ?: 0L,
+                        )
+                    }
                 }
             }
         }

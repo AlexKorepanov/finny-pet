@@ -21,6 +21,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
+import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
@@ -167,6 +168,9 @@ fun PetGameApp(repository: GameRepository) {
         }
         AppScreen.SECTION_STUB -> SectionStubScreen(
             title = stringResource(sectionTitleRes),
+            accent = sectionAccentFor(sectionTitleRes),
+            petSpecies = mainSnapshot?.profile?.petSpecies ?: 0,
+            petColorIndex = mainSnapshot?.profile?.petColor ?: 0,
             onBack = goBack,
             onHint = { showHint = true },
         )
@@ -182,4 +186,13 @@ private fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }
+}
+
+private fun sectionAccentFor(titleRes: Int): SectionAccent = when (titleRes) {
+    R.string.section_plan -> SectionAccent.PLAN
+    R.string.section_shop -> SectionAccent.SHOP
+    R.string.section_tasks -> SectionAccent.TASKS
+    R.string.section_savings -> SectionAccent.SAVINGS
+    R.string.section_progress -> SectionAccent.PROGRESS
+    else -> SectionAccent.ADULT
 }

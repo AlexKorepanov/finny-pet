@@ -53,6 +53,7 @@
     <string name="section_progress">Прогресс</string>
     <string name="section_adult">Для взрослого</string>
     <string name="section_stub_text">Раздел появится позже.</string>
+    <string name="section_hint_stub">Скоро здесь появится что-то новое.</string>
 
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
     <string name="plan_available">Доступно: %1$d монет</string>
@@ -61,7 +62,7 @@
     <string name="plan_direction_optional">По желанию</string>
     <string name="plan_direction_savings">Копилка</string>
     <string name="plan_confirm">Подтвердить</string>
-    <string name="plan_confirmed_note">План подтверждён. Сравни план с фактом.</string>
+    <string name="plan_confirmed_badge">План подтверждён</string>
     <string name="plan_label">План</string>
     <string name="fact_label">Факт</string>
     <string name="plan_increase">+</string>
