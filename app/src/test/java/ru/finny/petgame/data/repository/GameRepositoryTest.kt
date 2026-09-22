@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -302,6 +303,24 @@ class GameRepositoryTest {
         val wrong = snapshot.completedTasks.first { it.taskId == "task_savings_1" }
         assertEquals(false, wrong.isCorrect)
         assertEquals(0L, wrong.reward)
+    }
+
+    @Test
+    fun `achieved goal cannot be selected or saved again`() = runTest {
+        repository.earn(source = "TASK", amount = 200L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 200L)
+        assertTrue(repository.achieveGoal("goal_1") is GoalAchieveResult.Success)
+
+        assertFalse(repository.selectGoal("goal_1", "Велосипед", 200L))
+        val deposit = repository.depositToSavings("goal_1", 10L)
+        assertTrue(deposit is DepositResult.Invalid)
+        assertTrue(repository.achieveGoal("goal_1") is GoalAchieveResult.Invalid)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertNull(snapshot.selectedGoalId)
+        assertTrue(snapshot.achievedGoalIds.contains("goal_1"))
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 200L - 200L, snapshot.balance)
     }
 
     @Test

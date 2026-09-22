@@ -20,4 +20,5 @@ data class GameSnapshot(
     val periodFact: Map<BudgetDirection, Long>,
     val periodPurchases: List<PurchaseEntity>,
     val completedTasks: List<CompletedTaskEntity>,
+    val achievedGoalIds: Set<String>,
 )

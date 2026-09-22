@@ -109,6 +109,10 @@ class GameRepository(
         val historyIndex = period?.periodIndex ?: 0
         val periodPurchases = purchaseDao().getByPeriod(profile.id, historyIndex)
         val completedTasks = completedTaskDao().getByProfileId(profile.id)
+        val achievedGoalIds = progressDao()
+            .getByKind(profile.id, PROGRESS_GOAL_ACHIEVED)
+            .map { it.itemId }
+            .toSet()
         GameSnapshot(
             profile = profile,
             balance = balance,
@@ -121,6 +125,7 @@ class GameRepository(
             periodFact = periodFact,
             periodPurchases = periodPurchases,
             completedTasks = completedTasks,
+            achievedGoalIds = achievedGoalIds,
         )
     }
 
@@ -259,6 +264,12 @@ class GameRepository(
     suspend fun selectGoal(goalId: String, goalTitle: String, goalCost: Long): Boolean =
         database.withTransaction {
             val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
+            val alreadyAchieved = progressDao()
+                .getByKind(profile.id, PROGRESS_GOAL_ACHIEVED)
+                .any { it.itemId == goalId }
+            if (alreadyAchieved) {
+                return@withTransaction false
+            }
             val existing = savingsDao().getByGoal(profile.id, goalId)
             val ts = now()
             if (existing == null) {
@@ -305,6 +316,12 @@ class GameRepository(
     suspend fun depositToSavings(goalId: String, amount: Long): DepositResult = database.withTransaction {
         val profile = profileDao().getCurrentProfile()
             ?: return@withTransaction DepositResult.Invalid(NO_PROFILE)
+        val alreadyAchieved = progressDao()
+            .getByKind(profile.id, PROGRESS_GOAL_ACHIEVED)
+            .any { it.itemId == goalId }
+        if (alreadyAchieved) {
+            return@withTransaction DepositResult.Invalid(EXPLANATION_GOAL_RECEIVED)
+        }
         val state = loadEconomyState(profile.id)
         when (val result = engine.depositToSavings(state, goalId, amount)) {
             is DepositResult.Success -> {
@@ -373,6 +390,12 @@ class GameRepository(
     suspend fun achieveGoal(goalId: String): GoalAchieveResult = database.withTransaction {
         val profile = profileDao().getCurrentProfile()
             ?: return@withTransaction GoalAchieveResult.Invalid(NO_PROFILE)
+        val alreadyAchieved = progressDao()
+            .getByKind(profile.id, PROGRESS_GOAL_ACHIEVED)
+            .any { it.itemId == goalId }
+        if (alreadyAchieved) {
+            return@withTransaction GoalAchieveResult.Invalid(EXPLANATION_GOAL_RECEIVED)
+        }
         val row = savingsDao().getByGoal(profile.id, goalId)
             ?: return@withTransaction GoalAchieveResult.Invalid(EXPLANATION_GOAL_REQUIRED)
         if (row.savedAmount < row.goalCost) {
@@ -393,6 +416,7 @@ class GameRepository(
         )
         val newMood = engine.applyPetEffect(profile.mood, GOAL_MOOD_REWARD)
         profileDao().update(profile.copy(mood = newMood))
+        progressDao().deleteByKind(profile.id, PROGRESS_SELECTED_GOAL)
         GoalAchieveResult.Success(
             goalTitle = row.goalTitle,
             moodDelta = GOAL_MOOD_REWARD,
@@ -539,6 +563,7 @@ class GameRepository(
         private const val TASK_MOOD_REWARD = 10
         private const val NO_PROFILE = "Сначала создай профиль."
         private const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
+        private const val EXPLANATION_GOAL_RECEIVED = "Эта цель уже получена. Выбери новую цель."
         private const val EXPLANATION_PLAN_CONFIRMED =
             "План уже подтверждён. Изменить его можно в новом периоде."
     }

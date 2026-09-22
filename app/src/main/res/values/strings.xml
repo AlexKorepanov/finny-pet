@@ -107,6 +107,9 @@
     <string name="savings_receive_confirm_text">Получить награду? Настроение питомца вырастет.</string>
     <string name="savings_receive_title">Цель получена!</string>
     <string name="savings_receive_text">Цель получена! Можно выбрать новую цель.</string>
+    <string name="savings_already_received">Уже получено</string>
+    <string name="savings_all_received">Все цели получены!</string>
+    <string name="savings_choose_new">Выбери новую цель из оставшихся.</string>
 
     <string name="tasks_header_hint">Выполняй задания и получай монеты.</string>
     <string name="tasks_all_open">Все задания открыты</string>

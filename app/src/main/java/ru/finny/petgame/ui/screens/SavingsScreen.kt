@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -94,6 +95,7 @@ fun SavingsScreen(
     LaunchedEffect(snapshot) {
         eta = selectedRow?.let { repository.getGoalEta(it.goalId) }
     }
+    val noActiveGoal = snapshot.selectedGoalId == null
 
     Scaffold(
         topBar = {
@@ -134,15 +136,38 @@ fun SavingsScreen(
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
+            } else if (goalList.all { it.id in snapshot.achievedGoalIds }) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    StatusBadge(
+                        text = stringResource(R.string.savings_all_received),
+                        icon = Icons.Filled.Done,
+                        kind = BadgeKind.POSITIVE,
+                    )
+                }
             } else {
+                SectionTitle(
+                    text = stringResource(R.string.savings_choose_title),
+                    accent = SectionAccent.SAVINGS,
+                    icon = Icons.Filled.Star,
+                )
+                if (noActiveGoal) {
+                    Text(
+                        text = stringResource(R.string.savings_choose_new),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
                 goalList.forEach { goal ->
+                    val achieved = goal.id in snapshot.achievedGoalIds
                     GoalCard(
                         goal = goal,
                         selected = goal.id == snapshot.selectedGoalId,
+                        achieved = achieved,
                         onClick = {
-                            scope.launch {
-                                repository.selectGoal(goal.id, goal.title, goal.cost)
-                                onSavingsChanged()
+                            if (!achieved) {
+                                scope.launch {
+                                    repository.selectGoal(goal.id, goal.title, goal.cost)
+                                    onSavingsChanged()
+                                }
                             }
                         },
                     )
@@ -408,9 +433,10 @@ fun SavingsScreen(
 }
 
 @Composable
-private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, onClick: () -> Unit) {
+private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, achieved: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
+        enabled = !achieved,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
@@ -424,7 +450,7 @@ private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, onClick: () ->
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (selected) {
+                if (selected && !achieved) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = null,
@@ -437,10 +463,18 @@ private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, onClick: () ->
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    text = stringResource(R.string.savings_goal_cost, coinsAmount(goal.cost)),
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                if (achieved) {
+                    StatusBadge(
+                        text = stringResource(R.string.savings_already_received),
+                        icon = Icons.Filled.Done,
+                        kind = BadgeKind.POSITIVE,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.savings_goal_cost, coinsAmount(goal.cost)),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             }
             Text(text = goal.description, style = MaterialTheme.typography.bodyLarge)
         }
