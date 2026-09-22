@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,8 +49,11 @@ import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.StatusBadge
+import ru.finny.petgame.ui.components.coinsAmount
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun ShopScreen(
@@ -108,17 +113,20 @@ fun ShopScreen(
             } else {
                 ShopSection(
                     title = stringResource(R.string.shop_tab_required),
+                    icon = Icons.Filled.Check,
                     items = items.filter { it.category == PurchaseCategory.REQUIRED },
                     onBuy = { confirmItem = it },
                 )
                 ShopSection(
                     title = stringResource(R.string.shop_tab_optional),
+                    icon = Icons.Filled.Star,
                     items = items.filter { it.category == PurchaseCategory.OPTIONAL },
                     onBuy = { confirmItem = it },
                 )
-                Text(
+                SectionTitle(
                     text = stringResource(R.string.shop_history_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    accent = SectionAccent.SHOP,
+                    icon = Icons.Filled.List,
                 )
                 AppCard(modifier = Modifier.fillMaxWidth()) {
                     if (snapshot.periodPurchases.isEmpty()) {
@@ -138,7 +146,7 @@ fun ShopScreen(
                                     modifier = Modifier.weight(1f),
                                 )
                                 Text(
-                                    text = purchase.price.toString(),
+                                    text = coinsAmount(purchase.price),
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             }
@@ -186,23 +194,27 @@ fun ShopScreen(
     successResult?.let { result ->
         AlertDialog(
             onDismissRequest = { successResult = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             title = { Text(text = stringResource(R.string.shop_done_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = stringResource(R.string.shop_bought, result.title, result.price))
+                    Text(text = stringResource(R.string.shop_bought, result.title, coinsAmount(result.price)))
                     if (result.moodDelta != 0) {
                         Text(text = stringResource(R.string.shop_mood_line, result.moodDelta))
                     }
                     if (result.satietyDelta != 0) {
                         Text(text = stringResource(R.string.shop_saturation_line, result.satietyDelta))
                     }
-                    Text(text = stringResource(R.string.shop_left_line, result.balance))
+                    Text(text = stringResource(R.string.shop_left_line, coinsAmount(result.balance)))
                 }
             },
             confirmButton = {
                 PrimaryButton(
                     text = stringResource(R.string.hint_close),
                     onClick = { successResult = null },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             },
         )
@@ -211,17 +223,21 @@ fun ShopScreen(
     failure?.let { fail ->
         AlertDialog(
             onDismissRequest = { failure = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             title = { Text(text = stringResource(R.string.shop_not_enough_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = fail.explanation)
-                    Text(text = stringResource(R.string.shop_not_enough_balance, fail.balance))
+                    Text(text = stringResource(R.string.shop_not_enough_balance, coinsAmount(fail.balance)))
                 }
             },
             confirmButton = {
                 PrimaryButton(
                     text = stringResource(R.string.hint_close),
                     onClick = { failure = null },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             },
         )
@@ -229,8 +245,8 @@ fun ShopScreen(
 }
 
 @Composable
-private fun ShopSection(title: String, items: List<ShopItemContent>, onBuy: (ShopItemContent) -> Unit) {
-    Text(text = title, style = MaterialTheme.typography.titleLarge)
+private fun ShopSection(title: String, icon: ImageVector, items: List<ShopItemContent>, onBuy: (ShopItemContent) -> Unit) {
+    SectionTitle(text = title, accent = SectionAccent.SHOP, icon = icon)
     items.forEach { item ->
         ShopItemCard(item = item, onBuy = onBuy)
     }
@@ -258,7 +274,7 @@ private fun ShopItemCard(item: ShopItemContent, onBuy: (ShopItemContent) -> Unit
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = stringResource(R.string.shop_price, item.price),
+                    text = coinsAmount(item.price),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -285,10 +301,13 @@ private fun ConfirmPurchaseDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(text = item.title, style = MaterialTheme.typography.headlineSmall) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = stringResource(R.string.shop_confirm_price, item.price))
+                Text(text = stringResource(R.string.shop_confirm_price, coinsAmount(item.price)))
                 StatusBadge(
                     text = if (item.category == PurchaseCategory.REQUIRED) {
                         stringResource(R.string.shop_category_required)
@@ -304,14 +323,26 @@ private fun ConfirmPurchaseDialog(
                 }
                 Text(text = item.effect, style = MaterialTheme.typography.bodyLarge)
                 Text(text = stringResource(R.string.shop_confirm_balance_now, balance))
-                Text(text = stringResource(R.string.shop_confirm_after, balance - item.price))
+                Text(text = stringResource(R.string.shop_confirm_after, coinsAmount(balance - item.price)))
             }
         },
         confirmButton = {
-            PrimaryButton(text = stringResource(R.string.shop_buy), onClick = onBuy)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PrimaryButton(
+                    text = stringResource(R.string.shop_buy),
+                    onClick = onBuy,
+                    modifier = Modifier.weight(1f),
+                )
+                SecondaryButton(
+                    text = stringResource(R.string.shop_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         },
-        dismissButton = {
-            SecondaryButton(text = stringResource(R.string.shop_cancel), onClick = onDismiss)
-        },
+        dismissButton = {},
     )
 }

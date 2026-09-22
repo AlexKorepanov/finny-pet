@@ -14,8 +14,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import ru.finny.petgame.data.PetDatabase
+import ru.finny.petgame.data.model.GoalAchieveResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
+import ru.finny.petgame.data.model.TaskCompletionResult
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
@@ -174,6 +176,156 @@ class GameRepositoryTest {
         val snapshot = freshRepository().loadSnapshot()!!
         assertEquals(PeriodStatus.ACTIVE.name, snapshot.currentPeriod?.status)
         assertEquals(40L, snapshot.plan.first { it.direction == BudgetDirection.REQUIRED.name }.plannedAmount)
+    }
+
+    @Test
+    fun `savings eta uses average deposit`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 30L)
+        repository.depositToSavings("goal_1", 20L)
+
+        val eta = repository.getGoalEta("goal_1")
+
+        assertTrue(eta != null)
+        eta!!
+        assertEquals(25L, eta.averageDeposit)
+        assertEquals(6, eta.periodsLeft)
+        assertEquals(50L, freshRepository().loadSnapshot()!!.savingsTotal)
+    }
+
+    @Test
+    fun `goal achievement reduces savings raises mood and marks progress`() = runTest {
+        repository.earn(source = "TASK", amount = 200L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 200L)
+
+        val result = repository.achieveGoal("goal_1")
+
+        assertTrue(result is GoalAchieveResult.Success)
+        val success = result as GoalAchieveResult.Success
+        assertEquals(15, success.moodDelta)
+        assertEquals(85, success.mood)
+        assertEquals(0L, success.savedLeft)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(85, snapshot.profile.mood)
+        assertEquals(0L, snapshot.savings.first { it.goalId == "goal_1" }.savedAmount)
+        val progress = db.progressDao().getByKind(profileId, GameRepository.PROGRESS_GOAL_ACHIEVED)
+        assertEquals(1, progress.size)
+        assertEquals("goal_1", progress.first().itemId)
+    }
+
+    @Test
+    fun `goal cannot be achieved before enough saved`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 50L)
+
+        val result = repository.achieveGoal("goal_1")
+
+        assertTrue(result is GoalAchieveResult.Invalid)
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(50L, snapshot.savings.first { it.goalId == "goal_1" }.savedAmount)
+        assertEquals(70, snapshot.profile.mood)
+    }
+
+    @Test
+    fun `task reward is granted once`() = runTest {
+        val first = repository.completeTask(
+            taskId = "task_budget_1",
+            taskTitle = "Первые монеты",
+            theme = "BUDGET",
+            isCorrect = true,
+            reward = 5L,
+        )
+        assertTrue(first is TaskCompletionResult.Success)
+        val success = first as TaskCompletionResult.Success
+        assertEquals(true, success.isCorrect)
+        assertEquals(5L, success.reward)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 5L, success.balance)
+        assertEquals(80, success.mood)
+
+        val second = repository.completeTask(
+            taskId = "task_budget_1",
+            taskTitle = "Первые монеты",
+            theme = "BUDGET",
+            isCorrect = true,
+            reward = 5L,
+        )
+        assertTrue(second is TaskCompletionResult.AlreadyCompleted)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 5L, freshRepository().loadSnapshot()!!.balance)
+
+        val earnings = db.earningDao()
+            .getByPeriod(profileId, 0)
+            .filter { it.source == "Задание: Первые монеты" }
+        assertEquals(1, earnings.size)
+        assertEquals(5L, earnings.first().amount)
+    }
+
+    @Test
+    fun `wrong task answer does not change balance`() = runTest {
+        val result = repository.completeTask(
+            taskId = "t1",
+            taskTitle = "Задание",
+            theme = "BUDGET",
+            isCorrect = false,
+            reward = 10L,
+        )
+        assertTrue(result is TaskCompletionResult.Success)
+        val success = result as TaskCompletionResult.Success
+        assertEquals(false, success.isCorrect)
+        assertEquals(0L, success.reward)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT, success.balance)
+        assertEquals(70, success.mood)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(1, snapshot.completedTasks.size)
+        val record = snapshot.completedTasks.first()
+        assertEquals("t1", record.taskId)
+        assertEquals(false, record.isCorrect)
+        assertEquals(0L, record.reward)
+        assertEquals("BUDGET", record.theme)
+    }
+
+    @Test
+    fun `completed tasks persist between launches`() = runTest {
+        repository.completeTask("task_budget_1", "Первые монеты", "BUDGET", true, 5L)
+        repository.completeTask("task_savings_1", "Домик", "SAVINGS", false, 5L)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(2, snapshot.completedTasks.size)
+        val rewarded = snapshot.completedTasks.first { it.taskId == "task_budget_1" }
+        assertEquals(true, rewarded.isCorrect)
+        assertEquals(5L, rewarded.reward)
+        assertEquals("BUDGET", rewarded.theme)
+        val wrong = snapshot.completedTasks.first { it.taskId == "task_savings_1" }
+        assertEquals(false, wrong.isCorrect)
+        assertEquals(0L, wrong.reward)
+    }
+
+    @Test
+    fun `withdrawal preview and confirmed withdraw persist`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 80L)
+
+        val preview = repository.withdrawFromSavings("goal_1", 30L, confirmed = false)
+        assertTrue(preview is WithdrawResult.NeedsConfirmation)
+        val previewResult = preview as WithdrawResult.NeedsConfirmation
+        assertEquals(50L, previewResult.newSavedAmount)
+        assertEquals(2, previewResult.eta.periodsLeft)
+
+        val confirmed = repository.withdrawFromSavings("goal_1", 30L, confirmed = true)
+        assertTrue(confirmed is WithdrawResult.Success)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(GameRepository.START_BUDGET_AMOUNT + 100L - 80L + 30L, snapshot.balance)
+        assertEquals(50L, snapshot.savings.first().savedAmount)
+        assertEquals(
+            1,
+            db.savingsOperationDao().getByPeriod(profileId, 0, SavingsOperationType.WITHDRAW.name).size,
+        )
     }
 
     @Test

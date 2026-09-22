@@ -12,10 +12,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,19 +28,33 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.content.ContentLoader
+import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
+import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PlayerAvatar
+import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
+import ru.finny.petgame.ui.components.SectionTitle
+import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.sectionAccentColor
 import ru.finny.petgame.ui.theme.FinnyColors
 
@@ -47,7 +64,9 @@ fun MainScreen(
     onHint: () -> Unit,
     onPlan: () -> Unit,
     onShop: () -> Unit,
+    onSavings: () -> Unit,
     onSection: (Int) -> Unit,
+    onOpenTask: (String) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -65,6 +84,13 @@ fun MainScreen(
             }
         } else {
             val profile = snapshot.profile
+            val context = LocalContext.current
+            var tasks by remember { mutableStateOf<List<TaskContent>?>(null) }
+            LaunchedEffect(Unit) {
+                tasks = withContext(Dispatchers.IO) {
+                    ContentLoader(context.assets).loadCatalog().tasks
+                }
+            }
             Column(
                 modifier = Modifier
                     .padding(padding)
@@ -112,20 +138,50 @@ fun MainScreen(
                     )
                 }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = stringResource(R.string.stat_goal_label), style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(
+                        text = stringResource(R.string.stat_goal_label),
+                        icon = Icons.Filled.Done,
+                    )
                     Text(
                         text = snapshot.selectedGoalTitle ?: stringResource(R.string.stat_goal_none),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = stringResource(R.string.pet_state_title), style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(
+                        text = stringResource(R.string.pet_state_title),
+                        icon = Icons.Filled.Face,
+                    )
                     MoodRow(label = stringResource(R.string.pet_state_mood), value = profile.mood)
                     MoodRow(label = stringResource(R.string.pet_state_saturation), value = profile.saturation)
                 }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = stringResource(R.string.active_task_title), style = MaterialTheme.typography.titleMedium)
-                    Text(text = stringResource(R.string.active_task_stub), style = MaterialTheme.typography.bodyLarge)
+                    SectionTitle(
+                        text = stringResource(R.string.active_task_title),
+                        icon = Icons.Filled.PlayArrow,
+                    )
+                    val completedIds = snapshot.completedTasks.filter { it.isCorrect == true }.map { it.taskId }.toSet()
+                    val nextTask = tasks?.firstOrNull { it.id !in completedIds }
+                    when {
+                        tasks == null -> {
+                            Text(text = stringResource(R.string.active_task_stub), style = MaterialTheme.typography.bodyLarge)
+                        }
+                        nextTask != null -> {
+                            Text(text = nextTask.title, style = MaterialTheme.typography.bodyLarge)
+                            PrimaryButton(
+                                text = stringResource(R.string.tasks_start),
+                                onClick = { onOpenTask(nextTask.id) },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        else -> {
+                            StatusBadge(
+                                text = stringResource(R.string.tasks_all_done),
+                                icon = Icons.Filled.Done,
+                                kind = BadgeKind.POSITIVE,
+                            )
+                        }
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionTile(
@@ -155,7 +211,7 @@ fun MainScreen(
                         label = stringResource(R.string.section_savings),
                         icon = Icons.Filled.Favorite,
                         accent = SectionAccent.SAVINGS,
-                        onClick = { onSection(R.string.section_savings) },
+                        onClick = onSavings,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -183,7 +239,7 @@ fun MainScreen(
 @Composable
 private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
     AppCard(modifier = modifier) {
-        Text(text = title, style = MaterialTheme.typography.bodyLarge)
+        SectionTitle(text = title, icon = Icons.Filled.Star)
         Text(text = value, style = MaterialTheme.typography.headlineSmall)
     }
 }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -22,6 +24,7 @@ import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.OptionCard
 import ru.finny.petgame.ui.components.PlayerAvatar
 import ru.finny.petgame.ui.components.PrimaryButton
+import ru.finny.petgame.ui.components.SectionTitle
 
 @Composable
 fun ProfileScreen(
@@ -64,9 +67,9 @@ fun ProfileScreen(
                 text = stringResource(R.string.profile_guest_note),
                 style = MaterialTheme.typography.bodyLarge,
             )
-            Text(
+            SectionTitle(
                 text = stringResource(R.string.character_title),
-                style = MaterialTheme.typography.titleMedium,
+                icon = Icons.Filled.Person,
             )
             avatarLabels.forEachIndexed { index, label ->
                 OptionCard(

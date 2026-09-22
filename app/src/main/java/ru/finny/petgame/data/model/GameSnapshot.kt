@@ -1,6 +1,7 @@
 package ru.finny.petgame.data.model
 
 import ru.finny.petgame.data.entity.BudgetPlanItemEntity
+import ru.finny.petgame.data.entity.CompletedTaskEntity
 import ru.finny.petgame.data.entity.PeriodEntity
 import ru.finny.petgame.data.entity.ProfileEntity
 import ru.finny.petgame.data.entity.PurchaseEntity
@@ -18,4 +19,5 @@ data class GameSnapshot(
     val plan: List<BudgetPlanItemEntity>,
     val periodFact: Map<BudgetDirection, Long>,
     val periodPurchases: List<PurchaseEntity>,
+    val completedTasks: List<CompletedTaskEntity>,
 )

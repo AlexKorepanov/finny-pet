@@ -1,7 +1,9 @@
 package ru.finny.petgame.economy
 
+import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.DepositResult
+import ru.finny.petgame.economy.model.DistributionCheck
 import ru.finny.petgame.economy.model.EarnResult
 import ru.finny.petgame.economy.model.Earning
 import ru.finny.petgame.economy.model.GoalEta
@@ -57,7 +59,7 @@ class EconomyEngine {
                 price = draft.price,
                 shortfall = shortfall,
                 explanation = "Не хватает $shortfall монет, чтобы купить «${draft.title}». " +
-                    "Можно выполнить задание, выбрать товар дешевле или отказаться, если это необязательная покупка.",
+                    "Можно выполнить задание, выбрать товар дешевле или отказаться, если покупка по желанию.",
             )
         }
         val newState = state.copy(balance = state.balance - draft.price)
@@ -81,7 +83,7 @@ class EconomyEngine {
             return DepositResult.InsufficientFunds(
                 balance = state.balance,
                 shortfall = shortfall,
-                explanation = "Не хватает $shortfall монет, чтобы отложить. Отложи меньше или сначала подкопи баланс.",
+                explanation = "Не хватает ещё $shortfall, чтобы отложить. Отложи меньше или сначала подкопи баланс.",
             )
         }
         val newBucket = bucket.copy(savedAmount = bucket.savedAmount + amount)
@@ -106,7 +108,7 @@ class EconomyEngine {
             ?: return WithdrawResult.Invalid(EXPLANATION_GOAL_REQUIRED)
         if (amount > bucket.savedAmount) {
             return WithdrawResult.Invalid(
-                "В накоплениях только ${bucket.savedAmount} монет. Снять больше, чем накоплено, нельзя.",
+                "В копилке сейчас ${bucket.savedAmount}. Снять больше, чем накоплено, нельзя.",
             )
         }
         val newBucket = bucket.copy(savedAmount = bucket.savedAmount - amount)
@@ -142,6 +144,34 @@ class EconomyEngine {
         if (deposits.isEmpty()) 0L else deposits.sum() / deposits.size
 
     fun applyPetEffect(current: Int, delta: Int): Int = (current + delta).coerceIn(0, 100)
+
+    fun checkDistribution(
+        amounts: Map<BudgetDirection, Long>,
+        sum: Long,
+        minimums: Map<BudgetDirection, Long>,
+    ): DistributionCheck {
+        val problems = mutableListOf<String>()
+        val total = amounts.values.sum()
+        if (total != sum) {
+            problems += "Распредели ровно $sum. Сейчас распределено $total."
+        }
+        BudgetDirection.entries.forEach { direction ->
+            val amount = amounts[direction] ?: 0L
+            if (amount < 0L) {
+                problems += "Сумма не может быть меньше нуля: ${direction.label.lowercase()}."
+            }
+            minimums[direction]?.let { minimum ->
+                if (amount < minimum) {
+                    problems += "На ${direction.label.lowercase()} нужно минимум $minimum."
+                }
+            }
+        }
+        return if (problems.isEmpty()) {
+            DistributionCheck.Valid(remainder = sum - total)
+        } else {
+            DistributionCheck.Invalid(problems)
+        }
+    }
 
     private companion object {
         const val EXPLANATION_SOURCE_REQUIRED = "У начисления должен быть источник."

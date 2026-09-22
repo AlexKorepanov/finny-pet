@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import ru.finny.petgame.data.PetDatabase
 import ru.finny.petgame.data.entity.BalanceEntity
 import ru.finny.petgame.data.entity.BudgetPlanItemEntity
+import ru.finny.petgame.data.entity.CompletedTaskEntity
 import ru.finny.petgame.data.entity.EarningEntity
 import ru.finny.petgame.data.entity.PeriodEntity
 import ru.finny.petgame.data.entity.ProfileEntity
@@ -12,14 +13,18 @@ import ru.finny.petgame.data.entity.PurchaseEntity
 import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.data.entity.SavingsOperationEntity
 import ru.finny.petgame.data.model.GameSnapshot
+import ru.finny.petgame.data.model.GoalAchieveResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
+import ru.finny.petgame.data.model.TaskCompletionResult
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.economy.EconomyState
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.DepositResult
+import ru.finny.petgame.economy.model.DistributionCheck
 import ru.finny.petgame.economy.model.EarnResult
+import ru.finny.petgame.economy.model.GoalEta
 import ru.finny.petgame.economy.model.PlanCheckResult
 import ru.finny.petgame.economy.model.PurchaseCategory
 import ru.finny.petgame.economy.model.PurchaseDraft
@@ -43,6 +48,7 @@ class GameRepository(
     private fun periodDao() = database.periodDao()
     private fun budgetPlanItemDao() = database.budgetPlanItemDao()
     private fun savingsOperationDao() = database.savingsOperationDao()
+    private fun completedTaskDao() = database.completedTaskDao()
 
     suspend fun createProfile(
         playerName: String,
@@ -102,6 +108,7 @@ class GameRepository(
         } ?: emptyMap()
         val historyIndex = period?.periodIndex ?: 0
         val periodPurchases = purchaseDao().getByPeriod(profile.id, historyIndex)
+        val completedTasks = completedTaskDao().getByProfileId(profile.id)
         GameSnapshot(
             profile = profile,
             balance = balance,
@@ -113,6 +120,7 @@ class GameRepository(
             plan = plan,
             periodFact = periodFact,
             periodPurchases = periodPurchases,
+            completedTasks = completedTasks,
         )
     }
 
@@ -347,6 +355,124 @@ class GameRepository(
             }
         }
 
+    suspend fun getGoalEta(goalId: String): GoalEta? {
+        val profile = profileDao().getCurrentProfile() ?: return null
+        val row = savingsDao().getByGoal(profile.id, goalId) ?: return null
+        val deposits = savingsOperationDao().getDepositsByGoal(profile.id, goalId).map { it.amount }
+        return engine.goalEta(
+            SavingsBucket(
+                goalId = row.goalId,
+                goalTitle = row.goalTitle,
+                goalCost = row.goalCost,
+                savedAmount = row.savedAmount,
+            ),
+            engine.averageDeposit(deposits),
+        )
+    }
+
+    suspend fun achieveGoal(goalId: String): GoalAchieveResult = database.withTransaction {
+        val profile = profileDao().getCurrentProfile()
+            ?: return@withTransaction GoalAchieveResult.Invalid(NO_PROFILE)
+        val row = savingsDao().getByGoal(profile.id, goalId)
+            ?: return@withTransaction GoalAchieveResult.Invalid(EXPLANATION_GOAL_REQUIRED)
+        if (row.savedAmount < row.goalCost) {
+            return@withTransaction GoalAchieveResult.Invalid(
+                "Пока не хватает монет. Осталось накопить: ${row.goalCost - row.savedAmount}.",
+            )
+        }
+        val newSaved = row.savedAmount - row.goalCost
+        savingsDao().update(row.copy(savedAmount = newSaved, updatedAt = now()))
+        progressDao().upsert(
+            ProgressEntity(
+                profileId = profile.id,
+                kind = PROGRESS_GOAL_ACHIEVED,
+                itemId = goalId,
+                value = row.goalTitle,
+                updatedAt = now(),
+            ),
+        )
+        val newMood = engine.applyPetEffect(profile.mood, GOAL_MOOD_REWARD)
+        profileDao().update(profile.copy(mood = newMood))
+        GoalAchieveResult.Success(
+            goalTitle = row.goalTitle,
+            moodDelta = GOAL_MOOD_REWARD,
+            mood = newMood,
+            savedLeft = newSaved,
+        )
+    }
+
+    suspend fun setAllTasksOpen(open: Boolean): Boolean = database.withTransaction {
+        val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
+        profileDao().update(profile.copy(allTasksOpen = open))
+        true
+    }
+
+    fun checkTaskDistribution(
+        amounts: Map<BudgetDirection, Long>,
+        sum: Long,
+        minimums: Map<BudgetDirection, Long>,
+    ): DistributionCheck = engine.checkDistribution(amounts, sum, minimums)
+
+    suspend fun completeTask(
+        taskId: String,
+        taskTitle: String,
+        theme: String,
+        isCorrect: Boolean,
+        reward: Long,
+    ): TaskCompletionResult = database.withTransaction {
+        val profile = profileDao().getCurrentProfile()
+            ?: return@withTransaction TaskCompletionResult.Invalid(NO_PROFILE)
+        val rewardedAlready = completedTaskDao().getByProfileId(profile.id)
+            .any { record -> record.taskId == taskId && record.isCorrect == true }
+        if (rewardedAlready) {
+            return@withTransaction TaskCompletionResult.AlreadyCompleted
+        }
+        val grantedReward = if (isCorrect) reward else 0L
+        val moodDelta = if (isCorrect) TASK_MOOD_REWARD else 0
+        val periodIndex = currentPeriodIndex(profile.id)
+        completedTaskDao().insert(
+            CompletedTaskEntity(
+                profileId = profile.id,
+                taskId = taskId,
+                theme = theme,
+                isCorrect = isCorrect,
+                reward = grantedReward,
+                periodIndex = periodIndex,
+                completedAt = now(),
+            ),
+        )
+        val state = loadEconomyState(profile.id)
+        var newBalance = state.balance
+        if (isCorrect && grantedReward > 0L) {
+            val earningSource = "Задание: $taskTitle"
+            when (val earnResult = engine.earn(state, earningSource, grantedReward)) {
+                is EarnResult.Success -> {
+                    earningDao().insert(
+                        EarningEntity(
+                            profileId = profile.id,
+                            source = earningSource,
+                            amount = earnResult.earning.amount,
+                            periodIndex = periodIndex,
+                            createdAt = now(),
+                        ),
+                    )
+                    balanceDao().upsert(BalanceEntity(profile.id, earnResult.state.balance, now()))
+                    newBalance = earnResult.state.balance
+                }
+                is EarnResult.Error -> {}
+            }
+        }
+        val newMood = engine.applyPetEffect(profile.mood, moodDelta)
+        profileDao().update(profile.copy(mood = newMood))
+        TaskCompletionResult.Success(
+            isCorrect = isCorrect,
+            reward = grantedReward,
+            balance = newBalance,
+            mood = newMood,
+            moodDelta = moodDelta,
+        )
+    }
+
     suspend fun closePeriod(): Boolean = database.withTransaction {
         val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
         val period = periodDao().getLatest(profile.id) ?: return@withTransaction false
@@ -406,9 +532,13 @@ class GameRepository(
 
     companion object {
         const val PROGRESS_SELECTED_GOAL = "SELECTED_GOAL"
+        const val PROGRESS_GOAL_ACHIEVED = "GOAL_ACHIEVED"
         const val START_BUDGET_SOURCE = "START_BUDGET"
         const val START_BUDGET_AMOUNT = 30L
+        private const val GOAL_MOOD_REWARD = 15
+        private const val TASK_MOOD_REWARD = 10
         private const val NO_PROFILE = "Сначала создай профиль."
+        private const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
         private const val EXPLANATION_PLAN_CONFIRMED =
             "План уже подтверждён. Изменить его можно в новом периоде."
     }

@@ -38,7 +38,7 @@ import ru.finny.petgame.data.entity.SavingsOperationEntity
         SavingsOperationEntity::class,
         CompletedTaskEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class PetDatabase : RoomDatabase() {

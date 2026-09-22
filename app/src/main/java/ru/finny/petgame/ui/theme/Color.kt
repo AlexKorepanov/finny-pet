@@ -16,6 +16,7 @@ object FinnyColors {
     val OnPrimary = Color(0xFFFFFFFF)
 
     val Success = Color(0xFF1F7A33)
+    val SuccessEdge = Color(0xFF14571F)
     val Optional = Color(0xFFB45309)
     val Tasks = Color(0xFF6D3FBF)
     val Teal = Color(0xFF0E7A6E)

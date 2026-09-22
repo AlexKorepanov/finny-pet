@@ -2,18 +2,14 @@ package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,12 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
@@ -42,11 +34,14 @@ import ru.finny.petgame.economy.model.BudgetPlan
 import ru.finny.petgame.economy.model.PlanCheckResult
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
+import ru.finny.petgame.ui.components.AmountStepper
 import ru.finny.petgame.ui.components.BadgeKind
+import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
 import ru.finny.petgame.ui.components.StatusBadge
+import ru.finny.petgame.ui.components.coinsAmount
 
 @Composable
 fun PlanScreen(
@@ -96,28 +91,31 @@ fun PlanScreen(
             )
             if (editable) {
                 Text(
-                    text = stringResource(R.string.plan_available, available),
+                    text = stringResource(R.string.plan_available, coinsAmount(available)),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    DirectionRow(
+                    AmountStepper(
                         label = stringResource(R.string.plan_direction_required),
+                        caption = stringResource(R.string.plan_hint_required),
                         amount = requiredAmount,
                         canIncrease = total < available,
                         canDecrease = requiredAmount > 0L,
                         onIncrease = { requiredAmount += 1L },
                         onDecrease = { requiredAmount -= 1L },
                     )
-                    DirectionRow(
+                    AmountStepper(
                         label = stringResource(R.string.plan_direction_optional),
+                        caption = stringResource(R.string.plan_hint_optional),
                         amount = optionalAmount,
                         canIncrease = total < available,
                         canDecrease = optionalAmount > 0L,
                         onIncrease = { optionalAmount += 1L },
                         onDecrease = { optionalAmount -= 1L },
                     )
-                    DirectionRow(
+                    AmountStepper(
                         label = stringResource(R.string.plan_direction_savings),
+                        caption = stringResource(R.string.plan_hint_savings),
                         amount = savingsAmount,
                         canIncrease = total < available,
                         canDecrease = savingsAmount > 0L,
@@ -125,7 +123,7 @@ fun PlanScreen(
                         onDecrease = { savingsAmount -= 1L },
                     )
                     Text(
-                        text = stringResource(R.string.plan_remainder, remainder),
+                        text = stringResource(R.string.plan_remainder, coinsAmount(remainder)),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -171,21 +169,6 @@ fun PlanScreen(
                     BudgetDirection.valueOf(it.direction) to it.plannedAmount
                 }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = stringResource(R.string.plan_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.width(56.dp),
-                            textAlign = TextAlign.End,
-                        )
-                        Text(
-                            text = stringResource(R.string.fact_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.width(56.dp),
-                            textAlign = TextAlign.End,
-                        )
-                    }
                     listOf(
                         BudgetDirection.REQUIRED,
                         BudgetDirection.OPTIONAL,
@@ -193,6 +176,7 @@ fun PlanScreen(
                     ).forEach { direction ->
                         PlanFactRow(
                             label = directionLabel(direction),
+                            caption = directionCaption(direction),
                             planAmount = planByDirection[direction] ?: 0L,
                             factAmount = snapshot.periodFact[direction] ?: 0L,
                         )
@@ -204,69 +188,21 @@ fun PlanScreen(
 }
 
 @Composable
-private fun DirectionRow(
-    label: String,
-    amount: Long,
-    canIncrease: Boolean,
-    canDecrease: Boolean,
-    onIncrease: () -> Unit,
-    onDecrease: () -> Unit,
-) {
-    val increaseDesc = stringResource(R.string.cd_increase)
-    val decreaseDesc = stringResource(R.string.cd_decrease)
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        IconButton(
-            onClick = onDecrease,
-            enabled = canDecrease,
-            modifier = Modifier.semantics { contentDescription = decreaseDesc },
-        ) {
-            Text(
-                text = stringResource(R.string.plan_decrease),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        }
+private fun PlanFactRow(label: String, caption: String, planAmount: Long, factAmount: Long) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
         Text(
-            text = amount.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.width(40.dp),
-            textAlign = TextAlign.End,
-        )
-        IconButton(
-            onClick = onIncrease,
-            enabled = canIncrease,
-            modifier = Modifier.semantics { contentDescription = increaseDesc },
-        ) {
-            Text(
-                text = stringResource(R.string.plan_increase),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlanFactRow(label: String, planAmount: Long, factAmount: Long) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Text(
-            text = planAmount.toString(),
+            text = caption,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.width(56.dp),
-            textAlign = TextAlign.End,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(
-            text = factAmount.toString(),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.width(56.dp),
-            textAlign = TextAlign.End,
+        FinnyProgressBar(
+            progress = if (planAmount > 0L) factAmount.toFloat() / planAmount else 0f,
+            label = stringResource(R.string.plan_fact_ratio, factAmount, planAmount),
         )
+        if (factAmount > planAmount) {
+            Text(text = stringResource(R.string.plan_over_note), style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 
@@ -275,4 +211,11 @@ private fun directionLabel(direction: BudgetDirection): String = when (direction
     BudgetDirection.REQUIRED -> stringResource(R.string.plan_direction_required)
     BudgetDirection.OPTIONAL -> stringResource(R.string.plan_direction_optional)
     BudgetDirection.SAVINGS -> stringResource(R.string.plan_direction_savings)
+}
+
+@Composable
+private fun directionCaption(direction: BudgetDirection): String = when (direction) {
+    BudgetDirection.REQUIRED -> stringResource(R.string.plan_hint_required)
+    BudgetDirection.OPTIONAL -> stringResource(R.string.plan_hint_optional)
+    BudgetDirection.SAVINGS -> stringResource(R.string.plan_hint_savings)
 }

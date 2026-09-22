@@ -15,6 +15,9 @@ interface CompletedTaskDao {
     @Query("SELECT * FROM completed_tasks WHERE profileId = :profileId ORDER BY completedAt DESC")
     fun observeByProfileId(profileId: Long): Flow<List<CompletedTaskEntity>>
 
+    @Query("SELECT * FROM completed_tasks WHERE profileId = :profileId ORDER BY completedAt DESC")
+    suspend fun getByProfileId(profileId: Long): List<CompletedTaskEntity>
+
     @Query("SELECT * FROM completed_tasks WHERE profileId = :profileId AND theme = :theme")
     suspend fun getByTheme(profileId: Long, theme: String): List<CompletedTaskEntity>
 

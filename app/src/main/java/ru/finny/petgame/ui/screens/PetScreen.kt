@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -25,6 +27,7 @@ import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.OptionCard
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
+import ru.finny.petgame.ui.components.SectionTitle
 
 @Composable
 fun PetScreen(
@@ -60,9 +63,9 @@ fun PetScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PetSprite(species = speciesIndex, colorIndex = colorIndex, modifier = Modifier.size(140.dp))
-            Text(
+            SectionTitle(
                 text = stringResource(R.string.pet_species_title),
-                style = MaterialTheme.typography.titleMedium,
+                icon = Icons.Filled.Person,
                 modifier = Modifier.fillMaxWidth(),
             )
             speciesLabels.forEachIndexed { index, label ->
@@ -74,9 +77,8 @@ fun PetScreen(
                     PetSprite(species = index, colorIndex = colorIndex, modifier = Modifier.size(48.dp))
                 }
             }
-            Text(
+            SectionTitle(
                 text = stringResource(R.string.pet_color_title),
-                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth(),
             )
             colorLabels.forEachIndexed { index, label ->

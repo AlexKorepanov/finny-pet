@@ -61,27 +61,79 @@
     <string name="shop_tab_optional">По желанию</string>
     <string name="shop_category_required">Нужное</string>
     <string name="shop_category_optional">По желанию</string>
-    <string name="shop_price">%1$d монет</string>
     <string name="shop_buy">Купить</string>
     <string name="shop_cancel">Отмена</string>
-    <string name="shop_confirm_price">Цена: %1$d монет</string>
+    <string name="shop_confirm_price">Цена: %1$s</string>
     <string name="shop_confirm_mood">Настроение: +%1$d</string>
     <string name="shop_confirm_saturation">Сытость: +%1$d</string>
     <string name="shop_confirm_balance_now">Монет сейчас: %1$d</string>
-    <string name="shop_confirm_after">Останется: %1$d монет</string>
+    <string name="shop_confirm_after">Останется: %1$s</string>
     <string name="shop_done_title">Готово!</string>
-    <string name="shop_bought">Ты купил «%1$s» за %2$d монет.</string>
+    <string name="shop_bought">Ты купил %1$s за %2$s.</string>
     <string name="shop_mood_line">Настроение: +%1$d.</string>
     <string name="shop_saturation_line">Сытость: +%1$d.</string>
-    <string name="shop_left_line">Осталось %1$d монет.</string>
+    <string name="shop_left_line">Осталось %1$s.</string>
     <string name="shop_not_enough_title">Не хватает монет</string>
-    <string name="shop_not_enough_balance">Сейчас у тебя %1$d монет.</string>
+    <string name="shop_not_enough_balance">Сейчас у тебя %1$s.</string>
     <string name="shop_history_title">Покупки за период</string>
     <string name="shop_history_empty">Пока покупок не было.</string>
 
+    <string name="plan_first_hint_title">Сначала план</string>
+    <string name="plan_first_hint_text">Сначала составь план: реши, сколько монет пойдёт на каждое.</string>
+    <string name="plan_make">Составить план</string>
+    <string name="plan_skip">Пропустить</string>
+    <string name="plan_hint_required">Еда и уход для питомца.</string>
+    <string name="plan_hint_optional">Игрушки и украшения.</string>
+    <string name="plan_hint_savings">На мечту.</string>
+    <string name="plan_fact_ratio">%1$d / %2$d</string>
+    <string name="plan_over_note">Потрачено больше, чем в плане. В следующий раз можно чуть уменьшить эту часть.</string>
+
+    <string name="savings_header_hint">Откладывай монеты в копилку на мечту.</string>
+    <string name="savings_choose_title">Выбери цель</string>
+    <string name="savings_goal_cost">Цена: %1$s</string>
+    <string name="savings_saved_line">Накоплено: %1$s</string>
+    <string name="savings_remaining_line">Осталось: %1$s</string>
+    <string name="savings_eta">Если откладывать по %1$s, цель будет через %2$s.</string>
+    <string name="savings_amount_label">Сколько монет:</string>
+    <string name="savings_deposit_title">Отложить монеты</string>
+    <string name="savings_deposit_button">Пополнить</string>
+    <string name="savings_withdraw_title">Снять монеты</string>
+    <string name="savings_withdraw_button">Снять</string>
+    <string name="savings_withdraw_preview_title">Снять монеты?</string>
+    <string name="savings_preview_saved">Накоплено станет: %1$s</string>
+    <string name="savings_confirm_withdraw">Подтвердить снятие</string>
+    <string name="savings_goal_reached">Цель достигнута!</string>
+    <string name="savings_receive">Получить</string>
+    <string name="savings_receive_confirm_text">Получить награду? Настроение питомца вырастет.</string>
+    <string name="savings_receive_title">Цель получена!</string>
+    <string name="savings_receive_text">Цель получена! Можно выбрать новую цель.</string>
+
+    <string name="tasks_header_hint">Выполняй задания и получай монеты.</string>
+    <string name="tasks_all_open">Все задания открыты</string>
+    <string name="tasks_done_badge">Выполнено</string>
+    <string name="tasks_locked_badge">Откроется позже</string>
+    <string name="tasks_theme_budget">Планирование бюджета</string>
+    <string name="tasks_theme_savings">Сбережения</string>
+    <string name="tasks_theme_payments">Платежи и покупки</string>
+    <string name="tasks_check_button">Проверить</string>
+    <string name="tasks_distribute_sum">Распредели ровно %1$s.</string>
+    <string name="tasks_distribute_left">Осталось распределить: %1$s</string>
+    <string name="tasks_correct_badge">Верно!</string>
+    <string name="tasks_already_badge">Уже выполнено</string>
+    <string name="tasks_try_again">Попробовать ещё раз</string>
+    <string name="tasks_reward_line">Монеты: +%1$d.</string>
+    <string name="tasks_no_reward_line">Награды нет, но и ничего не отняли. Попробуй ещё раз!</string>
+    <string name="tasks_already_rewarded">Награда за это задание уже получена.</string>
+    <string name="tasks_next">Следующее задание</string>
+    <string name="tasks_to_plan">Составить план</string>
+    <string name="tasks_to_shop">В магазин</string>
+    <string name="tasks_back_to_list">К списку заданий</string>
+    <string name="tasks_start">Начать</string>
+    <string name="tasks_all_done">Все задания выполнены!</string>
+
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
-    <string name="plan_available">Доступно: %1$d монет</string>
-    <string name="plan_remainder">Остаток: %1$d монет</string>
+    <string name="plan_available">Доступно: %1$s</string>
+    <string name="plan_remainder">Остаток: %1$s</string>
     <string name="plan_direction_required">Нужное (еда и уход)</string>
     <string name="plan_direction_optional">По желанию</string>
     <string name="plan_direction_savings">Копилка</string>
@@ -119,4 +171,17 @@
         <item>Ракета</item>
         <item>Робот</item>
     </string-array>
+
+    <plurals name="coins">
+        <item quantity="one">%1$d монета</item>
+        <item quantity="few">%1$d монеты</item>
+        <item quantity="many">%1$d монет</item>
+        <item quantity="other">%1$d монет</item>
+    </plurals>
+    <plurals name="times">
+        <item quantity="one">%1$d раз</item>
+        <item quantity="few">%1$d раза</item>
+        <item quantity="many">%1$d раз</item>
+        <item quantity="other">%1$d раз</item>
+    </plurals>
 </resources>

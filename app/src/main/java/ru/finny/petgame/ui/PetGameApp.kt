@@ -1,9 +1,15 @@
 package ru.finny.petgame.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,20 +22,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
 import ru.finny.petgame.data.model.GameSnapshot
+import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
+import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
+import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.PlanScreen
 import ru.finny.petgame.ui.screens.ProfileScreen
+import ru.finny.petgame.ui.screens.SavingsScreen
 import ru.finny.petgame.ui.screens.SectionStubScreen
 import ru.finny.petgame.ui.screens.ShopScreen
+import ru.finny.petgame.ui.screens.TasksScreen
 
 enum class AppScreen {
     LOADING,
@@ -40,6 +52,8 @@ enum class AppScreen {
     MAIN,
     PLAN,
     SHOP,
+    SAVINGS,
+    TASKS,
     SECTION_STUB,
 }
 
@@ -54,6 +68,8 @@ fun PetGameApp(repository: GameRepository) {
     var petName by rememberSaveable { mutableStateOf("") }
     var sectionTitleRes by rememberSaveable { mutableIntStateOf(R.string.section_plan) }
     var showHint by remember { mutableStateOf(false) }
+    var showPlanHint by remember { mutableStateOf(false) }
+    var focusedTaskId by rememberSaveable { mutableStateOf<String?>(null) }
     var mainSnapshot by remember { mutableStateOf<GameSnapshot?>(null) }
 
     LaunchedEffect(Unit) {
@@ -65,6 +81,9 @@ fun PetGameApp(repository: GameRepository) {
     LaunchedEffect(screen) {
         if (screen == AppScreen.MAIN) {
             mainSnapshot = repository.loadSnapshot()
+        }
+        if ((screen == AppScreen.SHOP || screen == AppScreen.SAVINGS) && !isPlanConfirmed(mainSnapshot)) {
+            showPlanHint = true
         }
     }
 
@@ -79,6 +98,8 @@ fun PetGameApp(repository: GameRepository) {
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
             AppScreen.PLAN -> screen = AppScreen.MAIN
             AppScreen.SHOP -> screen = AppScreen.MAIN
+            AppScreen.SAVINGS -> screen = AppScreen.MAIN
+            AppScreen.TASKS -> screen = AppScreen.MAIN
             AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
@@ -149,9 +170,14 @@ fun PetGameApp(repository: GameRepository) {
             onHint = { showHint = true },
             onPlan = { screen = AppScreen.PLAN },
             onShop = { screen = AppScreen.SHOP },
+            onSavings = { screen = AppScreen.SAVINGS },
             onSection = { titleRes ->
                 sectionTitleRes = titleRes
                 screen = AppScreen.SECTION_STUB
+            },
+            onOpenTask = { taskId ->
+                focusedTaskId = taskId
+                screen = AppScreen.TASKS
             },
         )
         AppScreen.PLAN -> {
@@ -186,6 +212,41 @@ fun PetGameApp(repository: GameRepository) {
                 )
             }
         }
+        AppScreen.SAVINGS -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                SavingsScreen(
+                    repository = repository,
+                    snapshot = currentSnapshot,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                    onSavingsChanged = {
+                        scope.launch { mainSnapshot = repository.loadSnapshot() }
+                    },
+                )
+            }
+        }
+        AppScreen.TASKS -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                TasksScreen(
+                    repository = repository,
+                    snapshot = currentSnapshot,
+                    focusedTaskId = focusedTaskId,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                    onTasksChanged = {
+                        scope.launch { mainSnapshot = repository.loadSnapshot() }
+                    },
+                    onOpenPlan = { screen = AppScreen.PLAN },
+                    onOpenShop = { screen = AppScreen.SHOP },
+                )
+            }
+        }
         AppScreen.SECTION_STUB -> SectionStubScreen(
             title = stringResource(sectionTitleRes),
             accent = sectionAccentFor(sectionTitleRes),
@@ -198,6 +259,37 @@ fun PetGameApp(repository: GameRepository) {
 
     if (showHint) {
         HintDialog(onClose = { showHint = false })
+    }
+
+    if (showPlanHint) {
+        AlertDialog(
+            onDismissRequest = { showPlanHint = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
+            title = { Text(text = stringResource(R.string.plan_first_hint_title)) },
+            text = { Text(text = stringResource(R.string.plan_first_hint_text)) },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    PrimaryButton(
+                        text = stringResource(R.string.plan_make),
+                        onClick = {
+                            showPlanHint = false
+                            screen = AppScreen.PLAN
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    SecondaryButton(
+                        text = stringResource(R.string.plan_skip),
+                        onClick = { showPlanHint = false },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            },
+        )
     }
 }
 
@@ -216,3 +308,7 @@ private fun sectionAccentFor(titleRes: Int): SectionAccent = when (titleRes) {
     R.string.section_progress -> SectionAccent.PROGRESS
     else -> SectionAccent.ADULT
 }
+
+private fun isPlanConfirmed(snapshot: GameSnapshot?): Boolean =
+    snapshot?.currentPeriod?.status == PeriodStatus.ACTIVE.name ||
+        snapshot?.currentPeriod?.status == PeriodStatus.CLOSED.name

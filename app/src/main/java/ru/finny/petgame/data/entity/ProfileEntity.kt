@@ -14,4 +14,5 @@ data class ProfileEntity(
     val playerAvatar: Int = 0,
     val mood: Int = 70,
     val saturation: Int = 70,
+    val allTasksOpen: Boolean = false,
 )

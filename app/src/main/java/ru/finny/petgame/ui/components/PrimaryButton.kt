@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.ui.theme.FinnyColors
 
@@ -26,18 +27,20 @@ fun PrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    edgeColor: Color = FinnyColors.PrimaryEdge,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val shape = MaterialTheme.shapes.medium
-    val faceColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-    val edgeColor = if (enabled) FinnyColors.PrimaryEdge else FinnyColors.PrimaryEdge.copy(alpha = 0.4f)
+    val faceColor = if (enabled) containerColor else containerColor.copy(alpha = 0.4f)
+    val edge = if (enabled) edgeColor else edgeColor.copy(alpha = 0.4f)
 
     Box(
         modifier = modifier
             .heightIn(min = 56.dp)
             .clip(shape)
-            .background(edgeColor)
+            .background(edge)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
