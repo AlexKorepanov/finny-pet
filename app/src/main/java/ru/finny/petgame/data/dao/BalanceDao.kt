@@ -18,4 +18,10 @@ interface BalanceDao {
 
     @Query("SELECT * FROM balance WHERE profileId = :profileId")
     fun observeByProfileId(profileId: Long): Flow<BalanceEntity?>
+
+    @Query("DELETE FROM balance WHERE profileId = :profileId")
+    suspend fun deleteByProfileId(profileId: Long)
+
+    @Query("DELETE FROM balance")
+    suspend fun deleteAll()
 }

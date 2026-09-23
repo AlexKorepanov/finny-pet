@@ -19,7 +19,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -128,26 +127,12 @@ fun TasksScreen(
                     CircularProgressIndicator()
                 }
             } else if (currentTask == null) {
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.tasks_all_open),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Switch(
-                            checked = snapshot.profile.allTasksOpen,
-                            onCheckedChange = { open ->
-                                scope.launch {
-                                    repository.setAllTasksOpen(open)
-                                    onTasksChanged()
-                                }
-                            },
-                        )
-                    }
+                if (snapshot.profile.allTasksOpen) {
+                    StatusBadge(
+                        text = stringResource(R.string.tasks_demo_badge),
+                        icon = Icons.Filled.Done,
+                        kind = BadgeKind.NEUTRAL,
+                    )
                 }
                 TaskTheme.entries.forEach { theme ->
                     SectionTitle(

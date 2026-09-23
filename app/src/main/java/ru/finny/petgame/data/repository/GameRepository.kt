@@ -14,6 +14,7 @@ import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.data.entity.SavingsOperationEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.GoalAchieveResult
+import ru.finny.petgame.data.model.LastPeriodSummary
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
@@ -115,6 +116,8 @@ class GameRepository(
             .getByKind(profile.id, PROGRESS_GOAL_ACHIEVED)
             .map { it.itemId }
             .toSet()
+        val closedPeriodCount = periodDao().countClosed(profile.id)
+        val lastClosedPeriod = loadLastClosedPeriodSummary(profile.id)
         GameSnapshot(
             profile = profile,
             balance = balance,
@@ -128,6 +131,42 @@ class GameRepository(
             periodPurchases = periodPurchases,
             completedTasks = completedTasks,
             achievedGoalIds = achievedGoalIds,
+            closedPeriodCount = closedPeriodCount,
+            lastClosedPeriod = lastClosedPeriod,
+        )
+    }
+
+    suspend fun deleteCurrentProfile(): Boolean = database.withTransaction {
+        val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
+        balanceDao().deleteByProfileId(profile.id)
+        profileDao().deleteAll()
+        true
+    }
+
+    private suspend fun loadLastClosedPeriodSummary(profileId: Long): LastPeriodSummary? {
+        val closed = periodDao().getLatestClosed(profileId) ?: return null
+        val planItems = budgetPlanItemDao().getByPeriod(closed.id)
+        val plan = planItems.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
+        val purchases = purchaseDao().getByPeriod(profileId, closed.periodIndex)
+        val deposits = savingsOperationDao().getByPeriod(
+            profileId,
+            closed.periodIndex,
+            SavingsOperationType.DEPOSIT.name,
+        )
+        val fact = mapOf(
+            BudgetDirection.REQUIRED to purchases
+                .filter { row -> row.category == PurchaseCategory.REQUIRED.name }
+                .sumOf { row -> row.price },
+            BudgetDirection.OPTIONAL to purchases
+                .filter { row -> row.category == PurchaseCategory.OPTIONAL.name }
+                .sumOf { row -> row.price },
+            BudgetDirection.SAVINGS to deposits.sumOf { row -> row.amount },
+        )
+        return LastPeriodSummary(
+            periodIndex = closed.periodIndex,
+            plan = plan,
+            fact = fact,
+            closedAt = closed.closedAt,
         )
     }
 

@@ -552,6 +552,11 @@ class GameRepositoryTest {
         assertEquals(1, snapshot.currentPeriod?.periodIndex)
         assertEquals(1, snapshot.profile.petStage)
         assertEquals(1, snapshot.profile.goodPeriods)
+        assertEquals(1, snapshot.closedPeriodCount)
+        assertTrue(snapshot.lastClosedPeriod != null)
+        assertEquals(0, snapshot.lastClosedPeriod!!.periodIndex)
+        assertEquals(40L, snapshot.lastClosedPeriod!!.plan[BudgetDirection.REQUIRED])
+        assertEquals(40L, snapshot.lastClosedPeriod!!.fact[BudgetDirection.REQUIRED])
 
         val income = db.earningDao().getByPeriod(profileId, 1)
             .filter { it.source == EconomyEngine.PERIOD_INCOME_SOURCE }
@@ -601,5 +606,20 @@ class GameRepositoryTest {
         repository.saveBudgetPlan(plan(20, 10, 10))
         val stillPlanned = repository.closePeriod()
         assertTrue(stillPlanned is PeriodCloseResult.Invalid)
+    }
+
+    @Test
+    fun `deleteCurrentProfile clears data so snapshot is null`() = runTest {
+        repository.earn(source = "TASK", amount = 20L)
+        assertTrue(repository.deleteCurrentProfile())
+        assertNull(freshRepository().loadSnapshot())
+    }
+
+    @Test
+    fun `demo mode flag persists`() = runTest {
+        assertTrue(repository.setAllTasksOpen(true))
+        assertTrue(freshRepository().loadSnapshot()!!.profile.allTasksOpen)
+        assertTrue(repository.setAllTasksOpen(false))
+        assertFalse(freshRepository().loadSnapshot()!!.profile.allTasksOpen)
     }
 }

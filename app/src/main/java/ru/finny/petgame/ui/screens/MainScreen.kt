@@ -66,7 +66,9 @@ fun MainScreen(
     onPlan: () -> Unit,
     onShop: () -> Unit,
     onSavings: () -> Unit,
-    onSection: (Int) -> Unit,
+    onTasks: () -> Unit,
+    onProgress: () -> Unit,
+    onAdult: () -> Unit,
     onOpenTask: (String) -> Unit,
     onClosePeriod: () -> Unit,
 ) {
@@ -230,7 +232,7 @@ fun MainScreen(
                         label = stringResource(R.string.section_tasks),
                         icon = Icons.Filled.Edit,
                         accent = SectionAccent.TASKS,
-                        onClick = { onSection(R.string.section_tasks) },
+                        onClick = onTasks,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -255,14 +257,14 @@ fun MainScreen(
                         label = stringResource(R.string.section_progress),
                         icon = Icons.Filled.Star,
                         accent = SectionAccent.PROGRESS,
-                        onClick = { onSection(R.string.section_progress) },
+                        onClick = onProgress,
                         modifier = Modifier.weight(1f),
                     )
                     SectionTile(
                         label = stringResource(R.string.section_adult),
                         icon = Icons.Filled.Lock,
                         accent = SectionAccent.ADULT,
-                        onClick = { onSection(R.string.section_adult) },
+                        onClick = onAdult,
                         modifier = Modifier.weight(1f),
                     )
                 }

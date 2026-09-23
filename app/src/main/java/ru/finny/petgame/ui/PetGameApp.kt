@@ -31,8 +31,8 @@ import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
-import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.screens.AdultScreen
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
 import ru.finny.petgame.ui.screens.PeriodResultScreen
@@ -40,8 +40,8 @@ import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.PlanScreen
 import ru.finny.petgame.ui.screens.ProfileScreen
+import ru.finny.petgame.ui.screens.ProgressScreen
 import ru.finny.petgame.ui.screens.SavingsScreen
-import ru.finny.petgame.ui.screens.SectionStubScreen
 import ru.finny.petgame.ui.screens.ShopScreen
 import ru.finny.petgame.ui.screens.TasksScreen
 
@@ -56,8 +56,9 @@ enum class AppScreen {
     SHOP,
     SAVINGS,
     TASKS,
+    PROGRESS,
+    ADULT,
     PERIOD_RESULT,
-    SECTION_STUB,
 }
 
 @Composable
@@ -69,7 +70,6 @@ fun PetGameApp(repository: GameRepository) {
     var speciesIndex by rememberSaveable { mutableIntStateOf(0) }
     var colorIndex by rememberSaveable { mutableIntStateOf(0) }
     var petName by rememberSaveable { mutableStateOf("") }
-    var sectionTitleRes by rememberSaveable { mutableIntStateOf(R.string.section_plan) }
     var showHint by remember { mutableStateOf(false) }
     var showPlanHint by remember { mutableStateOf(false) }
     var showClosePeriodConfirm by remember { mutableStateOf(false) }
@@ -84,7 +84,10 @@ fun PetGameApp(repository: GameRepository) {
     }
 
     LaunchedEffect(screen) {
-        if (screen == AppScreen.MAIN) {
+        if (screen == AppScreen.MAIN ||
+            screen == AppScreen.PROGRESS ||
+            screen == AppScreen.ADULT
+        ) {
             mainSnapshot = repository.loadSnapshot()
         }
         if ((screen == AppScreen.SHOP || screen == AppScreen.SAVINGS) && !isPlanConfirmed(mainSnapshot)) {
@@ -105,8 +108,9 @@ fun PetGameApp(repository: GameRepository) {
             AppScreen.SHOP -> screen = AppScreen.MAIN
             AppScreen.SAVINGS -> screen = AppScreen.MAIN
             AppScreen.TASKS -> screen = AppScreen.MAIN
+            AppScreen.PROGRESS -> screen = AppScreen.MAIN
+            AppScreen.ADULT -> screen = AppScreen.MAIN
             AppScreen.PERIOD_RESULT -> screen = AppScreen.MAIN
-            AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
     }
@@ -194,10 +198,12 @@ fun PetGameApp(repository: GameRepository) {
             onPlan = { screen = AppScreen.PLAN },
             onShop = { screen = AppScreen.SHOP },
             onSavings = { screen = AppScreen.SAVINGS },
-            onSection = { titleRes ->
-                sectionTitleRes = titleRes
-                screen = AppScreen.SECTION_STUB
+            onTasks = {
+                focusedTaskId = null
+                screen = AppScreen.TASKS
             },
+            onProgress = { screen = AppScreen.PROGRESS },
+            onAdult = { screen = AppScreen.ADULT },
             onOpenTask = { taskId ->
                 focusedTaskId = taskId
                 screen = AppScreen.TASKS
@@ -272,6 +278,41 @@ fun PetGameApp(repository: GameRepository) {
                 )
             }
         }
+        AppScreen.PROGRESS -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                ProgressScreen(
+                    snapshot = currentSnapshot,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                )
+            }
+        }
+        AppScreen.ADULT -> {
+            val currentSnapshot = mainSnapshot
+            if (currentSnapshot == null) {
+                LoadingScreen()
+            } else {
+                AdultScreen(
+                    repository = repository,
+                    snapshot = currentSnapshot,
+                    onBack = goBack,
+                    onHint = { showHint = true },
+                    onDemoChanged = {
+                        scope.launch { mainSnapshot = repository.loadSnapshot() }
+                    },
+                    onProfileDeleted = {
+                        mainSnapshot = null
+                        playerName = ""
+                        petName = ""
+                        introPage = 0
+                        screen = AppScreen.INTRO
+                    },
+                )
+            }
+        }
         AppScreen.PERIOD_RESULT -> {
             val result = periodCloseResult
             if (result == null) {
@@ -289,14 +330,6 @@ fun PetGameApp(repository: GameRepository) {
                 )
             }
         }
-        AppScreen.SECTION_STUB -> SectionStubScreen(
-            title = stringResource(sectionTitleRes),
-            accent = sectionAccentFor(sectionTitleRes),
-            petSpecies = mainSnapshot?.profile?.petSpecies ?: 0,
-            petColorIndex = mainSnapshot?.profile?.petColor ?: 0,
-            onBack = goBack,
-            onHint = { showHint = true },
-        )
     }
 
     if (showHint) {
@@ -368,15 +401,6 @@ private fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }
-}
-
-private fun sectionAccentFor(titleRes: Int): SectionAccent = when (titleRes) {
-    R.string.section_plan -> SectionAccent.PLAN
-    R.string.section_shop -> SectionAccent.SHOP
-    R.string.section_tasks -> SectionAccent.TASKS
-    R.string.section_savings -> SectionAccent.SAVINGS
-    R.string.section_progress -> SectionAccent.PROGRESS
-    else -> SectionAccent.ADULT
 }
 
 private fun isPlanConfirmed(snapshot: GameSnapshot?): Boolean =

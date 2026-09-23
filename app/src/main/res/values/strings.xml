@@ -79,6 +79,59 @@
     <string name="section_stub_text">Раздел появится позже.</string>
     <string name="section_hint_stub">Скоро здесь появится что-то новое.</string>
 
+    <string name="progress_header_hint">Смотри, что уже получилось, и учись словам.</string>
+    <string name="progress_overview_title">Общий прогресс</string>
+    <string name="progress_stage_line">Стадия питомца: %1$s</string>
+    <string name="progress_periods_line">Периодов закрыто: %1$d. Удачных: %2$d</string>
+    <string name="progress_tasks_line">Заданий выполнено: %1$d</string>
+    <string name="progress_goal_title">Цель накопления</string>
+    <string name="progress_goal_saved">Накоплено %1$s из %2$s</string>
+    <string name="progress_goal_pick_next">Можно выбрать новую цель в копилке.</string>
+    <string name="progress_tasks_title">Завершённые задания</string>
+    <string name="progress_tasks_empty">Пока заданий нет. Загляни в раздел «Задания».</string>
+    <string name="progress_task_reward">Тема: %1$s. Награда: +%2$d</string>
+    <string name="progress_last_period_title">Итог последнего периода</string>
+    <string name="progress_last_period_empty">Ещё ни один период не закрыт.</string>
+    <string name="progress_last_period_num">Период %1$d</string>
+    <string name="progress_plan_fact_line">%1$s — план %2$d, факт %3$d</string>
+    <string name="progress_glossary_title">Справочник</string>
+    <string name="glossary_plan_term">План</string>
+    <string name="glossary_plan_body">Как ты решил распределить монеты до трат.</string>
+    <string name="glossary_fact_term">Факт</string>
+    <string name="glossary_fact_body">Сколько монет реально ушло по каждому направлению.</string>
+    <string name="glossary_required_term">Нужное</string>
+    <string name="glossary_required_body">Еда и уход. Без этого питомцу хуже.</string>
+    <string name="glossary_optional_term">По желанию</string>
+    <string name="glossary_optional_body">Игрушки и украшения. Можно отказаться — это не ошибка.</string>
+    <string name="glossary_savings_term">Копилка</string>
+    <string name="glossary_savings_body">Монеты, отложенные отдельно от баланса.</string>
+    <string name="glossary_goal_term">Цель</string>
+    <string name="glossary_goal_body">То, на что ты копишь: цена понятна заранее.</string>
+    <string name="glossary_period_term">Период</string>
+    <string name="glossary_period_body">Цикл: план → покупки и копилка → итог.</string>
+
+    <string name="adult_header_hint">Раздел для родителя или учителя.</string>
+    <string name="adult_gate_title">Сначала пример</string>
+    <string name="adult_gate_text">Сколько будет %1$d + %2$d?</string>
+    <string name="adult_gate_answer">Ответ</string>
+    <string name="adult_gate_open">Открыть раздел</string>
+    <string name="adult_gate_wrong">Неверно. Попробуй другой пример.</string>
+    <string name="adult_goals_title">Зачем это приложение</string>
+    <string name="adult_goals_body">Ребёнок учится планировать монеты, различать нужное и желаемое, копить на цель и видеть последствия выбора. Без реальных денег и рекламы.</string>
+    <string name="adult_progress_title">Общий прогресс</string>
+    <string name="adult_progress_stage">Стадия питомца: %1$s</string>
+    <string name="adult_progress_periods">Периодов: %1$d, из них удачных: %2$d</string>
+    <string name="adult_progress_tasks">Верных заданий: %1$d</string>
+    <string name="adult_themes_title">Пройденные темы</string>
+    <string name="adult_demo_title">Демо-режим</string>
+    <string name="adult_demo_body">Все задания открыты сразу, без ожидания.</string>
+    <string name="adult_reset_hint">Сброс удаляет локальный профиль. Можно начать сначала.</string>
+    <string name="adult_reset_button">Сбросить профиль</string>
+    <string name="adult_reset_confirm_title">Сбросить профиль?</string>
+    <string name="adult_reset_confirm_text">Все монеты, покупки, цели и прогресс будут удалены с этого устройства.</string>
+    <string name="adult_reset_confirm">Сбросить</string>
+    <string name="adult_reset_cancel">Отмена</string>
+
     <string name="shop_header_hint">Выбирай покупки для питомца.</string>
     <string name="shop_balance_line">Монет: %1$d</string>
     <string name="shop_tab_required">Нужное (еда и уход)</string>
@@ -137,6 +190,7 @@
 
     <string name="tasks_header_hint">Выполняй задания и получай монеты.</string>
     <string name="tasks_all_open">Все задания открыты</string>
+    <string name="tasks_demo_badge">Демо: все задания открыты</string>
     <string name="tasks_done_badge">Выполнено</string>
     <string name="tasks_locked_badge">Откроется позже</string>
     <string name="tasks_theme_budget">Планирование бюджета</string>

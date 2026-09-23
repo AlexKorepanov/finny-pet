@@ -22,6 +22,12 @@ interface PeriodDao {
     @Query("SELECT * FROM periods WHERE profileId = :profileId ORDER BY periodIndex DESC LIMIT 1")
     suspend fun getLatest(profileId: Long): PeriodEntity?
 
+    @Query("SELECT * FROM periods WHERE profileId = :profileId AND status = 'CLOSED' ORDER BY periodIndex DESC LIMIT 1")
+    suspend fun getLatestClosed(profileId: Long): PeriodEntity?
+
+    @Query("SELECT COUNT(*) FROM periods WHERE profileId = :profileId AND status = 'CLOSED'")
+    suspend fun countClosed(profileId: Long): Int
+
     @Query("SELECT * FROM periods WHERE profileId = :profileId ORDER BY periodIndex")
     fun observeByProfileId(profileId: Long): Flow<List<PeriodEntity>>
 

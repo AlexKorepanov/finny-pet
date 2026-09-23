@@ -21,4 +21,6 @@ data class GameSnapshot(
     val periodPurchases: List<PurchaseEntity>,
     val completedTasks: List<CompletedTaskEntity>,
     val achievedGoalIds: Set<String>,
+    val closedPeriodCount: Int,
+    val lastClosedPeriod: LastPeriodSummary?,
 )
