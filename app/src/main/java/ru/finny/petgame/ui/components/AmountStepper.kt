@@ -1,10 +1,11 @@
 package ru.finny.petgame.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun AmountStepper(
@@ -33,9 +35,10 @@ fun AmountStepper(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(text = label, style = MaterialTheme.typography.titleMedium)
             caption?.let { captionText ->
                 Text(
                     text = captionText,
@@ -44,31 +47,50 @@ fun AmountStepper(
                 )
             }
         }
-        IconButton(
-            onClick = onDecrease,
+        StepperButton(
+            text = stringResource(R.string.plan_decrease),
             enabled = canDecrease,
-            modifier = Modifier.semantics { contentDescription = decreaseDesc },
-        ) {
-            Text(
-                text = stringResource(R.string.plan_decrease),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        }
+            onClick = onDecrease,
+            contentDescription = decreaseDesc,
+        )
         Text(
             text = amount.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.width(40.dp),
-            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.widthIn(min = 44.dp),
+            textAlign = TextAlign.Center,
         )
-        IconButton(
-            onClick = onIncrease,
+        StepperButton(
+            text = stringResource(R.string.plan_increase),
             enabled = canIncrease,
-            modifier = Modifier.semantics { contentDescription = increaseDesc },
-        ) {
-            Text(
-                text = stringResource(R.string.plan_increase),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        }
+            onClick = onIncrease,
+            contentDescription = increaseDesc,
+        )
+    }
+}
+
+@Composable
+private fun StepperButton(
+    text: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    contentDescription: String,
+) {
+    ChunkySurface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .size(52.dp)
+            .semantics { this.contentDescription = contentDescription },
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        edgeColor = FinnyColors.PrimaryEdge,
+        borderColor = MaterialTheme.colorScheme.primary,
+        borderWidth = 2.dp,
+        minHeight = 52.dp,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }

@@ -2,9 +2,11 @@ package ru.finny.petgame.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,15 @@ fun sectionAccentColor(accent: SectionAccent): Color = when (accent) {
     SectionAccent.ADULT -> FinnyColors.Adult
 }
 
+fun sectionAccentEdge(accent: SectionAccent): Color = when (accent) {
+    SectionAccent.PLAN -> FinnyColors.PrimaryEdge
+    SectionAccent.SHOP -> FinnyColors.OptionalEdge
+    SectionAccent.TASKS -> FinnyColors.TasksEdge
+    SectionAccent.SAVINGS -> FinnyColors.SuccessEdge
+    SectionAccent.PROGRESS -> FinnyColors.TealEdge
+    SectionAccent.ADULT -> FinnyColors.AdultEdge
+}
+
 @Composable
 fun SectionHeader(
     accent: SectionAccent,
@@ -45,32 +56,43 @@ fun SectionHeader(
     petColorIndex: Int = 0,
     petStage: Int = 0,
 ) {
-    Row(
+    val face = sectionAccentColor(accent)
+    val edge = sectionAccentEdge(accent)
+    val shape = MaterialTheme.shapes.extraLarge
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.large)
-            .background(sectionAccentColor(accent))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .clip(shape)
+            .background(edge),
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = title,
-                color = FinnyColors.OnPrimary,
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Text(
-                text = hint,
-                color = FinnyColors.OnPrimary,
-                style = MaterialTheme.typography.bodyLarge,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = (-3).dp)
+                .clip(shape)
+                .background(face)
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = title,
+                    color = FinnyColors.OnPrimary,
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = hint,
+                    color = FinnyColors.OnPrimary,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            PetSprite(
+                species = petSpecies,
+                colorIndex = petColorIndex,
+                stage = petStage,
+                modifier = Modifier.size(72.dp),
             )
         }
-        PetSprite(
-            species = petSpecies,
-            colorIndex = petColorIndex,
-            stage = petStage,
-            modifier = Modifier.size(56.dp),
-        )
     }
 }

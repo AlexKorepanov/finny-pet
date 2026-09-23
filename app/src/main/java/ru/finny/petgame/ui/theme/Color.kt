@@ -18,13 +18,22 @@ object FinnyColors {
     val Success = Color(0xFF1F7A33)
     val SuccessEdge = Color(0xFF14571F)
     val Optional = Color(0xFFB45309)
+    val OptionalEdge = Color(0xFF8A3F07)
     val Tasks = Color(0xFF6D3FBF)
+    val TasksEdge = Color(0xFF4E2A8F)
     val Teal = Color(0xFF0E7A6E)
+    val TealEdge = Color(0xFF0A5A51)
     val Adult = Color(0xFF5B6670)
+    val AdultEdge = Color(0xFF3F474F)
 
     val ProgressYellow = Color(0xFFF6C445)
     val ProgressHighlight = Color(0xFFFFE08A)
     val OnProgressText = Color(0xFF4A3A14)
+
+    val SoftBlue = Color(0xFFE8F0FF)
+    val SoftGreen = Color(0xFFE3F5E7)
+    val SoftOrange = Color(0xFFFCEBD3)
+    val SoftPurple = Color(0xFFF0E8FF)
 
     val BadgePositiveContainer = Color(0xFFDFF3E1)
     val BadgePositiveContent = Color(0xFF14571F)

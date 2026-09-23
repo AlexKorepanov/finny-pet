@@ -52,20 +52,26 @@ fun ProfileScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            Text(
+                text = stringResource(R.string.profile_title),
+                style = MaterialTheme.typography.headlineSmall,
+            )
             OutlinedTextField(
                 value = playerName,
                 onValueChange = { value -> if (value.length <= 20) onPlayerNameChange(value) },
                 label = { Text(text = stringResource(R.string.player_name_label)) },
                 placeholder = { Text(text = stringResource(R.string.player_name_hint)) },
                 singleLine = true,
+                shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = stringResource(R.string.profile_guest_note),
                 style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             SectionTitle(
                 text = stringResource(R.string.character_title),
@@ -77,7 +83,7 @@ fun ProfileScreen(
                     onClick = { onAvatarChange(index) },
                     label = label,
                 ) {
-                    PlayerAvatar(index = index, modifier = Modifier.size(48.dp))
+                    PlayerAvatar(index = index, modifier = Modifier.size(56.dp))
                 }
             }
             PrimaryButton(

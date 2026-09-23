@@ -4,12 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
+import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.OptionCard
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionTitle
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun PetScreen(
@@ -58,11 +58,24 @@ fun PetScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            PetSprite(species = speciesIndex, colorIndex = colorIndex, modifier = Modifier.size(140.dp))
+            ChunkySurface(
+                onClick = null,
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = FinnyColors.SoftBlue,
+                edgeColor = FinnyColors.PrimaryEdge.copy(alpha = 0.35f),
+                borderColor = FinnyColors.Primary.copy(alpha = 0.3f),
+                minHeight = 180.dp,
+            ) {
+                PetSprite(
+                    species = speciesIndex,
+                    colorIndex = colorIndex,
+                    modifier = Modifier.size(160.dp),
+                )
+            }
             SectionTitle(
                 text = stringResource(R.string.pet_species_title),
                 icon = Icons.Filled.Person,
@@ -74,7 +87,7 @@ fun PetScreen(
                     onClick = { onSpeciesChange(index) },
                     label = label,
                 ) {
-                    PetSprite(species = index, colorIndex = colorIndex, modifier = Modifier.size(48.dp))
+                    PetSprite(species = index, colorIndex = colorIndex, modifier = Modifier.size(56.dp))
                 }
             }
             SectionTitle(
@@ -87,7 +100,7 @@ fun PetScreen(
                     onClick = { onColorChange(index) },
                     label = label,
                 ) {
-                    PetSprite(species = speciesIndex, colorIndex = index, modifier = Modifier.size(48.dp))
+                    PetSprite(species = speciesIndex, colorIndex = index, modifier = Modifier.size(56.dp))
                 }
             }
             OutlinedTextField(
@@ -96,6 +109,7 @@ fun PetScreen(
                 label = { Text(text = stringResource(R.string.pet_name_label)) },
                 placeholder = { Text(text = stringResource(R.string.pet_name_hint)) },
                 singleLine = true,
+                shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth(),
             )
             PrimaryButton(

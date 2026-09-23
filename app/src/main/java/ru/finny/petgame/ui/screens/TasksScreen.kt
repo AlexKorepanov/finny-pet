@@ -49,6 +49,7 @@ import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.DistributionCheck
 import ru.finny.petgame.ui.components.AppCard
+import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.AmountStepper
 import ru.finny.petgame.ui.components.BadgeKind
@@ -59,6 +60,7 @@ import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun TasksScreen(
@@ -234,16 +236,19 @@ private fun themeTitle(theme: TaskTheme): String = when (theme) {
 
 @Composable
 private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, onClick: () -> Unit) {
-    Surface(
+    ChunkySurface(
         onClick = onClick,
         enabled = available,
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        selected = completed,
+        containerColor = if (completed) FinnyColors.SoftGreen else MaterialTheme.colorScheme.surface,
+        edgeColor = if (completed) FinnyColors.SuccessEdge else FinnyColors.CardBorder,
+        borderColor = if (completed) FinnyColors.Success else FinnyColors.CardBorder,
+        minHeight = 64.dp,
+        contentAlignment = Alignment.CenterStart,
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -441,22 +446,19 @@ private fun TaskPlayView(
 
 @Composable
 private fun OptionSurface(selected: Boolean, enabled: Boolean, text: String, onClick: () -> Unit) {
-    Surface(
+    ChunkySurface(
         onClick = onClick,
         enabled = enabled,
+        selected = selected,
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(
-            width = if (selected) 2.dp else 1.dp,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-        ),
+        containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        edgeColor = if (selected) FinnyColors.PrimaryEdge else FinnyColors.CardBorder,
+        borderColor = if (selected) MaterialTheme.colorScheme.primary else FinnyColors.CardBorder,
+        borderWidth = if (selected) 3.dp else 2.dp,
+        minHeight = 64.dp,
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(12.dp),
-        )
+        Text(text = text, style = MaterialTheme.typography.titleMedium)
     }
 }
 

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -25,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +47,7 @@ import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
+import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PlayerAvatar
@@ -57,6 +56,7 @@ import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.sectionAccentColor
+import ru.finny.petgame.ui.components.sectionAccentEdge
 import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
@@ -104,46 +104,46 @@ fun MainScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         PetSprite(
                             species = profile.petSpecies,
                             colorIndex = profile.petColor,
                             stage = profile.petStage,
-                            modifier = Modifier.size(96.dp),
+                            modifier = Modifier.size(140.dp),
                         )
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                PlayerAvatar(
-                                    index = profile.playerAvatar,
-                                    modifier = Modifier.size(48.dp),
-                                    contentDescription = stringResource(R.string.cd_player_avatar),
-                                )
-                                Text(
-                                    text = stringResource(R.string.main_greeting, profile.playerName),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                )
-                            }
-                            Text(
-                                text = stringResource(
-                                    R.string.main_period_line,
-                                    (snapshot.currentPeriod?.periodIndex ?: 0) + 1,
-                                ),
-                                style = MaterialTheme.typography.bodyLarge,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            PlayerAvatar(
+                                index = profile.playerAvatar,
+                                modifier = Modifier.size(48.dp),
+                                contentDescription = stringResource(R.string.cd_player_avatar),
                             )
                             Text(
-                                text = stringResource(
-                                    R.string.main_stage_line,
-                                    stageTitle(profile.petStage),
-                                ),
-                                style = MaterialTheme.typography.bodyLarge,
+                                text = stringResource(R.string.main_greeting, profile.playerName),
+                                style = MaterialTheme.typography.headlineSmall,
                             )
                         }
+                        Text(
+                            text = stringResource(
+                                R.string.main_period_line,
+                                (snapshot.currentPeriod?.periodIndex ?: 0) + 1,
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.main_stage_line,
+                                stageTitle(profile.petStage),
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -277,14 +277,14 @@ fun MainScreen(
 private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
     AppCard(modifier = modifier) {
         SectionTitle(text = title, icon = Icons.Filled.Star)
-        Text(text = value, style = MaterialTheme.typography.headlineSmall)
+        Text(text = value, style = MaterialTheme.typography.headlineMedium)
     }
 }
 
 @Composable
 private fun MoodRow(label: String, value: Int) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(text = label, style = MaterialTheme.typography.titleMedium)
         FinnyProgressBar(
             progress = value.coerceIn(0, 100) / 100f,
             label = value.toString(),
@@ -300,24 +300,25 @@ private fun SectionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    ChunkySurface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 96.dp),
-        shape = MaterialTheme.shapes.large,
-        color = sectionAccentColor(accent),
+        modifier = modifier,
+        containerColor = sectionAccentColor(accent),
+        edgeColor = sectionAccentEdge(accent),
+        borderColor = sectionAccentEdge(accent),
+        borderWidth = 0.dp,
+        minHeight = 108.dp,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = FinnyColors.OnPrimary,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
             )
             Text(
                 text = label,

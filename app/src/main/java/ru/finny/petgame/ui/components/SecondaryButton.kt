@@ -1,13 +1,12 @@
 package ru.finny.petgame.ui.components
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun SecondaryButton(
@@ -16,13 +15,24 @@ fun SecondaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    OutlinedButton(
+    ChunkySurface(
         onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
         enabled = enabled,
-        modifier = modifier.heightIn(min = 56.dp),
-        shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+        containerColor = MaterialTheme.colorScheme.surface,
+        edgeColor = FinnyColors.PrimaryEdge,
+        borderColor = MaterialTheme.colorScheme.primary,
+        borderWidth = 3.dp,
+        minHeight = 56.dp,
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge)
+        Text(
+            text = text,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            },
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }

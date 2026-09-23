@@ -2,10 +2,10 @@ package ru.finny.petgame.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,23 +25,24 @@ fun FinnyProgressBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(24.dp)
-            .clip(MaterialTheme.shapes.small)
+            .height(28.dp)
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.CenterStart,
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(16.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .fillMaxHeight()
+                .clip(MaterialTheme.shapes.medium)
                 .background(FinnyColors.ProgressYellow),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 3.dp)
-                    .height(3.dp)
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                    .height(4.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .background(FinnyColors.ProgressHighlight),
             )
         }
@@ -50,6 +51,7 @@ fun FinnyProgressBar(
             color = FinnyColors.OnProgressText,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

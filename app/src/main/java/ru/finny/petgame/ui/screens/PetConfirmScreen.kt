@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -15,12 +16,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
+import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun PetConfirmScreen(
@@ -47,18 +51,42 @@ fun PetConfirmScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PetSprite(species = speciesIndex, colorIndex = colorIndex, modifier = Modifier.size(160.dp))
-            Text(text = petName, style = MaterialTheme.typography.headlineSmall)
-            Text(
-                text = stringResource(R.string.confirm_player, playerName),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            ChunkySurface(
+                onClick = null,
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = FinnyColors.SoftGreen,
+                edgeColor = FinnyColors.SuccessEdge.copy(alpha = 0.4f),
+                borderColor = FinnyColors.Success.copy(alpha = 0.35f),
+                minHeight = 220.dp,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    PetSprite(
+                        species = speciesIndex,
+                        colorIndex = colorIndex,
+                        modifier = Modifier.size(168.dp),
+                    )
+                    Text(
+                        text = petName,
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.confirm_player, playerName),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
             Row(
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SecondaryButton(
