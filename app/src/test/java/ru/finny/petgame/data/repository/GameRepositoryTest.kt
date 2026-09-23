@@ -577,11 +577,19 @@ class GameRepositoryTest {
         assertFalse(success.review.isGoodPeriod)
         assertEquals(0, success.newStage)
         assertFalse(success.stageGrew)
+        assertEquals(0L, success.periodIncome)
         assertTrue(success.newMood < success.previousMood)
 
         val snapshot = freshRepository().loadSnapshot()!!
         assertEquals(0, snapshot.profile.petStage)
         assertEquals(0, snapshot.profile.goodPeriods)
+        assertEquals(
+            GameRepository.START_BUDGET_AMOUNT + 100L,
+            snapshot.balance,
+        )
+        val income = db.earningDao().getByPeriod(profileId, 1)
+            .filter { it.source == EconomyEngine.PERIOD_INCOME_SOURCE }
+        assertTrue(income.isEmpty())
     }
 
     @Test

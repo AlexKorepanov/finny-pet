@@ -544,28 +544,31 @@ class GameRepository(
         ensureOpenPeriod(profile.id)
 
         var newBalance = balanceDao().getByProfileId(profile.id)?.amount ?: 0L
-        val periodIncome = EconomyEngine.PERIOD_INCOME_AMOUNT
-        when (
-            val earnResult = engine.earn(
-                loadEconomyState(profile.id),
-                EconomyEngine.PERIOD_INCOME_SOURCE,
-                periodIncome,
-            )
-        ) {
-            is EarnResult.Success -> {
-                earningDao().insert(
-                    EarningEntity(
-                        profileId = profile.id,
-                        source = earnResult.earning.source,
-                        amount = earnResult.earning.amount,
-                        periodIndex = currentPeriodIndex(profile.id),
-                        createdAt = now(),
-                    ),
+        // Доход за новый период только если период пройден хорошо — иначе «пустой» план не даёт монет.
+        val periodIncome = if (review.isGoodPeriod) EconomyEngine.PERIOD_INCOME_AMOUNT else 0L
+        if (periodIncome > 0L) {
+            when (
+                val earnResult = engine.earn(
+                    loadEconomyState(profile.id),
+                    EconomyEngine.PERIOD_INCOME_SOURCE,
+                    periodIncome,
                 )
-                balanceDao().upsert(BalanceEntity(profile.id, earnResult.state.balance, now()))
-                newBalance = earnResult.state.balance
+            ) {
+                is EarnResult.Success -> {
+                    earningDao().insert(
+                        EarningEntity(
+                            profileId = profile.id,
+                            source = earnResult.earning.source,
+                            amount = earnResult.earning.amount,
+                            periodIndex = currentPeriodIndex(profile.id),
+                            createdAt = now(),
+                        ),
+                    )
+                    balanceDao().upsert(BalanceEntity(profile.id, earnResult.state.balance, now()))
+                    newBalance = earnResult.state.balance
+                }
+                is EarnResult.Error -> {}
             }
-            is EarnResult.Error -> {}
         }
 
         PeriodCloseResult.Success(

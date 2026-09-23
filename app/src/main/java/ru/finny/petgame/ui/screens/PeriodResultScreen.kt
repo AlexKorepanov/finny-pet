@@ -131,11 +131,18 @@ fun PeriodResultScreen(
             }
             AppCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = stringResource(
-                        R.string.period_income_line,
-                        coinsAmount(result.periodIncome),
-                        coinsAmount(result.newBalance),
-                    ),
+                    text = if (result.periodIncome > 0L) {
+                        stringResource(
+                            R.string.period_income_line,
+                            coinsAmount(result.periodIncome),
+                            coinsAmount(result.newBalance),
+                        )
+                    } else {
+                        stringResource(
+                            R.string.period_income_none_line,
+                            coinsAmount(result.newBalance),
+                        )
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }

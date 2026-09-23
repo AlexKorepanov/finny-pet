@@ -58,6 +58,7 @@
     <string name="period_stage_grew">Питомец подрос! Теперь: %1$s</string>
     <string name="period_stage_same">Стадия: %1$s</string>
     <string name="period_income_line">Новый период: +%1$s. Сейчас у тебя %2$s.</string>
+    <string name="period_income_none_line">Дохода за период нет: план не выполнен. Сейчас у тебя %1$s.</string>
     <string name="period_continue">К новому периоду</string>
     <string name="stat_balance_label">Монеты</string>
     <string name="stat_savings_label">Копилка</string>
