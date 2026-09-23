@@ -14,6 +14,7 @@ import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.data.entity.SavingsOperationEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.GoalAchieveResult
+import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
 import ru.finny.petgame.data.model.TaskCompletionResult
@@ -25,6 +26,7 @@ import ru.finny.petgame.economy.model.DepositResult
 import ru.finny.petgame.economy.model.DistributionCheck
 import ru.finny.petgame.economy.model.EarnResult
 import ru.finny.petgame.economy.model.GoalEta
+import ru.finny.petgame.economy.model.PeriodReview
 import ru.finny.petgame.economy.model.PlanCheckResult
 import ru.finny.petgame.economy.model.PurchaseCategory
 import ru.finny.petgame.economy.model.PurchaseDraft
@@ -497,12 +499,94 @@ class GameRepository(
         )
     }
 
-    suspend fun closePeriod(): Boolean = database.withTransaction {
-        val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
-        val period = periodDao().getLatest(profile.id) ?: return@withTransaction false
-        if (period.status == PeriodStatus.CLOSED.name) return@withTransaction false
+    suspend fun closePeriod(): PeriodCloseResult = database.withTransaction {
+        val profile = profileDao().getCurrentProfile()
+            ?: return@withTransaction PeriodCloseResult.Invalid(NO_PROFILE)
+        val period = periodDao().getLatest(profile.id)
+            ?: return@withTransaction PeriodCloseResult.Invalid(EXPLANATION_NO_PERIOD)
+        if (period.status != PeriodStatus.ACTIVE.name) {
+            return@withTransaction PeriodCloseResult.Invalid(EXPLANATION_PERIOD_NOT_ACTIVE)
+        }
+        val planItems = budgetPlanItemDao().getByPeriod(period.id)
+        if (planItems.isEmpty()) {
+            return@withTransaction PeriodCloseResult.Invalid(EXPLANATION_NO_PLAN)
+        }
+        val plan = planItems.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
+        val purchases = purchaseDao().getByPeriod(profile.id, period.periodIndex)
+        val deposits = savingsOperationDao().getByPeriod(
+            profile.id,
+            period.periodIndex,
+            SavingsOperationType.DEPOSIT.name,
+        )
+        val fact = mapOf(
+            BudgetDirection.REQUIRED to purchases
+                .filter { row -> row.category == PurchaseCategory.REQUIRED.name }
+                .sumOf { row -> row.price },
+            BudgetDirection.OPTIONAL to purchases
+                .filter { row -> row.category == PurchaseCategory.OPTIONAL.name }
+                .sumOf { row -> row.price },
+            BudgetDirection.SAVINGS to deposits.sumOf { row -> row.amount },
+        )
+        val review = engine.evaluatePeriod(plan, fact)
+        val previousMood = profile.mood
+        val previousStage = profile.petStage.coerceIn(0, EconomyEngine.MAX_PET_STAGE)
+        val newMood = engine.applyPetEffect(previousMood, review.moodDelta)
+        val newStage = engine.nextPetStage(previousStage, review.isGoodPeriod)
+        val newGoodPeriods = if (review.isGoodPeriod) profile.goodPeriods + 1 else profile.goodPeriods
+        profileDao().update(
+            profile.copy(
+                mood = newMood,
+                petStage = newStage,
+                goodPeriods = newGoodPeriods,
+            ),
+        )
         periodDao().update(period.copy(status = PeriodStatus.CLOSED.name, closedAt = now()))
-        true
+        ensureOpenPeriod(profile.id)
+
+        var newBalance = balanceDao().getByProfileId(profile.id)?.amount ?: 0L
+        val periodIncome = EconomyEngine.PERIOD_INCOME_AMOUNT
+        when (
+            val earnResult = engine.earn(
+                loadEconomyState(profile.id),
+                EconomyEngine.PERIOD_INCOME_SOURCE,
+                periodIncome,
+            )
+        ) {
+            is EarnResult.Success -> {
+                earningDao().insert(
+                    EarningEntity(
+                        profileId = profile.id,
+                        source = earnResult.earning.source,
+                        amount = earnResult.earning.amount,
+                        periodIndex = currentPeriodIndex(profile.id),
+                        createdAt = now(),
+                    ),
+                )
+                balanceDao().upsert(BalanceEntity(profile.id, earnResult.state.balance, now()))
+                newBalance = earnResult.state.balance
+            }
+            is EarnResult.Error -> {}
+        }
+
+        PeriodCloseResult.Success(
+            periodIndex = period.periodIndex,
+            review = review,
+            previousMood = previousMood,
+            newMood = newMood,
+            previousStage = previousStage,
+            newStage = newStage,
+            stageGrew = newStage > previousStage,
+            periodIncome = periodIncome,
+            newBalance = newBalance,
+        )
+    }
+
+    fun evaluateCurrentPeriod(snapshot: GameSnapshot): PeriodReview? {
+        val period = snapshot.currentPeriod ?: return null
+        if (period.status != PeriodStatus.ACTIVE.name) return null
+        if (snapshot.plan.isEmpty()) return null
+        val plan = snapshot.plan.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
+        return engine.evaluatePeriod(plan, snapshot.periodFact)
     }
 
     private suspend fun persistSavingsResult(profileId: Long, goalId: String, newBalance: Long, newSaved: Long) {
@@ -564,7 +648,10 @@ class GameRepository(
         private const val NO_PROFILE = "Сначала создай профиль."
         private const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
         private const val EXPLANATION_GOAL_RECEIVED = "Эта цель уже получена. Выбери новую цель."
-        private const val EXPLANATION_PLAN_CONFIRMED =
-            "План уже подтверждён. Изменить его можно в новом периоде."
+        private const val EXPLANATION_PLAN_CONFIRMED = "План уже подтверждён. Его нельзя менять в этом периоде."
+        private const val EXPLANATION_NO_PERIOD = "Сначала составь план периода."
+        private const val EXPLANATION_PERIOD_NOT_ACTIVE =
+            "Сначала подтверди план. Завершить период можно после этого."
+        private const val EXPLANATION_NO_PLAN = "Сначала составь и подтверди план."
     }
 }

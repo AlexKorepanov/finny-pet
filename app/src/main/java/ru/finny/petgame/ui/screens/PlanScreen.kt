@@ -50,6 +50,7 @@ fun PlanScreen(
     onBack: () -> Unit,
     onHint: () -> Unit,
     onPlanConfirmed: () -> Unit,
+    onClosePeriod: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val status = snapshot.currentPeriod?.status
@@ -88,6 +89,7 @@ fun PlanScreen(
                 hint = stringResource(R.string.plan_edit_hint),
                 petSpecies = snapshot.profile.petSpecies,
                 petColorIndex = snapshot.profile.petColor,
+                petStage = snapshot.profile.petStage,
             )
             if (editable) {
                 Text(
@@ -181,6 +183,13 @@ fun PlanScreen(
                             factAmount = snapshot.periodFact[direction] ?: 0L,
                         )
                     }
+                }
+                if (status == PeriodStatus.ACTIVE.name) {
+                    PrimaryButton(
+                        text = stringResource(R.string.period_close_button),
+                        onClick = onClosePeriod,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         }

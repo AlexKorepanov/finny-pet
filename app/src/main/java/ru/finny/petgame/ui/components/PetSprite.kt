@@ -1,7 +1,10 @@
 package ru.finny.petgame.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -30,10 +33,17 @@ private val NOSE_PINK = Color(0xFFF06292)
 private val INNER_EAR_PINK = lerp(Color(0xFFF06292), Color.White, 0.4f)
 
 @Composable
-fun PetSprite(species: Int, colorIndex: Int, modifier: Modifier = Modifier) {
+fun PetSprite(species: Int, colorIndex: Int, modifier: Modifier = Modifier, stage: Int = 0) {
     val color = PET_COLORS[colorIndex.coerceIn(PET_COLORS.indices)]
-    Canvas(modifier = modifier) {
-        drawPet(species = species.coerceIn(0, 2), color = color)
+    val scale = when (stage.coerceIn(0, 2)) {
+        0 -> 0.78f
+        1 -> 0.90f
+        else -> 1f
+    }
+    Box(modifier = modifier, contentAlignment = Alignment.BottomCenter) {
+        Canvas(modifier = Modifier.fillMaxSize(fraction = scale)) {
+            drawPet(species = species.coerceIn(0, 2), color = color)
+        }
     }
 }
 

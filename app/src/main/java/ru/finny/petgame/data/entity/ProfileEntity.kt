@@ -14,5 +14,7 @@ data class ProfileEntity(
     val playerAvatar: Int = 0,
     val mood: Int = 70,
     val saturation: Int = 70,
+    val petStage: Int = 0,
+    val goodPeriods: Int = 0,
     val allTasksOpen: Boolean = false,
 )

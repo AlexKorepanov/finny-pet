@@ -121,6 +121,7 @@ fun SavingsScreen(
                 hint = stringResource(R.string.savings_header_hint),
                 petSpecies = snapshot.profile.petSpecies,
                 petColorIndex = snapshot.profile.petColor,
+                petStage = snapshot.profile.petStage,
             )
             Text(
                 text = stringResource(R.string.shop_balance_line, snapshot.balance),

@@ -43,6 +43,7 @@ fun SectionHeader(
     modifier: Modifier = Modifier,
     petSpecies: Int = 0,
     petColorIndex: Int = 0,
+    petStage: Int = 0,
 ) {
     Row(
         modifier = modifier
@@ -68,6 +69,7 @@ fun SectionHeader(
         PetSprite(
             species = petSpecies,
             colorIndex = petColorIndex,
+            stage = petStage,
             modifier = Modifier.size(56.dp),
         )
     }

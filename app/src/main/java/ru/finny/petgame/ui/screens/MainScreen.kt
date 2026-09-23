@@ -45,6 +45,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.data.model.GameSnapshot
+import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
@@ -67,6 +68,7 @@ fun MainScreen(
     onSavings: () -> Unit,
     onSection: (Int) -> Unit,
     onOpenTask: (String) -> Unit,
+    onClosePeriod: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -107,20 +109,37 @@ fun MainScreen(
                         PetSprite(
                             species = profile.petSpecies,
                             colorIndex = profile.petColor,
+                            stage = profile.petStage,
                             modifier = Modifier.size(96.dp),
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            PlayerAvatar(
-                                index = profile.playerAvatar,
-                                modifier = Modifier.size(48.dp),
-                                contentDescription = stringResource(R.string.cd_player_avatar),
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                PlayerAvatar(
+                                    index = profile.playerAvatar,
+                                    modifier = Modifier.size(48.dp),
+                                    contentDescription = stringResource(R.string.cd_player_avatar),
+                                )
+                                Text(
+                                    text = stringResource(R.string.main_greeting, profile.playerName),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                )
+                            }
+                            Text(
+                                text = stringResource(
+                                    R.string.main_period_line,
+                                    (snapshot.currentPeriod?.periodIndex ?: 0) + 1,
+                                ),
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                             Text(
-                                text = stringResource(R.string.main_greeting, profile.playerName),
-                                style = MaterialTheme.typography.headlineSmall,
+                                text = stringResource(
+                                    R.string.main_stage_line,
+                                    stageTitle(profile.petStage),
+                                ),
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                         }
                     }
@@ -154,6 +173,22 @@ fun MainScreen(
                     )
                     MoodRow(label = stringResource(R.string.pet_state_mood), value = profile.mood)
                     MoodRow(label = stringResource(R.string.pet_state_saturation), value = profile.saturation)
+                }
+                if (snapshot.currentPeriod?.status == PeriodStatus.ACTIVE.name) {
+                    PrimaryButton(
+                        text = stringResource(R.string.period_close_button),
+                        onClick = onClosePeriod,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else if (snapshot.currentPeriod == null ||
+                    snapshot.currentPeriod.status == PeriodStatus.PLANNED.name
+                ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = stringResource(R.string.period_need_plan),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
                 }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
                     SectionTitle(

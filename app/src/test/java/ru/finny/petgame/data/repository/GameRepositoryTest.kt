@@ -16,6 +16,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import ru.finny.petgame.data.PetDatabase
 import ru.finny.petgame.data.model.GoalAchieveResult
+import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
 import ru.finny.petgame.data.model.TaskCompletionResult
@@ -534,19 +535,63 @@ class GameRepositoryTest {
         repository.earn(source = "TASK", amount = 100L)
         repository.saveBudgetPlan(plan(40, 20, 25))
         assertTrue(repository.confirmBudgetPlan())
-        assertTrue(repository.closePeriod())
+        repository.purchase(PurchaseDraft("food_1", "Корм", PurchaseCategory.REQUIRED, 40L))
+        repository.purchase(PurchaseDraft("toy_1", "Мяч", PurchaseCategory.OPTIONAL, 10L))
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 25L)
+
+        val closed = repository.closePeriod()
+        assertTrue(closed is PeriodCloseResult.Success)
+        val success = closed as PeriodCloseResult.Success
+        assertTrue(success.review.isGoodPeriod)
+        assertEquals(1, success.newStage)
+        assertEquals(EconomyEngine.PERIOD_INCOME_AMOUNT, success.periodIncome)
 
         val snapshot = freshRepository().loadSnapshot()!!
-        assertEquals(PeriodStatus.CLOSED.name, snapshot.currentPeriod?.status)
-        assertEquals(fixedTime, snapshot.currentPeriod?.closedAt)
+        assertEquals(PeriodStatus.PLANNED.name, snapshot.currentPeriod?.status)
+        assertEquals(1, snapshot.currentPeriod?.periodIndex)
+        assertEquals(1, snapshot.profile.petStage)
+        assertEquals(1, snapshot.profile.goodPeriods)
 
-        repository.earn(source = "PERIOD_INCOME", amount = 5L)
-        val earnings = db.earningDao().getByPeriod(profileId, 1)
-        assertEquals(1, earnings.size)
+        val income = db.earningDao().getByPeriod(profileId, 1)
+            .filter { it.source == EconomyEngine.PERIOD_INCOME_SOURCE }
+        assertEquals(1, income.size)
+        assertEquals(EconomyEngine.PERIOD_INCOME_AMOUNT, income.first().amount)
 
         repository.saveBudgetPlan(plan(3, 1, 1))
         val after = freshRepository().loadSnapshot()!!
         assertEquals(PeriodStatus.PLANNED.name, after.currentPeriod?.status)
         assertEquals(1, after.currentPeriod?.periodIndex)
+    }
+
+    @Test
+    fun `closePeriod without matching plan does not grow stage`() = runTest {
+        repository.earn(source = "TASK", amount = 100L)
+        repository.saveBudgetPlan(plan(40, 20, 25))
+        assertTrue(repository.confirmBudgetPlan())
+        // No purchases and no savings — period is weak.
+
+        val closed = repository.closePeriod()
+        assertTrue(closed is PeriodCloseResult.Success)
+        val success = closed as PeriodCloseResult.Success
+        assertFalse(success.review.isGoodPeriod)
+        assertEquals(0, success.newStage)
+        assertFalse(success.stageGrew)
+        assertTrue(success.newMood < success.previousMood)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(0, snapshot.profile.petStage)
+        assertEquals(0, snapshot.profile.goodPeriods)
+    }
+
+    @Test
+    fun `closePeriod requires active confirmed plan`() = runTest {
+        val result = repository.closePeriod()
+        assertTrue(result is PeriodCloseResult.Invalid)
+
+        repository.earn(source = "TASK", amount = 50L)
+        repository.saveBudgetPlan(plan(20, 10, 10))
+        val stillPlanned = repository.closePeriod()
+        assertTrue(stillPlanned is PeriodCloseResult.Invalid)
     }
 }

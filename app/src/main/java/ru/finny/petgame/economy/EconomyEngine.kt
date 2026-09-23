@@ -7,6 +7,7 @@ import ru.finny.petgame.economy.model.DistributionCheck
 import ru.finny.petgame.economy.model.EarnResult
 import ru.finny.petgame.economy.model.Earning
 import ru.finny.petgame.economy.model.GoalEta
+import ru.finny.petgame.economy.model.PeriodReview
 import ru.finny.petgame.economy.model.PlanCheckResult
 import ru.finny.petgame.economy.model.PurchaseDraft
 import ru.finny.petgame.economy.model.PurchaseRecord
@@ -145,6 +146,59 @@ class EconomyEngine {
 
     fun applyPetEffect(current: Int, delta: Int): Int = (current + delta).coerceIn(0, 100)
 
+    fun evaluatePeriod(
+        plan: Map<BudgetDirection, Long>,
+        fact: Map<BudgetDirection, Long>,
+    ): PeriodReview {
+        val planRequired = plan[BudgetDirection.REQUIRED] ?: 0L
+        val planOptional = plan[BudgetDirection.OPTIONAL] ?: 0L
+        val planSavings = plan[BudgetDirection.SAVINGS] ?: 0L
+        val factRequired = fact[BudgetDirection.REQUIRED] ?: 0L
+        val factOptional = fact[BudgetDirection.OPTIONAL] ?: 0L
+        val factSavings = fact[BudgetDirection.SAVINGS] ?: 0L
+
+        val requiredCovered = factRequired >= planRequired && planRequired > 0L
+        val planMatched = factRequired <= planRequired &&
+            factOptional <= planOptional &&
+            factSavings >= planSavings
+        val savingsRegular = factSavings > 0L
+
+        var moodDelta = 0
+        val explanations = mutableListOf<String>()
+        if (requiredCovered) {
+            moodDelta += MOOD_REQUIRED_OK
+            explanations += "Нужное куплено — питомцу спокойнее."
+        } else {
+            moodDelta += MOOD_REQUIRED_MISS
+            explanations += "Нужного не хватило. В следующий раз купи еду и уход по плану."
+        }
+        if (planMatched) {
+            moodDelta += MOOD_PLAN_OK
+            explanations += "Факт совпал с планом — хорошая привычка."
+        } else {
+            moodDelta += MOOD_PLAN_MISS
+            explanations += "Факт не совпал с планом. Посмотри, где потратил больше или меньше."
+        }
+        if (savingsRegular) {
+            moodDelta += MOOD_SAVINGS_OK
+            explanations += "Ты отложил монеты в копилку — это помогает цели."
+        } else {
+            explanations += "В этом периоде в копилку ничего не попало. Можно отложить чуть-чуть в следующий раз."
+        }
+        return PeriodReview(
+            requiredCovered = requiredCovered,
+            planMatched = planMatched,
+            savingsRegular = savingsRegular,
+            moodDelta = moodDelta,
+            explanations = explanations,
+        )
+    }
+
+    fun nextPetStage(currentStage: Int, isGoodPeriod: Boolean): Int {
+        if (!isGoodPeriod) return currentStage.coerceIn(0, MAX_PET_STAGE)
+        return (currentStage + 1).coerceAtMost(MAX_PET_STAGE)
+    }
+
     fun checkDistribution(
         amounts: Map<BudgetDirection, Long>,
         sum: Long,
@@ -173,10 +227,18 @@ class EconomyEngine {
         }
     }
 
-    private companion object {
-        const val EXPLANATION_SOURCE_REQUIRED = "У начисления должен быть источник."
-        const val EXPLANATION_AMOUNT_POSITIVE = "Сумма должна быть больше нуля."
-        const val EXPLANATION_PRICE_POSITIVE = "Цена должна быть больше нуля."
-        const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
+    companion object {
+        const val MAX_PET_STAGE = 2
+        const val PERIOD_INCOME_AMOUNT = 20L
+        const val PERIOD_INCOME_SOURCE = "Доход за новый период"
+        private const val MOOD_REQUIRED_OK = 8
+        private const val MOOD_REQUIRED_MISS = -8
+        private const val MOOD_PLAN_OK = 5
+        private const val MOOD_PLAN_MISS = -3
+        private const val MOOD_SAVINGS_OK = 5
+        private const val EXPLANATION_SOURCE_REQUIRED = "У начисления должен быть источник."
+        private const val EXPLANATION_AMOUNT_POSITIVE = "Сумма должна быть больше нуля."
+        private const val EXPLANATION_PRICE_POSITIVE = "Цена должна быть больше нуля."
+        private const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
     }
 }

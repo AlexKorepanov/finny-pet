@@ -121,6 +121,7 @@ fun TasksScreen(
                 hint = stringResource(R.string.tasks_header_hint),
                 petSpecies = snapshot.profile.petSpecies,
                 petColorIndex = snapshot.profile.petColor,
+                petStage = snapshot.profile.petStage,
             )
             if (taskList == null) {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

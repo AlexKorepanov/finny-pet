@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
 import ru.finny.petgame.data.model.GameSnapshot
+import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
@@ -34,6 +35,7 @@ import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
+import ru.finny.petgame.ui.screens.PeriodResultScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.PlanScreen
@@ -54,6 +56,7 @@ enum class AppScreen {
     SHOP,
     SAVINGS,
     TASKS,
+    PERIOD_RESULT,
     SECTION_STUB,
 }
 
@@ -69,8 +72,10 @@ fun PetGameApp(repository: GameRepository) {
     var sectionTitleRes by rememberSaveable { mutableIntStateOf(R.string.section_plan) }
     var showHint by remember { mutableStateOf(false) }
     var showPlanHint by remember { mutableStateOf(false) }
+    var showClosePeriodConfirm by remember { mutableStateOf(false) }
     var focusedTaskId by rememberSaveable { mutableStateOf<String?>(null) }
     var mainSnapshot by remember { mutableStateOf<GameSnapshot?>(null) }
+    var periodCloseResult by remember { mutableStateOf<PeriodCloseResult.Success?>(null) }
 
     LaunchedEffect(Unit) {
         val snapshot = repository.loadSnapshot()
@@ -100,6 +105,7 @@ fun PetGameApp(repository: GameRepository) {
             AppScreen.SHOP -> screen = AppScreen.MAIN
             AppScreen.SAVINGS -> screen = AppScreen.MAIN
             AppScreen.TASKS -> screen = AppScreen.MAIN
+            AppScreen.PERIOD_RESULT -> screen = AppScreen.MAIN
             AppScreen.SECTION_STUB -> screen = AppScreen.MAIN
             else -> {}
         }
@@ -108,12 +114,29 @@ fun PetGameApp(repository: GameRepository) {
     BackHandler(
         enabled = screen != AppScreen.LOADING &&
             screen != AppScreen.MAIN &&
+            screen != AppScreen.PERIOD_RESULT &&
             !(screen == AppScreen.INTRO && introPage == 0),
     ) {
         goBack()
     }
 
     val scope = rememberCoroutineScope()
+    val requestClosePeriod: () -> Unit = { showClosePeriodConfirm = true }
+    val performClosePeriod: () -> Unit = {
+        scope.launch {
+            when (val result = repository.closePeriod()) {
+                is PeriodCloseResult.Success -> {
+                    periodCloseResult = result
+                    mainSnapshot = repository.loadSnapshot()
+                    showClosePeriodConfirm = false
+                    screen = AppScreen.PERIOD_RESULT
+                }
+                is PeriodCloseResult.Invalid -> {
+                    showClosePeriodConfirm = false
+                }
+            }
+        }
+    }
 
     when (screen) {
         AppScreen.LOADING -> LoadingScreen()
@@ -179,6 +202,7 @@ fun PetGameApp(repository: GameRepository) {
                 focusedTaskId = taskId
                 screen = AppScreen.TASKS
             },
+            onClosePeriod = requestClosePeriod,
         )
         AppScreen.PLAN -> {
             val currentSnapshot = mainSnapshot
@@ -193,6 +217,7 @@ fun PetGameApp(repository: GameRepository) {
                     onPlanConfirmed = {
                         scope.launch { mainSnapshot = repository.loadSnapshot() }
                     },
+                    onClosePeriod = requestClosePeriod,
                 )
             }
         }
@@ -247,6 +272,23 @@ fun PetGameApp(repository: GameRepository) {
                 )
             }
         }
+        AppScreen.PERIOD_RESULT -> {
+            val result = periodCloseResult
+            if (result == null) {
+                LoadingScreen()
+            } else {
+                PeriodResultScreen(
+                    result = result,
+                    petSpecies = mainSnapshot?.profile?.petSpecies ?: 0,
+                    petColorIndex = mainSnapshot?.profile?.petColor ?: 0,
+                    onContinue = {
+                        periodCloseResult = null
+                        screen = AppScreen.MAIN
+                    },
+                    onHint = { showHint = true },
+                )
+            }
+        }
         AppScreen.SECTION_STUB -> SectionStubScreen(
             title = stringResource(sectionTitleRes),
             accent = sectionAccentFor(sectionTitleRes),
@@ -259,6 +301,34 @@ fun PetGameApp(repository: GameRepository) {
 
     if (showHint) {
         HintDialog(onClose = { showHint = false })
+    }
+
+    if (showClosePeriodConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClosePeriodConfirm = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
+            title = { Text(text = stringResource(R.string.period_close_confirm_title)) },
+            text = { Text(text = stringResource(R.string.period_close_confirm_text)) },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    PrimaryButton(
+                        text = stringResource(R.string.period_close_confirm),
+                        onClick = performClosePeriod,
+                        modifier = Modifier.weight(1f),
+                    )
+                    SecondaryButton(
+                        text = stringResource(R.string.period_close_cancel),
+                        onClick = { showClosePeriodConfirm = false },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            },
+        )
     }
 
     if (showPlanHint) {
