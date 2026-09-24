@@ -15,6 +15,9 @@ interface PurchaseDao {
     @Query("SELECT * FROM purchases WHERE profileId = :profileId ORDER BY purchasedAt DESC")
     fun observeByProfileId(profileId: Long): Flow<List<PurchaseEntity>>
 
+    @Query("SELECT * FROM purchases WHERE profileId = :profileId ORDER BY purchasedAt, id")
+    suspend fun getByProfileId(profileId: Long): List<PurchaseEntity>
+
     @Query("SELECT * FROM purchases WHERE profileId = :profileId AND periodIndex = :periodIndex ORDER BY purchasedAt")
     suspend fun getByPeriod(profileId: Long, periodIndex: Int): List<PurchaseEntity>
 

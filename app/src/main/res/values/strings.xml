@@ -9,7 +9,7 @@
     <string name="intro_title_2">Три решения</string>
     <string name="intro_body_2">Ты будешь выбирать, куда пойдут монеты:</string>
     <string name="intro_decision_1_title">Нужное (еда и уход)</string>
-    <string name="intro_decision_1_body">Еда и уход нужны питомцу каждый день.</string>
+    <string name="intro_decision_1_body">Еда и уход нужны питомцу каждую неделю.</string>
     <string name="intro_decision_2_title">По желанию</string>
     <string name="intro_decision_2_body">Игрушки и украшения — если монет хватает.</string>
     <string name="intro_decision_3_title">Копилка</string>
@@ -27,6 +27,8 @@
     <string name="pet_eye_title">Цвет глаз</string>
     <string name="pet_name_label">Имя питомца</string>
     <string name="pet_name_hint">Например: Финни</string>
+    <string name="wardrobe_title">Гардероб</string>
+    <string name="wardrobe_button">Гардероб</string>
 
     <string name="confirm_title">Всё верно?</string>
     <string name="confirm_player">Игрок: %1$s</string>
@@ -34,30 +36,47 @@
     <string name="edit">Изменить</string>
 
     <string name="main_greeting">Привет!</string>
-    <string name="main_period_line">Период %1$d</string>
+    <string name="main_period_line">Неделя %1$d</string>
+    <string name="main_week_theme_line">Неделя %1$d · %2$s</string>
     <string name="main_stage_line">Стадия: %1$s</string>
+    <string name="main_stars_line">★ Звёздочек роста: %1$d. До следующей стадии: %2$d</string>
+    <string name="main_stars_max_line">★ Звёздочек роста: %1$d. Финни совсем взрослый!</string>
+    <string name="next_step_title">Следующий шаг</string>
+    <string name="next_step_plan">Составь план на неделю: реши, сколько монет пойдёт на нужное, по желанию и в копилку.</string>
+    <string name="next_step_needs">Купи Финни нужное на эту неделю: %1$s.</string>
+    <string name="next_step_save">По плану в копилку осталось отложить %1$s.</string>
+    <string name="next_step_save_button">В копилку</string>
+    <string name="next_step_task">Реши задание «%1$s» и получи монеты.</string>
+    <string name="next_step_close">Всё по плану сделано! Можно завершить неделю и посмотреть итог.</string>
+    <string name="tasks_week_done">Задания этой недели решены. Новые — на следующей неделе.</string>
     <string name="pet_stage_0">Малыш</string>
     <string name="pet_stage_1">Растёт</string>
     <string name="pet_stage_2">Большой</string>
-    <string name="period_close_button">Завершить период</string>
-    <string name="period_need_plan">Составь план, чтобы начать период.</string>
-    <string name="period_close_confirm_title">Завершить период?</string>
-    <string name="period_close_confirm_text">Мы посмотрим план и факт, обновим настроение питомца и откроем новый период.</string>
+    <string name="period_close_button">Завершить неделю</string>
+    <string name="period_close_confirm_title">Завершить неделю?</string>
+    <string name="period_close_confirm_text">Сравним план и факт, посчитаем звёздочки роста. Финни за неделю проголодается, а ты получишь карманные монеты на новую неделю.</string>
     <string name="period_close_confirm">Завершить</string>
     <string name="period_close_cancel">Ещё подумать</string>
-    <string name="period_result_title">Итог периода</string>
-    <string name="period_result_hint">Период %1$d закончен</string>
+    <string name="period_result_title">Итог недели</string>
+    <string name="period_result_hint">Неделя %1$d закончена</string>
     <string name="period_checks_title">Что получилось</string>
-    <string name="period_check_required">Нужное (еда и уход) по плану</string>
-    <string name="period_check_plan">Факт совпал с планом</string>
+    <string name="period_check_required">Купил всё нужное на неделю</string>
+    <string name="period_check_plan">Тратил по плану</string>
     <string name="period_check_savings">Отложил в копилку</string>
+    <string name="period_stars_title">Звёздочки роста</string>
+    <string name="period_stars_line">За неделю: +%1$d. Всего: %2$d.</string>
+    <string name="period_stars_next">До следующей стадии осталось %1$d.</string>
+    <string name="period_stars_max">Финни вырос совсем взрослым!</string>
+    <string name="period_satiety_change">Сытость: было %1$d, стало %2$d</string>
+    <string name="period_advice_title">Совет на следующую неделю</string>
+    <string name="period_bonus_line">Бонус за выполненный план: +%1$s</string>
+    <string name="period_balance_line">Сейчас у тебя %1$s.</string>
     <string name="period_mood_title">Настроение питомца</string>
     <string name="period_mood_change">Было %1$d, стало %2$d</string>
     <string name="period_stage_grew">Питомец подрос! Теперь: %1$s</string>
     <string name="period_stage_same">Стадия: %1$s</string>
-    <string name="period_income_line">Новый период: +%1$s. Сейчас у тебя %2$s.</string>
-    <string name="period_income_none_line">Дохода за период нет: план не выполнен. Сейчас у тебя %1$s.</string>
-    <string name="period_continue">К новому периоду</string>
+    <string name="period_income_line">Карманные монеты на новую неделю: +%1$s</string>
+    <string name="period_continue">К новой неделе</string>
     <string name="stat_balance_label">Монеты</string>
     <string name="stat_savings_label">Копилка</string>
     <string name="stat_goal_label">Текущая цель</string>
@@ -80,7 +99,7 @@
     <string name="progress_header_hint">Смотри, что уже получилось, и учись словам.</string>
     <string name="progress_overview_title">Общий прогресс</string>
     <string name="progress_stage_line">Стадия питомца: %1$s</string>
-    <string name="progress_periods_line">Периодов закрыто: %1$d. Удачных: %2$d</string>
+    <string name="progress_periods_line">Недель пройдено: %1$d. Со всеми звёздочками: %2$d</string>
     <string name="progress_tasks_line">Заданий выполнено: %1$d</string>
     <string name="progress_goal_title">Цель накопления</string>
     <string name="progress_goal_saved">Накоплено %1$s из %2$s</string>
@@ -88,11 +107,22 @@
     <string name="progress_tasks_title">Завершённые задания</string>
     <string name="progress_tasks_empty">Пока заданий нет. Загляни в раздел «Задания».</string>
     <string name="progress_task_reward">Тема: %1$s. Награда: +%2$d</string>
-    <string name="progress_last_period_title">Итог последнего периода</string>
-    <string name="progress_last_period_empty">Ещё ни один период не закрыт.</string>
-    <string name="progress_last_period_num">Период %1$d</string>
+    <string name="progress_last_period_title">Итог прошлой недели</string>
+    <string name="progress_last_period_empty">Ещё ни одна неделя не закончена.</string>
+    <string name="progress_last_period_num">Неделя %1$d</string>
     <string name="progress_plan_fact_line">%1$s — план %2$d, факт %3$d</string>
+    <string name="progress_ledger_title">Журнал монет</string>
+    <string name="progress_ledger_empty">Пока монеты никуда не двигались.</string>
+    <string name="progress_ledger_totals">Доход: %1$s. Расход: %2$s.</string>
     <string name="progress_glossary_title">Справочник</string>
+    <string name="glossary_income_term">Доход</string>
+    <string name="glossary_income_body">Монеты, которые пришли: карманные, за задания, бонус за план.</string>
+    <string name="glossary_expense_term">Расход</string>
+    <string name="glossary_expense_body">Монеты, которые ушли на покупки или в копилку.</string>
+    <string name="glossary_remainder_term">Остаток</string>
+    <string name="glossary_remainder_body">Сколько монет осталось после всех трат.</string>
+    <string name="glossary_change_term">Сдача</string>
+    <string name="glossary_change_body">Монеты, которые возвращают, если заплатил больше цены.</string>
     <string name="glossary_plan_term">План</string>
     <string name="glossary_plan_body">Как ты решил распределить монеты до трат.</string>
     <string name="glossary_fact_term">Факт</string>
@@ -105,8 +135,8 @@
     <string name="glossary_savings_body">Монеты, отложенные отдельно от баланса.</string>
     <string name="glossary_goal_term">Цель</string>
     <string name="glossary_goal_body">То, на что ты копишь: цена понятна заранее.</string>
-    <string name="glossary_period_term">Период</string>
-    <string name="glossary_period_body">Цикл: план → покупки и копилка → итог.</string>
+    <string name="glossary_period_term">Неделя</string>
+    <string name="glossary_period_body">Цикл: карманные монеты → план → покупки и копилка → итог.</string>
 
     <string name="adult_header_hint">Раздел для родителя или учителя.</string>
     <string name="adult_gate_title">Сначала пример</string>
@@ -118,9 +148,11 @@
     <string name="adult_goals_body">Ребёнок учится планировать монеты, различать нужное и желаемое, копить на цель и видеть последствия выбора. Без реальных денег и рекламы.</string>
     <string name="adult_progress_title">Общий прогресс</string>
     <string name="adult_progress_stage">Стадия питомца: %1$s</string>
-    <string name="adult_progress_periods">Периодов: %1$d, из них удачных: %2$d</string>
+    <string name="adult_progress_periods">Недель: %1$d, из них со всеми тремя проверками: %2$d</string>
     <string name="adult_progress_tasks">Верных заданий: %1$d</string>
     <string name="adult_themes_title">Пройденные темы</string>
+    <string name="adult_theme_stats">Решено заданий: %1$d, с первой попытки: %2$d</string>
+    <string name="adult_stats_note">Ошибки — часть обучения: после ошибки ребёнок видит объяснение и пробует снова. Обсудите с ребёнком темы, где было больше попыток.</string>
     <string name="adult_demo_title">Демо-режим</string>
     <string name="adult_demo_body">Все задания открыты сразу, без ожидания.</string>
     <string name="adult_reset_hint">Сброс удаляет локальный профиль. Можно начать сначала.</string>
@@ -150,7 +182,19 @@
     <string name="shop_left_line">Осталось %1$s.</string>
     <string name="shop_not_enough_title">Не хватает монет</string>
     <string name="shop_not_enough_balance">Сейчас у тебя %1$s.</string>
-    <string name="shop_history_title">Покупки за период</string>
+    <string name="shop_envelopes_title">Осталось по плану</string>
+    <string name="shop_envelope_left">%1$s</string>
+    <string name="shop_envelope_over">больше плана на %1$s</string>
+    <string name="shop_need_week">Нужно на этой неделе</string>
+    <string name="shop_need_bought">Куплено на неделю</string>
+    <string name="shop_confirm_over_plan">Это выйдет за план на %1$s</string>
+    <string name="shop_not_enough_required_tip">Нужное важно для Финни. Можно заработать монеты в заданиях или взять из копилки.</string>
+    <string name="shop_not_enough_optional_tip">Можно подождать и накопить — это нормально.</string>
+    <string name="shop_not_enough_tasks">Заработать в заданиях</string>
+    <string name="shop_not_enough_savings">Взять из копилки</string>
+    <string name="shop_not_enough_wait">Подожду и накоплю</string>
+    <string name="shop_not_enough_cheaper">Выбрать что-то дешевле</string>
+    <string name="shop_history_title">Покупки за неделю</string>
     <string name="shop_history_empty">Пока покупок не было.</string>
 
     <string name="plan_first_hint_title">Сначала план</string>
@@ -168,7 +212,8 @@
     <string name="savings_goal_cost">Цена: %1$s</string>
     <string name="savings_saved_line">Накоплено: %1$s</string>
     <string name="savings_remaining_line">Осталось: %1$s</string>
-    <string name="savings_eta">Если откладывать по %1$s, цель будет через %2$s.</string>
+    <string name="savings_eta">Если откладывать по %1$s в неделю, цель будет через %2$s.</string>
+    <string name="savings_eta_change">Цель отодвинется: было через %1$s, станет через %2$s.</string>
     <string name="savings_amount_label">Сколько монет:</string>
     <string name="savings_deposit_title">Отложить монеты</string>
     <string name="savings_deposit_button">Пополнить</string>
@@ -190,7 +235,6 @@
     <string name="tasks_all_open">Все задания открыты</string>
     <string name="tasks_demo_badge">Демо: все задания открыты</string>
     <string name="tasks_done_badge">Выполнено</string>
-    <string name="tasks_locked_badge">Откроется позже</string>
     <string name="tasks_theme_budget">Планирование бюджета</string>
     <string name="tasks_theme_savings">Сбережения</string>
     <string name="tasks_theme_payments">Платежи и покупки</string>
@@ -204,13 +248,25 @@
     <string name="tasks_no_reward_line">Награды нет, но и ничего не отняли. Попробуй ещё раз!</string>
     <string name="tasks_already_rewarded">Награда за это задание уже получена.</string>
     <string name="tasks_next">Следующее задание</string>
-    <string name="tasks_to_plan">Составить план</string>
     <string name="tasks_to_shop">В магазин</string>
     <string name="tasks_back_to_list">К списку заданий</string>
     <string name="tasks_start">Начать</string>
     <string name="tasks_all_done">Все задания выполнены!</string>
+    <string name="tasks_week_title">Неделя %1$d · %2$s</string>
+    <string name="tasks_week_title_short">Неделя %1$d</string>
+    <string name="tasks_locked_week">Откроется на неделе %1$d</string>
+    <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d. С первой попытки было бы +%2$d.</string>
+    <string name="tasks_try_in_game_hint">Теперь попробуй это в игре с Финни.</string>
+    <string name="tasks_try_plan">Попробуй в игре: план</string>
+    <string name="tasks_try_savings">Попробуй в игре: копилка</string>
+    <string name="tasks_try_shop">Попробуй в игре: магазин</string>
 
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
+    <string name="plan_week_title">Неделя %1$d · %2$s</string>
+    <string name="plan_needs_title">Нужно Финни на этой неделе:</string>
+    <string name="plan_needs_total">Всего на нужное: %1$s</string>
+    <string name="plan_needs_warning">На нужное в плане меньше, чем стоит список недели (%1$s). Финни может остаться без нужного.</string>
+    <string name="plan_savings_tip">Совет: отложи в копилку хотя бы 1 монету — так мечта станет ближе.</string>
     <string name="plan_available">Доступно: %1$s</string>
     <string name="plan_remainder">Остаток: %1$s</string>
     <string name="plan_direction_required">Нужное (еда и уход)</string>
@@ -264,16 +320,10 @@
         <item>Зелёные</item>
         <item>Карие</item>
     </string-array>
-    <plurals name="coins">
-        <item quantity="one">%1$d монета</item>
-        <item quantity="few">%1$d монеты</item>
-        <item quantity="many">%1$d монет</item>
-        <item quantity="other">%1$d монет</item>
-    </plurals>
-    <plurals name="times">
-        <item quantity="one">%1$d раз</item>
-        <item quantity="few">%1$d раза</item>
-        <item quantity="many">%1$d раз</item>
-        <item quantity="other">%1$d раз</item>
-    </plurals>
+    <string name="coins_one">%1$d монета</string>
+    <string name="coins_few">%1$d монеты</string>
+    <string name="coins_many">%1$d монет</string>
+    <string name="weeks_one">%1$d неделю</string>
+    <string name="weeks_few">%1$d недели</string>
+    <string name="weeks_many">%1$d недель</string>
 </resources>

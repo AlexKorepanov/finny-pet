@@ -15,6 +15,9 @@ interface SavingsOperationDao {
     @Query("SELECT * FROM savings_operations WHERE profileId = :profileId ORDER BY createdAt DESC")
     fun observeByProfileId(profileId: Long): Flow<List<SavingsOperationEntity>>
 
+    @Query("SELECT * FROM savings_operations WHERE profileId = :profileId ORDER BY createdAt, id")
+    suspend fun getByProfileId(profileId: Long): List<SavingsOperationEntity>
+
     @Query("SELECT * FROM savings_operations WHERE profileId = :profileId AND goalId = :goalId AND type = 'DEPOSIT' ORDER BY createdAt")
     suspend fun getDepositsByGoal(profileId: Long, goalId: String): List<SavingsOperationEntity>
 

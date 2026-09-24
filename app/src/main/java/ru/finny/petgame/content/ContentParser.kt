@@ -9,6 +9,7 @@ import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.content.model.TaskOption
 import ru.finny.petgame.content.model.TaskTheme
 import ru.finny.petgame.content.model.TaskType
+import ru.finny.petgame.content.model.WeekContent
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.PurchaseCategory
 
@@ -77,6 +78,58 @@ object ContentParser {
         return goals
     }
 
+    fun parseWeeks(json: String): List<WeekContent> {
+        val array = rootArray(json, "weeks")
+        val problems = mutableListOf<String>()
+        val weeks = mutableListOf<WeekContent>()
+        val indices = mutableSetOf<Int>()
+        for (index in 0 until array.length()) {
+            val prefix = "weeks[$index]"
+            val obj = objectAt(array, index, prefix, problems) ?: continue
+            parseWeek(obj, prefix, problems)?.let { week ->
+                if (!indices.add(week.index)) {
+                    problems += "$prefix: повторяется index ${week.index}"
+                } else {
+                    weeks += week
+                }
+            }
+        }
+        failIfProblems(problems)
+        return weeks.sortedBy { it.index }
+    }
+
+    private fun parseWeek(obj: JSONObject, prefix: String, problems: MutableList<String>): WeekContent? {
+        val local = mutableListOf<String>()
+        val index = requirePositiveLong(obj, "index", prefix, local)
+        val theme = requireString(obj, "theme", prefix, local)
+        val lesson = requireString(obj, "lesson", prefix, local)
+        val needs = mutableListOf<String>()
+        val rawNeeds = obj.optJSONArray("needs")
+        if (rawNeeds == null) {
+            local += "$prefix: нужен массив needs с id товаров"
+        } else {
+            for (i in 0 until rawNeeds.length()) {
+                val id = rawNeeds.optString(i, "")
+                if (id.isBlank()) {
+                    local += "$prefix.needs[$i]: пустой id товара"
+                } else {
+                    needs += id
+                }
+            }
+            if (needs.isEmpty()) local += "$prefix: список needs пустой"
+        }
+
+        problems += local
+        if (local.isNotEmpty()) return null
+
+        return WeekContent(
+            index = index!!.toInt(),
+            theme = theme!!,
+            lesson = lesson!!,
+            needs = needs,
+        )
+    }
+
     private fun parseTask(obj: JSONObject, prefix: String, problems: MutableList<String>): TaskContent? {
         val local = mutableListOf<String>()
         val id = requireString(obj, "id", prefix, local)
@@ -100,6 +153,10 @@ object ContentParser {
             0L
         }
         val minimums = parseMinimums(obj, prefix, local)
+        val week = if (obj.has("week")) optionalInt(obj, "week", prefix, local) else 1
+        if (week < 1) {
+            local += "$prefix: поле week должно быть не меньше 1"
+        }
 
         problems += local
         if (local.isNotEmpty()) return null
@@ -117,6 +174,7 @@ object ContentParser {
             minimums = minimums,
             correctExplanation = correctExplanation!!,
             wrongExplanation = wrongExplanation!!,
+            week = week,
         )
     }
 

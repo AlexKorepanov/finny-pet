@@ -27,9 +27,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.content.ContentCatalog
+import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
@@ -65,6 +70,7 @@ enum class AppScreen {
     PET,
     PET_CONFIRM,
     MAIN,
+    WARDROBE,
     PLAN,
     SHOP,
     SAVINGS,
@@ -86,9 +92,12 @@ fun PetGameApp(repository: GameRepository) {
     var focusedTaskId by rememberSaveable { mutableStateOf<String?>(null) }
     var mainSnapshot by remember { mutableStateOf<GameSnapshot?>(null) }
     var periodCloseResult by remember { mutableStateOf<PeriodCloseResult.Success?>(null) }
+    var catalog by remember { mutableStateOf<ContentCatalog?>(null) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         val startedAt = System.currentTimeMillis()
+        catalog = withContext(Dispatchers.IO) { ContentLoader(context.assets).loadCatalog() }
         val snapshot = repository.loadSnapshot()
         mainSnapshot = snapshot
         val elapsed = System.currentTimeMillis() - startedAt
@@ -118,6 +127,7 @@ fun PetGameApp(repository: GameRepository) {
                 screen = AppScreen.INTRO
             }
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
+            AppScreen.WARDROBE -> screen = AppScreen.MAIN
             AppScreen.PLAN -> screen = AppScreen.MAIN
             AppScreen.SHOP -> screen = AppScreen.MAIN
             AppScreen.SAVINGS -> screen = AppScreen.MAIN
@@ -142,7 +152,9 @@ fun PetGameApp(repository: GameRepository) {
     val requestClosePeriod: () -> Unit = { showClosePeriodConfirm = true }
     val performClosePeriod: () -> Unit = {
         scope.launch {
-            when (val result = repository.closePeriod()) {
+            val periodIndex = mainSnapshot?.currentPeriod?.periodIndex ?: 0
+            val needs = catalog?.needsFor(periodIndex).orEmpty()
+            when (val result = repository.closePeriod(needs)) {
                 is PeriodCloseResult.Success -> {
                     periodCloseResult = result
                     mainSnapshot = repository.loadSnapshot()
@@ -197,6 +209,7 @@ fun PetGameApp(repository: GameRepository) {
         )
         AppScreen.MAIN -> MainScreen(
             snapshot = mainSnapshot,
+            catalog = catalog,
             onHint = { showHint = true },
             onPlan = { screen = AppScreen.PLAN },
             onShop = { screen = AppScreen.SHOP },
@@ -212,6 +225,39 @@ fun PetGameApp(repository: GameRepository) {
                 screen = AppScreen.TASKS
             },
             onClosePeriod = requestClosePeriod,
+            onWardrobe = {
+                val profile = mainSnapshot?.profile
+                if (profile != null) {
+                    petLook = profile.toPetLook()
+                    petName = profile.petName
+                    screen = AppScreen.WARDROBE
+                }
+            },
+        )
+        AppScreen.WARDROBE -> PetScreen(
+            look = petLook,
+            petName = petName,
+            onLookChange = { petLook = it },
+            onPetNameChange = { petName = it },
+            onBack = goBack,
+            onHint = { showHint = true },
+            editMode = true,
+            onNext = {
+                scope.launch {
+                    val saved = repository.updatePetAppearance(
+                        petName = petName,
+                        petHat = petLook.hat,
+                        petFace = petLook.face,
+                        petOutfit = petLook.outfit,
+                        petEmotion = petLook.emotion,
+                        petEyeColor = petLook.eyeColor,
+                    )
+                    if (saved) {
+                        mainSnapshot = repository.loadSnapshot()
+                        screen = AppScreen.MAIN
+                    }
+                }
+            },
         )
         AppScreen.PLAN -> {
             val currentSnapshot = mainSnapshot
@@ -221,6 +267,7 @@ fun PetGameApp(repository: GameRepository) {
                 PlanScreen(
                     repository = repository,
                     snapshot = currentSnapshot,
+                    catalog = catalog,
                     onBack = goBack,
                     onHint = { showHint = true },
                     onPlanConfirmed = {
@@ -243,6 +290,11 @@ fun PetGameApp(repository: GameRepository) {
                     onShopChanged = {
                         scope.launch { mainSnapshot = repository.loadSnapshot() }
                     },
+                    onOpenTasks = {
+                        focusedTaskId = null
+                        screen = AppScreen.TASKS
+                    },
+                    onOpenSavings = { screen = AppScreen.SAVINGS },
                 )
             }
         }
@@ -278,6 +330,7 @@ fun PetGameApp(repository: GameRepository) {
                     },
                     onOpenPlan = { screen = AppScreen.PLAN },
                     onOpenShop = { screen = AppScreen.SHOP },
+                    onOpenSavings = { screen = AppScreen.SAVINGS },
                 )
             }
         }
@@ -287,6 +340,7 @@ fun PetGameApp(repository: GameRepository) {
                 LoadingScreen()
             } else {
                 ProgressScreen(
+                    repository = repository,
                     snapshot = currentSnapshot,
                     onBack = goBack,
                     onHint = { showHint = true },

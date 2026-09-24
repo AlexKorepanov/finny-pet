@@ -19,5 +19,6 @@ data class ProfileEntity(
     val saturation: Int = 70,
     val petStage: Int = 0,
     val goodPeriods: Int = 0,
+    val growthStars: Int = 0,
     val allTasksOpen: Boolean = false,
 )

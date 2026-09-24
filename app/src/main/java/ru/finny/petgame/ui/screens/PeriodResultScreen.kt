@@ -32,6 +32,7 @@ import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
+import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun PeriodResultScreen(
@@ -111,15 +112,38 @@ fun PeriodResultScreen(
             AppCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
+                        text = stringResource(R.string.period_stars_title),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "★".repeat(result.starsEarned) + "☆".repeat(3 - result.starsEarned),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = FinnyColors.Optional,
+                    )
+                    Text(
+                        text = stringResource(R.string.period_stars_line, result.starsEarned, result.totalStars),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = result.starsToNextStage?.let {
+                            stringResource(R.string.period_stars_next, it)
+                        } ?: stringResource(R.string.period_stars_max),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+            AppCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
                         text = stringResource(R.string.period_mood_title),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = stringResource(
-                            R.string.period_mood_change,
-                            result.previousMood,
-                            result.newMood,
-                        ),
+                        text = stringResource(R.string.period_mood_change, result.previousMood, result.newMood),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.period_satiety_change, result.previousSatiety, result.newSatiety),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     result.review.explanations.forEach { line ->
@@ -127,22 +151,35 @@ fun PeriodResultScreen(
                     }
                 }
             }
+            if (result.review.advice.isNotBlank()) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = stringResource(R.string.period_advice_title),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(text = result.review.advice, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
             AppCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = if (result.periodIncome > 0L) {
-                        stringResource(
-                            R.string.period_income_line,
-                            coinsAmount(result.periodIncome),
-                            coinsAmount(result.newBalance),
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.period_income_line, coinsAmount(result.periodIncome)),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    if (result.planBonus > 0L) {
+                        StatusBadge(
+                            text = stringResource(R.string.period_bonus_line, coinsAmount(result.planBonus)),
+                            icon = Icons.Filled.Star,
+                            kind = BadgeKind.POSITIVE,
                         )
-                    } else {
-                        stringResource(
-                            R.string.period_income_none_line,
-                            coinsAmount(result.newBalance),
-                        )
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                    }
+                    Text(
+                        text = stringResource(R.string.period_balance_line, coinsAmount(result.newBalance)),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             }
             PrimaryButton(
                 text = stringResource(R.string.period_continue),

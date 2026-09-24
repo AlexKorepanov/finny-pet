@@ -16,6 +16,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import ru.finny.petgame.data.PetDatabase
 import ru.finny.petgame.data.model.GoalAchieveResult
+import ru.finny.petgame.data.model.LedgerKind
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
@@ -30,6 +31,7 @@ import ru.finny.petgame.economy.model.PurchaseCategory
 import ru.finny.petgame.economy.model.PurchaseDraft
 import ru.finny.petgame.economy.model.PurchaseResult
 import ru.finny.petgame.economy.model.SavingsOperationType
+import ru.finny.petgame.economy.model.WeekNeed
 import ru.finny.petgame.economy.model.WithdrawResult
 
 @RunWith(RobolectricTestRunner::class)
@@ -98,6 +100,28 @@ class GameRepositoryTest {
         assertEquals(1, earnings.size)
         assertEquals(GameRepository.START_BUDGET_SOURCE, earnings[0].source)
         assertEquals(GameRepository.START_BUDGET_AMOUNT, earnings[0].amount)
+    }
+
+    @Test
+    fun `wardrobe updates look and name`() = runTest {
+        val saved = repository.updatePetAppearance(
+            petName = "Лиса",
+            petHat = 2,
+            petFace = 1,
+            petOutfit = 0,
+            petEmotion = 3,
+            petEyeColor = 2,
+        )
+        assertTrue(saved)
+
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals("Лиса", snapshot.profile.petName)
+        assertEquals(2, snapshot.profile.petHat)
+        assertEquals(1, snapshot.profile.petFace)
+        assertEquals(0, snapshot.profile.petOutfit)
+        assertEquals(3, snapshot.profile.petEmotion)
+        assertEquals(2, snapshot.profile.petEyeColor)
+        assertEquals(GameRepository.START_BUDGET_AMOUNT, snapshot.balance)
     }
 
     @Test
@@ -187,7 +211,7 @@ class GameRepositoryTest {
     }
 
     @Test
-    fun `savings eta uses average deposit`() = runTest {
+    fun `savings eta uses average deposit per week`() = runTest {
         repository.earn(source = "TASK", amount = 100L)
         assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
         repository.depositToSavings("goal_1", 30L)
@@ -197,8 +221,8 @@ class GameRepositoryTest {
 
         assertTrue(eta != null)
         eta!!
-        assertEquals(25L, eta.averageDeposit)
-        assertEquals(6, eta.periodsLeft)
+        assertEquals(50L, eta.averageDeposit)
+        assertEquals(3, eta.periodsLeft)
         assertEquals(50L, freshRepository().loadSnapshot()!!.savingsTotal)
     }
 
@@ -252,7 +276,8 @@ class GameRepositoryTest {
         assertEquals(true, success.isCorrect)
         assertEquals(5L, success.reward)
         assertEquals(GameRepository.START_BUDGET_AMOUNT + 5L, success.balance)
-        assertEquals(80, success.mood)
+        assertEquals(75, success.mood)
+        assertTrue(success.firstTry)
 
         val second = repository.completeTask(
             taskId = "task_budget_1",
@@ -550,13 +575,21 @@ class GameRepositoryTest {
         assertTrue(closed is PeriodCloseResult.Success)
         val success = closed as PeriodCloseResult.Success
         assertTrue(success.review.isGoodPeriod)
-        assertEquals(1, success.newStage)
+        assertEquals(3, success.starsEarned)
+        assertEquals(3, success.totalStars)
+        assertEquals(1, success.starsToNextStage)
+        assertEquals(0, success.newStage)
         assertEquals(EconomyEngine.PERIOD_INCOME_AMOUNT, success.periodIncome)
+        assertEquals(EconomyEngine.PLAN_BONUS_AMOUNT, success.planBonus)
+        assertEquals(70, success.previousSatiety)
+        assertEquals(40, success.newSatiety)
 
         val snapshot = freshRepository().loadSnapshot()!!
         assertEquals(PeriodStatus.PLANNED.name, snapshot.currentPeriod?.status)
         assertEquals(1, snapshot.currentPeriod?.periodIndex)
-        assertEquals(1, snapshot.profile.petStage)
+        assertEquals(0, snapshot.profile.petStage)
+        assertEquals(3, snapshot.profile.growthStars)
+        assertEquals(40, snapshot.profile.saturation)
         assertEquals(1, snapshot.profile.goodPeriods)
         assertEquals(1, snapshot.closedPeriodCount)
         assertTrue(snapshot.lastClosedPeriod != null)
@@ -576,7 +609,7 @@ class GameRepositoryTest {
     }
 
     @Test
-    fun `closePeriod without matching plan does not grow stage`() = runTest {
+    fun `weak period still pays allowance but no bonus`() = runTest {
         repository.earn(source = "TASK", amount = 100L)
         repository.saveBudgetPlan(plan(40, 20, 25))
         assertTrue(repository.confirmBudgetPlan())
@@ -586,21 +619,61 @@ class GameRepositoryTest {
         assertTrue(closed is PeriodCloseResult.Success)
         val success = closed as PeriodCloseResult.Success
         assertFalse(success.review.isGoodPeriod)
+        assertEquals(0, success.starsEarned)
         assertEquals(0, success.newStage)
         assertFalse(success.stageGrew)
-        assertEquals(0L, success.periodIncome)
+        assertEquals(EconomyEngine.PERIOD_INCOME_AMOUNT, success.periodIncome)
+        assertEquals(0L, success.planBonus)
         assertTrue(success.newMood < success.previousMood)
 
         val snapshot = freshRepository().loadSnapshot()!!
         assertEquals(0, snapshot.profile.petStage)
         assertEquals(0, snapshot.profile.goodPeriods)
         assertEquals(
-            GameRepository.START_BUDGET_AMOUNT + 100L,
+            GameRepository.START_BUDGET_AMOUNT + 100L + EconomyEngine.PERIOD_INCOME_AMOUNT,
             snapshot.balance,
         )
         val income = db.earningDao().getByPeriod(profileId, 1)
             .filter { it.source == EconomyEngine.PERIOD_INCOME_SOURCE }
-        assertTrue(income.isEmpty())
+        assertEquals(1, income.size)
+    }
+
+    @Test
+    fun `stage grows after enough stars`() = runTest {
+        repository.earn(source = "TASK", amount = 200L)
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 500L))
+        repeat(2) {
+            repository.saveBudgetPlan(plan(10, 5, 5))
+            assertTrue(repository.confirmBudgetPlan())
+            repository.purchase(PurchaseDraft("food_basic", "Корм", PurchaseCategory.REQUIRED, 8L))
+            repository.depositToSavings("goal_1", 5L)
+            repository.closePeriod(listOf(WeekNeed("food_basic", "Корм", 8L)))
+        }
+        val snapshot = freshRepository().loadSnapshot()!!
+        assertEquals(6, snapshot.profile.growthStars)
+        assertEquals(1, snapshot.profile.petStage)
+    }
+
+    @Test
+    fun `second try gives half reward`() = runTest {
+        repository.completeTask("task_x", "Задание", "BUDGET", isCorrect = false, reward = 10L)
+        val retry = repository.completeTask("task_x", "Задание", "BUDGET", isCorrect = true, reward = 10L)
+        val success = retry as TaskCompletionResult.Success
+        assertEquals(5L, success.reward)
+        assertEquals(10L, success.fullReward)
+        assertFalse(success.firstTry)
+    }
+
+    @Test
+    fun `ledger lists income purchases and savings`() = runTest {
+        repository.earn(source = "TASK", amount = 20L)
+        repository.purchase(PurchaseDraft("food_basic", "Корм", PurchaseCategory.REQUIRED, 8L))
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 60L))
+        repository.depositToSavings("goal_1", 10L)
+
+        val ledger = repository.loadLedger()
+        assertEquals(listOf(30L, 20L, -8L, -10L), ledger.map { it.amount })
+        assertEquals(LedgerKind.TO_SAVINGS, ledger.last().kind)
     }
 
     @Test

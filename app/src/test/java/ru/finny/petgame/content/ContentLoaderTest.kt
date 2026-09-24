@@ -3,6 +3,7 @@ package ru.finny.petgame.content
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -105,5 +106,29 @@ class ContentLoaderTest {
         assertEquals(item, catalog.shopItemById(item.id))
         val goal = catalog.goals.first()
         assertEquals(goal, catalog.goalById(goal.id))
+    }
+
+    @Test
+    fun `weeks list needs from shop and every week has two tasks`() {
+        val catalog = loader.loadCatalog()
+
+        assertEquals(5, catalog.weeks.size)
+        assertEquals(10, catalog.tasks.size)
+        assertTrue(catalog.validate().isEmpty())
+        catalog.weeks.forEach { week ->
+            assertEquals(2, catalog.tasksOfWeek(week.index - 1).size)
+            assertTrue(catalog.needsFor(week.index - 1).any { it.itemId == "food_basic" })
+        }
+    }
+
+    @Test
+    fun `tasks open by week unless all opened`() {
+        val catalog = loader.loadCatalog()
+        val late = catalog.tasks.first { it.week == 5 }
+
+        assertFalse(catalog.isTaskOpen(late, periodIndex = 0, allOpen = false))
+        assertTrue(catalog.isTaskOpen(late, periodIndex = 4, allOpen = false))
+        assertTrue(catalog.isTaskOpen(late, periodIndex = 0, allOpen = true))
+        assertEquals(catalog.weeks.first(), catalog.weekFor(5))
     }
 }

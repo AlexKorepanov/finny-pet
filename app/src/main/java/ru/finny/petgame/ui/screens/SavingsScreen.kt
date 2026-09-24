@@ -65,7 +65,7 @@ import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
-import ru.finny.petgame.ui.components.timesAmount
+import ru.finny.petgame.ui.components.weeksAmount
 import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
@@ -146,12 +146,7 @@ fun SavingsScreen(
                     )
                 }
             } else {
-                SectionTitle(
-                    text = stringResource(R.string.savings_choose_title),
-                    accent = SectionAccent.SAVINGS,
-                    icon = Icons.Filled.Star,
-                )
-                if (noActiveGoal) {
+                if (noActiveGoal && snapshot.achievedGoalIds.isNotEmpty()) {
                     Text(
                         text = stringResource(R.string.savings_choose_new),
                         style = MaterialTheme.typography.bodyLarge,
@@ -197,7 +192,7 @@ fun SavingsScreen(
                                     text = stringResource(
                                         R.string.savings_eta,
                                         coinsAmount(goalEta.averageDeposit),
-                                        timesAmount(periodsLeft),
+                                        weeksAmount(periodsLeft),
                                     ),
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
@@ -304,12 +299,16 @@ fun SavingsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = stringResource(R.string.savings_preview_saved, coinsAmount(preview.newSavedAmount)))
-                    preview.eta.periodsLeft?.let { periodsLeft ->
+                    val before = preview.etaBefore?.periodsLeft
+                    val after = preview.eta.periodsLeft
+                    if (before != null && after != null && after > before) {
+                        Text(text = stringResource(R.string.savings_eta_change, weeksAmount(before), weeksAmount(after)))
+                    } else if (after != null) {
                         Text(
                             text = stringResource(
                                 R.string.savings_eta,
                                 coinsAmount(preview.eta.averageDeposit),
-                                timesAmount(periodsLeft),
+                                weeksAmount(after),
                             ),
                         )
                     }

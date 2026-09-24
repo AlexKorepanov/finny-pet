@@ -5,9 +5,9 @@
       "title": "Корм «Хрустик»",
       "category": "REQUIRED",
       "price": 10,
-      "effect": "Финни сыт и доволен",
-      "moodDelta": 10,
-      "satietyDelta": 15
+      "effect": "Финни сыт всю неделю",
+      "moodDelta": 5,
+      "satietyDelta": 35
     },
     {
       "id": "food_treat",
@@ -16,7 +16,7 @@
       "price": 8,
       "effect": "Финни лижет губы",
       "moodDelta": 3,
-      "satietyDelta": 8
+      "satietyDelta": 10
     },
     {
       "id": "vitamins",

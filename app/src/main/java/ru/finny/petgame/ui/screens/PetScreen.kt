@@ -75,6 +75,7 @@ fun PetScreen(
     onBack: () -> Unit,
     onHint: () -> Unit,
     onNext: () -> Unit,
+    editMode: Boolean = false,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tab = PetCustomizeTab.entries[selectedTab.coerceIn(0, PetCustomizeTab.entries.lastIndex)]
@@ -97,7 +98,9 @@ fun PetScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.pet_title),
+                title = stringResource(
+                    if (editMode) R.string.wardrobe_title else R.string.pet_title,
+                ),
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
@@ -193,7 +196,7 @@ fun PetScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 PrimaryButton(
-                    text = stringResource(R.string.next),
+                    text = stringResource(if (editMode) R.string.save else R.string.next),
                     onClick = onNext,
                     enabled = petName.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),

@@ -18,6 +18,7 @@ sealed interface WithdrawResult {
     data class NeedsConfirmation(
         val newSavedAmount: Long,
         val eta: GoalEta,
+        val etaBefore: GoalEta? = null,
     ) : WithdrawResult
 
     data class Success(val state: EconomyState, val bucket: SavingsBucket) : WithdrawResult

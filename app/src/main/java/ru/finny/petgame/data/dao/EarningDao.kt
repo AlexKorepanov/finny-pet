@@ -15,6 +15,9 @@ interface EarningDao {
     @Query("SELECT * FROM earnings WHERE profileId = :profileId ORDER BY createdAt DESC")
     fun observeByProfileId(profileId: Long): Flow<List<EarningEntity>>
 
+    @Query("SELECT * FROM earnings WHERE profileId = :profileId ORDER BY createdAt, id")
+    suspend fun getByProfileId(profileId: Long): List<EarningEntity>
+
     @Query("SELECT * FROM earnings WHERE profileId = :profileId AND periodIndex = :periodIndex ORDER BY createdAt")
     suspend fun getByPeriod(profileId: Long, periodIndex: Int): List<EarningEntity>
 

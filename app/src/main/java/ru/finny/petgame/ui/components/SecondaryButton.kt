@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.ui.theme.FinnyColors
 
@@ -33,6 +34,7 @@ fun SecondaryButton(
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             },
             style = MaterialTheme.typography.labelLarge,
+            textAlign = TextAlign.Center,
         )
     }
 }

@@ -13,6 +13,12 @@ sealed interface PeriodCloseResult {
         val stageGrew: Boolean,
         val periodIncome: Long,
         val newBalance: Long,
+        val planBonus: Long = 0L,
+        val previousSatiety: Int = 0,
+        val newSatiety: Int = 0,
+        val starsEarned: Int = 0,
+        val totalStars: Int = 0,
+        val starsToNextStage: Int? = null,
     ) : PeriodCloseResult
 
     data class Invalid(val explanation: String) : PeriodCloseResult

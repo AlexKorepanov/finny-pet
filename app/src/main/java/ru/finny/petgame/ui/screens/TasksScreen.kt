@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.content.model.TaskOption
@@ -73,11 +75,13 @@ fun TasksScreen(
     onTasksChanged: () -> Unit,
     onOpenPlan: () -> Unit,
     onOpenShop: () -> Unit,
+    onOpenSavings: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    var tasks by remember { mutableStateOf<List<TaskContent>?>(null) }
+    var catalog by remember { mutableStateOf<ContentCatalog?>(null) }
     var currentTaskId by rememberSaveable { mutableStateOf(focusedTaskId) }
+    var attempt by remember(currentTaskId) { mutableIntStateOf(0) }
     var chosenOptionId by remember(currentTaskId) { mutableStateOf<String?>(null) }
     var feedback by remember(currentTaskId) { mutableStateOf<TaskCompletionResult?>(null) }
     var distributionCheck by remember(currentTaskId) { mutableStateOf<DistributionCheck?>(null) }
@@ -86,18 +90,21 @@ fun TasksScreen(
     var savingsAmount by remember(currentTaskId) { mutableLongStateOf(0L) }
 
     LaunchedEffect(Unit) {
-        tasks = withContext(Dispatchers.IO) {
-            ContentLoader(context.assets).loadCatalog().tasks
+        catalog = withContext(Dispatchers.IO) {
+            ContentLoader(context.assets).loadCatalog()
         }
     }
 
     val completedIds = snapshot.completedTasks.filter { it.isCorrect == true }.map { it.taskId }.toSet()
-    val taskList = tasks
+    val periodIndex = snapshot.currentPeriod?.periodIndex ?: 0
+    val allOpen = snapshot.profile.allTasksOpen
+    val loadedCatalog = catalog
+    val taskList = loadedCatalog?.tasks
     val currentTask = taskList?.firstOrNull { it.id == currentTaskId }
-    val orderById = taskList?.withIndex()?.associate { it.value.id to it.index }.orEmpty()
+    val shuffledOptions = remember(currentTask, attempt) { currentTask?.options?.shuffled().orEmpty() }
     val nextIncompleteTask = taskList
         ?.filter { it.id != currentTaskId && it.id !in completedIds }
-        ?.firstOrNull()
+        ?.firstOrNull { loadedCatalog.isTaskOpen(it, periodIndex, allOpen) }
 
     Scaffold(
         topBar = {
@@ -124,31 +131,33 @@ fun TasksScreen(
                 petLook = snapshot.profile.toPetLook(),
                 petStage = snapshot.profile.petStage,
             )
-            if (taskList == null) {
+            if (loadedCatalog == null || taskList == null) {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (currentTask == null) {
-                if (snapshot.profile.allTasksOpen) {
+                if (allOpen) {
                     StatusBadge(
                         text = stringResource(R.string.tasks_demo_badge),
                         icon = Icons.Filled.Done,
                         kind = BadgeKind.NEUTRAL,
                     )
                 }
-                TaskTheme.entries.forEach { theme ->
+                taskList.groupBy { it.week }.toSortedMap().forEach { (week, weekTasks) ->
+                    val weekTheme = loadedCatalog.weeks.firstOrNull { it.index == week }?.theme
                     SectionTitle(
-                        text = themeTitle(theme),
+                        text = if (weekTheme != null) {
+                            stringResource(R.string.tasks_week_title, week, weekTheme)
+                        } else {
+                            stringResource(R.string.tasks_week_title_short, week)
+                        },
                         accent = SectionAccent.TASKS,
                     )
-                    taskList.filter { it.theme == theme }.forEach { task ->
-                        val globalIndex = orderById[task.id] ?: 0
-                        val available = snapshot.profile.allTasksOpen ||
-                            taskList.take(globalIndex).all { it.id in completedIds }
+                    weekTasks.forEach { task ->
                         TaskCard(
                             task = task,
                             completed = task.id in completedIds,
-                            available = available,
+                            available = loadedCatalog.isTaskOpen(task, periodIndex, allOpen),
                             onClick = { currentTaskId = task.id },
                         )
                     }
@@ -156,6 +165,7 @@ fun TasksScreen(
             } else {
                 TaskPlayView(
                     task = currentTask,
+                    options = shuffledOptions,
                     chosenOptionId = chosenOptionId,
                     feedback = feedback,
                     distributionCheck = distributionCheck,
@@ -210,6 +220,7 @@ fun TasksScreen(
                         }
                     },
                     onRetry = {
+                        attempt++
                         chosenOptionId = null
                         feedback = null
                         distributionCheck = null
@@ -218,8 +229,11 @@ fun TasksScreen(
                         savingsAmount = 0L
                     },
                     onNextTask = { taskId -> currentTaskId = taskId },
-                    onOpenPlan = onOpenPlan,
-                    onOpenShop = onOpenShop,
+                    onTryInGame = when (currentTask.theme) {
+                        TaskTheme.BUDGET -> onOpenPlan
+                        TaskTheme.SAVINGS -> onOpenSavings
+                        TaskTheme.PAYMENTS -> onOpenShop
+                    },
                     onBackToList = { currentTaskId = null },
                 )
             }
@@ -228,10 +242,10 @@ fun TasksScreen(
 }
 
 @Composable
-private fun themeTitle(theme: TaskTheme): String = when (theme) {
-    TaskTheme.BUDGET -> stringResource(R.string.tasks_theme_budget)
-    TaskTheme.SAVINGS -> stringResource(R.string.tasks_theme_savings)
-    TaskTheme.PAYMENTS -> stringResource(R.string.tasks_theme_payments)
+private fun tryInGameLabel(theme: TaskTheme): String = when (theme) {
+    TaskTheme.BUDGET -> stringResource(R.string.tasks_try_plan)
+    TaskTheme.SAVINGS -> stringResource(R.string.tasks_try_savings)
+    TaskTheme.PAYMENTS -> stringResource(R.string.tasks_try_shop)
 }
 
 @Composable
@@ -264,7 +278,7 @@ private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, 
                     kind = BadgeKind.POSITIVE,
                 )
                 !available -> StatusBadge(
-                    text = stringResource(R.string.tasks_locked_badge),
+                    text = stringResource(R.string.tasks_locked_week, task.week),
                     icon = Icons.Filled.Lock,
                     kind = BadgeKind.NEUTRAL,
                 )
@@ -276,6 +290,7 @@ private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, 
 @Composable
 private fun TaskPlayView(
     task: TaskContent,
+    options: List<TaskOption>,
     chosenOptionId: String?,
     feedback: TaskCompletionResult?,
     distributionCheck: DistributionCheck?,
@@ -286,8 +301,7 @@ private fun TaskPlayView(
     onCheck: () -> Unit,
     onRetry: () -> Unit,
     onNextTask: (String) -> Unit,
-    onOpenPlan: () -> Unit,
-    onOpenShop: () -> Unit,
+    onTryInGame: () -> Unit,
     onBackToList: () -> Unit,
 ) {
     val locked = feedback is TaskCompletionResult.Success && feedback.isCorrect
@@ -299,7 +313,7 @@ private fun TaskPlayView(
         }
         when (task.type) {
             TaskType.CHOICE -> {
-                task.options.forEach { option ->
+                options.forEach { option ->
                     OptionSurface(
                         selected = chosenOptionId == option.id,
                         enabled = !locked,
@@ -362,7 +376,11 @@ private fun TaskPlayView(
                                 )
                                 if (result.reward > 0L) {
                                     Text(
-                                        text = stringResource(R.string.tasks_reward_line, result.reward),
+                                        text = if (result.firstTry) {
+                                            stringResource(R.string.tasks_reward_line, result.reward)
+                                        } else {
+                                            stringResource(R.string.tasks_retry_reward_line, result.reward, result.fullReward)
+                                        },
                                         style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
@@ -406,9 +424,19 @@ private fun TaskPlayView(
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
-                    if (locked) {
+                    val done = locked || result is TaskCompletionResult.AlreadyCompleted
+                    if (done) {
+                        Text(
+                            text = stringResource(R.string.tasks_try_in_game_hint),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        PrimaryButton(
+                            text = tryInGameLabel(task.theme),
+                            onClick = onTryInGame,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                         nextTaskId?.let { nextId ->
-                            PrimaryButton(
+                            SecondaryButton(
                                 text = stringResource(R.string.tasks_next),
                                 onClick = { onNextTask(nextId) },
                                 modifier = Modifier.fillMaxWidth(),
@@ -419,18 +447,6 @@ private fun TaskPlayView(
                             text = stringResource(R.string.tasks_try_again),
                             onClick = onRetry,
                             modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SecondaryButton(
-                            text = stringResource(R.string.tasks_to_plan),
-                            onClick = onOpenPlan,
-                            modifier = Modifier.weight(1f),
-                        )
-                        SecondaryButton(
-                            text = stringResource(R.string.tasks_to_shop),
-                            onClick = onOpenShop,
-                            modifier = Modifier.weight(1f),
                         )
                     }
                 }

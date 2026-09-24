@@ -33,4 +33,6 @@ data class TaskContent(
     val minimums: Map<BudgetDirection, Long> = emptyMap(),
     val correctExplanation: String,
     val wrongExplanation: String,
+    /** Номер учебной недели (с 1), с которой задание открыто. */
+    val week: Int = 1,
 )

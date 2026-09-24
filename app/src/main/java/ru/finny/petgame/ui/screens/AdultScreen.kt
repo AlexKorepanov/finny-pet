@@ -71,6 +71,7 @@ fun AdultScreen(
         .filter { it.isCorrect == true }
         .map { it.theme }
         .toSet()
+    val themeStats = themeStats(snapshot)
 
     Scaffold(
         topBar = {
@@ -191,9 +192,14 @@ fun AdultScreen(
                         text = stringResource(R.string.adult_themes_title),
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    ThemeLine(R.string.tasks_theme_budget, "BUDGET" in themesDone)
-                    ThemeLine(R.string.tasks_theme_savings, "SAVINGS" in themesDone)
-                    ThemeLine(R.string.tasks_theme_payments, "PAYMENTS" in themesDone)
+                    ThemeLine(R.string.tasks_theme_budget, "BUDGET" in themesDone, themeStats["BUDGET"])
+                    ThemeLine(R.string.tasks_theme_savings, "SAVINGS" in themesDone, themeStats["SAVINGS"])
+                    ThemeLine(R.string.tasks_theme_payments, "PAYMENTS" in themesDone, themeStats["PAYMENTS"])
+                    Text(
+                        text = stringResource(R.string.adult_stats_note),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
 
                 AppCard(modifier = Modifier.fillMaxWidth()) {
@@ -279,10 +285,27 @@ fun AdultScreen(
 }
 
 @Composable
-private fun ThemeLine(labelRes: Int, done: Boolean) {
+private fun ThemeLine(labelRes: Int, done: Boolean, stats: ThemeStats?) {
     StatusBadge(
         text = stringResource(labelRes),
         icon = if (done) Icons.Filled.Check else Icons.Filled.Lock,
         kind = if (done) BadgeKind.POSITIVE else BadgeKind.NEUTRAL,
     )
+    Text(
+        text = stringResource(R.string.adult_theme_stats, stats?.solved ?: 0, stats?.firstTry ?: 0),
+        style = MaterialTheme.typography.bodyLarge,
+    )
 }
+
+private data class ThemeStats(val solved: Int, val firstTry: Int)
+
+private fun themeStats(snapshot: GameSnapshot): Map<String, ThemeStats> =
+    snapshot.completedTasks
+        .groupBy { it.theme }
+        .mapValues { (_, rows) ->
+            val byTask = rows.groupBy { it.taskId }.values.map { attempts -> attempts.sortedBy { it.id } }
+            ThemeStats(
+                solved = byTask.count { attempts -> attempts.any { it.isCorrect == true } },
+                firstTry = byTask.count { attempts -> attempts.first().isCorrect == true },
+            )
+        }

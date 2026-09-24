@@ -2,6 +2,7 @@ package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -28,7 +31,10 @@ import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.data.model.GameSnapshot
+import ru.finny.petgame.data.model.LedgerEntry
+import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.model.BudgetDirection
+import ru.finny.petgame.ui.theme.FinnyColors
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
@@ -42,6 +48,7 @@ import ru.finny.petgame.ui.components.coinsAmount
 
 @Composable
 fun ProgressScreen(
+    repository: GameRepository,
     snapshot: GameSnapshot,
     onBack: () -> Unit,
     onHint: () -> Unit,
@@ -49,10 +56,14 @@ fun ProgressScreen(
     val profile = snapshot.profile
     val context = LocalContext.current
     var taskTitles by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var ledger by remember { mutableStateOf<List<LedgerEntry>?>(null) }
     LaunchedEffect(Unit) {
         taskTitles = withContext(Dispatchers.IO) {
             ContentLoader(context.assets).loadCatalog().tasks.associate { it.id to it.title }
         }
+    }
+    LaunchedEffect(snapshot) {
+        ledger = repository.loadLedger()
     }
     val rewardedTasks = snapshot.completedTasks.filter { it.isCorrect == true }
     val goalRow = snapshot.selectedGoalId?.let { id ->
@@ -220,9 +231,48 @@ fun ProgressScreen(
 
             AppCard(modifier = Modifier.fillMaxWidth()) {
                 SectionTitle(
+                    text = stringResource(R.string.progress_ledger_title),
+                    icon = Icons.Filled.List,
+                )
+                val entries = ledger
+                if (entries.isNullOrEmpty()) {
+                    Text(
+                        text = stringResource(R.string.progress_ledger_empty),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                } else {
+                    entries.groupBy { it.periodIndex }
+                        .toSortedMap(compareByDescending { it })
+                        .entries
+                        .take(LEDGER_WEEKS_SHOWN)
+                        .forEach { (periodIndex, weekEntries) ->
+                            Text(
+                                text = stringResource(R.string.main_period_line, periodIndex + 1),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            weekEntries.forEach { entry -> LedgerLine(entry) }
+                            Text(
+                                text = stringResource(
+                                    R.string.progress_ledger_totals,
+                                    coinsAmount(weekEntries.filter { it.amount > 0 }.sumOf { it.amount }),
+                                    coinsAmount(-weekEntries.filter { it.amount < 0 }.sumOf { it.amount }),
+                                ),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                }
+            }
+
+            AppCard(modifier = Modifier.fillMaxWidth()) {
+                SectionTitle(
                     text = stringResource(R.string.progress_glossary_title),
                     icon = Icons.Filled.Star,
                 )
+                GlossaryLine(R.string.glossary_income_term, R.string.glossary_income_body)
+                GlossaryLine(R.string.glossary_expense_term, R.string.glossary_expense_body)
+                GlossaryLine(R.string.glossary_remainder_term, R.string.glossary_remainder_body)
+                GlossaryLine(R.string.glossary_change_term, R.string.glossary_change_body)
                 GlossaryLine(R.string.glossary_plan_term, R.string.glossary_plan_body)
                 GlossaryLine(R.string.glossary_fact_term, R.string.glossary_fact_body)
                 GlossaryLine(R.string.glossary_required_term, R.string.glossary_required_body)
@@ -241,6 +291,20 @@ private fun themeLabel(theme: String): String = when (theme) {
     "SAVINGS" -> stringResource(R.string.tasks_theme_savings)
     "PAYMENTS" -> stringResource(R.string.tasks_theme_payments)
     else -> theme
+}
+
+private const val LEDGER_WEEKS_SHOWN = 3
+
+@Composable
+private fun LedgerLine(entry: LedgerEntry) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(text = entry.title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Text(
+            text = if (entry.amount >= 0) "+${entry.amount}" else "−${-entry.amount}",
+            style = MaterialTheme.typography.titleMedium,
+            color = if (entry.amount >= 0) FinnyColors.Success else FinnyColors.Optional,
+        )
+    }
 }
 
 @Composable

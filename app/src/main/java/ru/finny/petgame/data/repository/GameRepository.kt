@@ -15,6 +15,8 @@ import ru.finny.petgame.data.entity.SavingsOperationEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.GoalAchieveResult
 import ru.finny.petgame.data.model.LastPeriodSummary
+import ru.finny.petgame.data.model.LedgerEntry
+import ru.finny.petgame.data.model.LedgerKind
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
@@ -34,6 +36,7 @@ import ru.finny.petgame.economy.model.PurchaseDraft
 import ru.finny.petgame.economy.model.PurchaseResult
 import ru.finny.petgame.economy.model.SavingsBucket
 import ru.finny.petgame.economy.model.SavingsOperationType
+import ru.finny.petgame.economy.model.WeekNeed
 import ru.finny.petgame.economy.model.WithdrawResult
 
 class GameRepository(
@@ -89,6 +92,31 @@ class GameRepository(
             BalanceEntity(profileId = profileId, amount = START_BUDGET_AMOUNT, updatedAt = now()),
         )
         profileId
+    }
+
+    /** Обновить внешний вид и имя питомца из гардероба. */
+    suspend fun updatePetAppearance(
+        petName: String,
+        petHat: Int,
+        petFace: Int,
+        petOutfit: Int,
+        petEmotion: Int,
+        petEyeColor: Int,
+    ): Boolean = database.withTransaction {
+        val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
+        val trimmed = petName.trim()
+        if (trimmed.isEmpty()) return@withTransaction false
+        profileDao().update(
+            profile.copy(
+                petName = trimmed,
+                petHat = petHat,
+                petFace = petFace,
+                petOutfit = petOutfit,
+                petEmotion = petEmotion,
+                petEyeColor = petEyeColor,
+            ),
+        )
+        true
     }
 
     suspend fun loadSnapshot(): GameSnapshot? = database.withTransaction {
@@ -395,10 +423,7 @@ class GameRepository(
             val profile = profileDao().getCurrentProfile()
                 ?: return@withTransaction WithdrawResult.Invalid(NO_PROFILE)
             val state = loadEconomyState(profile.id)
-            val averageDeposit = savingsOperationDao()
-                .getDepositsByGoal(profile.id, goalId)
-                .map { it.amount }
-                .let { engine.averageDeposit(it) }
+            val averageDeposit = averageDepositPerPeriod(profile.id, goalId)
             when (val result = engine.withdrawFromSavings(state, goalId, amount, confirmed, averageDeposit)) {
                 is WithdrawResult.NeedsConfirmation -> result
                 is WithdrawResult.Success -> {
@@ -422,7 +447,6 @@ class GameRepository(
     suspend fun getGoalEta(goalId: String): GoalEta? {
         val profile = profileDao().getCurrentProfile() ?: return null
         val row = savingsDao().getByGoal(profile.id, goalId) ?: return null
-        val deposits = savingsOperationDao().getDepositsByGoal(profile.id, goalId).map { it.amount }
         return engine.goalEta(
             SavingsBucket(
                 goalId = row.goalId,
@@ -430,8 +454,51 @@ class GameRepository(
                 goalCost = row.goalCost,
                 savedAmount = row.savedAmount,
             ),
-            engine.averageDeposit(deposits),
+            averageDepositPerPeriod(profile.id, goalId),
         )
+    }
+
+    private suspend fun averageDepositPerPeriod(profileId: Long, goalId: String): Long {
+        val deposits = savingsOperationDao()
+            .getDepositsByGoal(profileId, goalId)
+            .map { it.periodIndex to it.amount }
+        return engine.averageDepositPerPeriod(deposits, currentPeriodIndex(profileId))
+    }
+
+    /** Журнал монет: все приходы и расходы баланса по порядку. */
+    suspend fun loadLedger(): List<LedgerEntry> {
+        val profile = profileDao().getCurrentProfile() ?: return emptyList()
+        val income = earningDao().getByProfileId(profile.id).map { row ->
+            LedgerEntry(
+                periodIndex = row.periodIndex,
+                kind = LedgerKind.INCOME,
+                title = if (row.source == START_BUDGET_SOURCE) START_BUDGET_TITLE else row.source,
+                amount = row.amount,
+                createdAt = row.createdAt,
+            )
+        }
+        val purchases = purchaseDao().getByProfileId(profile.id).map { row ->
+            LedgerEntry(
+                periodIndex = row.periodIndex,
+                kind = LedgerKind.PURCHASE,
+                title = row.title,
+                amount = -row.price,
+                createdAt = row.purchasedAt,
+            )
+        }
+        val goalTitles = savingsDao().getByProfileId(profile.id).associate { it.goalId to it.goalTitle }
+        val savings = savingsOperationDao().getByProfileId(profile.id).map { row ->
+            val deposit = row.type == SavingsOperationType.DEPOSIT.name
+            val goal = goalTitles[row.goalId] ?: row.goalId
+            LedgerEntry(
+                periodIndex = row.periodIndex,
+                kind = if (deposit) LedgerKind.TO_SAVINGS else LedgerKind.FROM_SAVINGS,
+                title = if (deposit) "В копилку: $goal" else "Из копилки: $goal",
+                amount = if (deposit) -row.amount else row.amount,
+                createdAt = row.createdAt,
+            )
+        }
+        return (income + purchases + savings).sortedWith(compareBy({ it.periodIndex }, { it.createdAt }))
     }
 
     suspend fun achieveGoal(goalId: String): GoalAchieveResult = database.withTransaction {
@@ -493,12 +560,12 @@ class GameRepository(
     ): TaskCompletionResult = database.withTransaction {
         val profile = profileDao().getCurrentProfile()
             ?: return@withTransaction TaskCompletionResult.Invalid(NO_PROFILE)
-        val rewardedAlready = completedTaskDao().getByProfileId(profile.id)
-            .any { record -> record.taskId == taskId && record.isCorrect == true }
-        if (rewardedAlready) {
+        val attempts = completedTaskDao().getByProfileId(profile.id).filter { it.taskId == taskId }
+        if (attempts.any { it.isCorrect == true }) {
             return@withTransaction TaskCompletionResult.AlreadyCompleted
         }
-        val grantedReward = if (isCorrect) reward else 0L
+        val wrongAttempts = attempts.count { it.isCorrect == false }
+        val grantedReward = if (isCorrect) engine.taskReward(reward, wrongAttempts) else 0L
         val moodDelta = if (isCorrect) TASK_MOOD_REWARD else 0
         val periodIndex = currentPeriodIndex(profile.id)
         completedTaskDao().insert(
@@ -540,11 +607,13 @@ class GameRepository(
             reward = grantedReward,
             balance = newBalance,
             mood = newMood,
-            moodDelta = moodDelta,
+            moodDelta = newMood - profile.mood,
+            firstTry = wrongAttempts == 0,
+            fullReward = reward,
         )
     }
 
-    suspend fun closePeriod(): PeriodCloseResult = database.withTransaction {
+    suspend fun closePeriod(weekNeeds: List<WeekNeed> = emptyList()): PeriodCloseResult = database.withTransaction {
         val profile = profileDao().getCurrentProfile()
             ?: return@withTransaction PeriodCloseResult.Invalid(NO_PROFILE)
         val period = periodDao().getLatest(profile.id)
@@ -572,48 +641,35 @@ class GameRepository(
                 .sumOf { row -> row.price },
             BudgetDirection.SAVINGS to deposits.sumOf { row -> row.amount },
         )
-        val review = engine.evaluatePeriod(plan, fact)
+        val boughtIds = purchases.map { it.itemId }.toSet()
+        val review = engine.evaluatePeriod(plan, fact, weekNeeds, boughtIds)
         val previousMood = profile.mood
+        val previousSatiety = profile.saturation
         val previousStage = profile.petStage.coerceIn(0, EconomyEngine.MAX_PET_STAGE)
         val newMood = engine.applyPetEffect(previousMood, review.moodDelta)
-        val newStage = engine.nextPetStage(previousStage, review.isGoodPeriod)
+        val newSatiety = engine.applyPetEffect(previousSatiety, review.satietyDelta)
+        val totalStars = profile.growthStars + review.stars
+        // Стадия не откатывается, даже если формулы роста поменяются.
+        val newStage = maxOf(previousStage, engine.stageForStars(totalStars))
         val newGoodPeriods = if (review.isGoodPeriod) profile.goodPeriods + 1 else profile.goodPeriods
         profileDao().update(
             profile.copy(
                 mood = newMood,
+                saturation = newSatiety,
                 petStage = newStage,
                 goodPeriods = newGoodPeriods,
+                growthStars = totalStars,
             ),
         )
         periodDao().update(period.copy(status = PeriodStatus.CLOSED.name, closedAt = now()))
         ensureOpenPeriod(profile.id)
 
-        var newBalance = balanceDao().getByProfileId(profile.id)?.amount ?: 0L
-        // Доход за новый период только если период пройден хорошо — иначе «пустой» план не даёт монет.
-        val periodIncome = if (review.isGoodPeriod) EconomyEngine.PERIOD_INCOME_AMOUNT else 0L
-        if (periodIncome > 0L) {
-            when (
-                val earnResult = engine.earn(
-                    loadEconomyState(profile.id),
-                    EconomyEngine.PERIOD_INCOME_SOURCE,
-                    periodIncome,
-                )
-            ) {
-                is EarnResult.Success -> {
-                    earningDao().insert(
-                        EarningEntity(
-                            profileId = profile.id,
-                            source = earnResult.earning.source,
-                            amount = earnResult.earning.amount,
-                            periodIndex = currentPeriodIndex(profile.id),
-                            createdAt = now(),
-                        ),
-                    )
-                    balanceDao().upsert(BalanceEntity(profile.id, earnResult.state.balance, now()))
-                    newBalance = earnResult.state.balance
-                }
-                is EarnResult.Error -> {}
-            }
+        val nextPeriodIndex = currentPeriodIndex(profile.id)
+        val periodIncome = EconomyEngine.PERIOD_INCOME_AMOUNT
+        var newBalance = grantIncome(profile.id, EconomyEngine.PERIOD_INCOME_SOURCE, periodIncome, nextPeriodIndex)
+        val planBonus = if (review.planMatched) EconomyEngine.PLAN_BONUS_AMOUNT else 0L
+        if (planBonus > 0L) {
+            newBalance = grantIncome(profile.id, EconomyEngine.PLAN_BONUS_SOURCE, planBonus, nextPeriodIndex)
         }
 
         PeriodCloseResult.Success(
@@ -626,15 +682,50 @@ class GameRepository(
             stageGrew = newStage > previousStage,
             periodIncome = periodIncome,
             newBalance = newBalance,
+            planBonus = planBonus,
+            previousSatiety = previousSatiety,
+            newSatiety = newSatiety,
+            starsEarned = review.stars,
+            totalStars = totalStars,
+            starsToNextStage = engine.starsToNextStage(totalStars),
         )
     }
 
-    fun evaluateCurrentPeriod(snapshot: GameSnapshot): PeriodReview? {
+    private suspend fun grantIncome(profileId: Long, source: String, amount: Long, periodIndex: Int): Long {
+        val state = loadEconomyState(profileId)
+        return when (val earnResult = engine.earn(state, source, amount)) {
+            is EarnResult.Success -> {
+                earningDao().insert(
+                    EarningEntity(
+                        profileId = profileId,
+                        source = earnResult.earning.source,
+                        amount = earnResult.earning.amount,
+                        periodIndex = periodIndex,
+                        createdAt = now(),
+                    ),
+                )
+                balanceDao().upsert(BalanceEntity(profileId, earnResult.state.balance, now()))
+                earnResult.state.balance
+            }
+            is EarnResult.Error -> state.balance
+        }
+    }
+
+    fun evaluateCurrentPeriod(snapshot: GameSnapshot, weekNeeds: List<WeekNeed> = emptyList()): PeriodReview? {
         val period = snapshot.currentPeriod ?: return null
         if (period.status != PeriodStatus.ACTIVE.name) return null
         if (snapshot.plan.isEmpty()) return null
         val plan = snapshot.plan.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
-        return engine.evaluatePeriod(plan, snapshot.periodFact)
+        val bought = snapshot.periodPurchases.map { it.itemId }.toSet()
+        return engine.evaluatePeriod(plan, snapshot.periodFact, weekNeeds, bought)
+    }
+
+    fun starsToNextStage(totalStars: Int): Int? = engine.starsToNextStage(totalStars)
+
+    fun overPlanAmount(snapshot: GameSnapshot, direction: BudgetDirection, price: Long): Long {
+        if (snapshot.currentPeriod?.status != PeriodStatus.ACTIVE.name) return 0L
+        val plan = snapshot.plan.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
+        return engine.overPlanAmount(plan, snapshot.periodFact, direction, price)
     }
 
     private suspend fun persistSavingsResult(profileId: Long, goalId: String, newBalance: Long, newSaved: Long) {
@@ -691,8 +782,9 @@ class GameRepository(
         const val PROGRESS_GOAL_ACHIEVED = "GOAL_ACHIEVED"
         const val START_BUDGET_SOURCE = "START_BUDGET"
         const val START_BUDGET_AMOUNT = 30L
+        private const val START_BUDGET_TITLE = "Стартовые монеты"
         private const val GOAL_MOOD_REWARD = 15
-        private const val TASK_MOOD_REWARD = 10
+        private const val TASK_MOOD_REWARD = 5
         private const val NO_PROFILE = "Сначала создай профиль."
         private const val EXPLANATION_GOAL_REQUIRED = "Сначала выбери цель накопления."
         private const val EXPLANATION_GOAL_RECEIVED = "Эта цель уже получена. Выбери новую цель."

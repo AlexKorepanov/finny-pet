@@ -26,25 +26,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
-import ru.finny.petgame.content.ContentLoader
-import ru.finny.petgame.content.model.TaskContent
+import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.data.model.GameSnapshot
-import ru.finny.petgame.data.model.PeriodStatus
+import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.ui.components.AppCard
+import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.components.coinsAmount
+import ru.finny.petgame.ui.model.NextStep
+import ru.finny.petgame.ui.model.nextOpenTask
+import ru.finny.petgame.ui.model.nextStep
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.ChunkySurface
@@ -62,6 +58,7 @@ import ru.finny.petgame.ui.theme.FinnyColors
 @Composable
 fun MainScreen(
     snapshot: GameSnapshot?,
+    catalog: ContentCatalog?,
     onHint: () -> Unit,
     onPlan: () -> Unit,
     onShop: () -> Unit,
@@ -71,6 +68,7 @@ fun MainScreen(
     onAdult: () -> Unit,
     onOpenTask: (String) -> Unit,
     onClosePeriod: () -> Unit,
+    onWardrobe: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -88,13 +86,9 @@ fun MainScreen(
             }
         } else {
             val profile = snapshot.profile
-            val context = LocalContext.current
-            var tasks by remember { mutableStateOf<List<TaskContent>?>(null) }
-            LaunchedEffect(Unit) {
-                tasks = withContext(Dispatchers.IO) {
-                    ContentLoader(context.assets).loadCatalog().tasks
-                }
-            }
+            val periodIndex = snapshot.currentPeriod?.periodIndex ?: 0
+            val week = catalog?.weekFor(periodIndex)
+            val starsLeft = EconomyEngine().starsToNextStage(profile.growthStars)
             Column(
                 modifier = Modifier
                     .padding(padding)
@@ -119,10 +113,20 @@ fun MainScreen(
                             style = MaterialTheme.typography.headlineSmall,
                         )
                         Text(
-                            text = stringResource(
-                                R.string.main_period_line,
-                                (snapshot.currentPeriod?.periodIndex ?: 0) + 1,
-                            ),
+                            text = profile.petName,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        SecondaryButton(
+                            text = stringResource(R.string.wardrobe_button),
+                            onClick = onWardrobe,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = if (week != null) {
+                                stringResource(R.string.main_week_theme_line, periodIndex + 1, week.theme)
+                            } else {
+                                stringResource(R.string.main_period_line, periodIndex + 1)
+                            },
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
@@ -133,8 +137,25 @@ fun MainScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Text(
+                            text = if (starsLeft != null) {
+                                stringResource(R.string.main_stars_line, profile.growthStars, starsLeft)
+                            } else {
+                                stringResource(R.string.main_stars_max_line, profile.growthStars)
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
+                NextStepCard(
+                    step = nextStep(snapshot, catalog),
+                    onPlan = onPlan,
+                    onShop = onShop,
+                    onSavings = onSavings,
+                    onOpenTask = onOpenTask,
+                    onClosePeriod = onClosePeriod,
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     StatCard(
                         title = stringResource(R.string.stat_balance_label),
@@ -165,31 +186,16 @@ fun MainScreen(
                     MoodRow(label = stringResource(R.string.pet_state_mood), value = profile.mood)
                     MoodRow(label = stringResource(R.string.pet_state_saturation), value = profile.saturation)
                 }
-                if (snapshot.currentPeriod?.status == PeriodStatus.ACTIVE.name) {
-                    PrimaryButton(
-                        text = stringResource(R.string.period_close_button),
-                        onClick = onClosePeriod,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else if (snapshot.currentPeriod == null ||
-                    snapshot.currentPeriod.status == PeriodStatus.PLANNED.name
-                ) {
-                    AppCard(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = stringResource(R.string.period_need_plan),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
-                }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
                     SectionTitle(
                         text = stringResource(R.string.active_task_title),
                         icon = Icons.Filled.PlayArrow,
                     )
-                    val completedIds = snapshot.completedTasks.filter { it.isCorrect == true }.map { it.taskId }.toSet()
-                    val nextTask = tasks?.firstOrNull { it.id !in completedIds }
+                    val nextTask = nextOpenTask(snapshot, catalog)
+                    val allDone = catalog != null &&
+                        catalog.tasks.all { task -> snapshot.completedTasks.any { it.taskId == task.id && it.isCorrect == true } }
                     when {
-                        tasks == null -> {
+                        catalog == null -> {
                             Text(text = stringResource(R.string.active_task_stub), style = MaterialTheme.typography.bodyLarge)
                         }
                         nextTask != null -> {
@@ -200,9 +206,16 @@ fun MainScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
-                        else -> {
+                        allDone -> {
                             StatusBadge(
                                 text = stringResource(R.string.tasks_all_done),
+                                icon = Icons.Filled.Done,
+                                kind = BadgeKind.POSITIVE,
+                            )
+                        }
+                        else -> {
+                            StatusBadge(
+                                text = stringResource(R.string.tasks_week_done),
                                 icon = Icons.Filled.Done,
                                 kind = BadgeKind.POSITIVE,
                             )
@@ -258,6 +271,59 @@ fun MainScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun NextStepCard(
+    step: NextStep,
+    onPlan: () -> Unit,
+    onShop: () -> Unit,
+    onSavings: () -> Unit,
+    onOpenTask: (String) -> Unit,
+    onClosePeriod: () -> Unit,
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        SectionTitle(
+            text = stringResource(R.string.next_step_title),
+            icon = Icons.Filled.PlayArrow,
+        )
+        val (text, button, action) = when (step) {
+            NextStep.MakePlan -> Triple(
+                stringResource(R.string.next_step_plan),
+                stringResource(R.string.plan_make),
+                onPlan,
+            )
+            is NextStep.BuyNeeds -> Triple(
+                stringResource(R.string.next_step_needs, step.titles.joinToString()),
+                stringResource(R.string.tasks_to_shop),
+                onShop,
+            )
+            is NextStep.Save -> Triple(
+                stringResource(R.string.next_step_save, coinsAmount(step.amount)),
+                stringResource(R.string.next_step_save_button),
+                onSavings,
+            )
+            is NextStep.SolveTask -> Triple(
+                stringResource(R.string.next_step_task, step.task.title),
+                stringResource(R.string.tasks_start),
+                { onOpenTask(step.task.id) },
+            )
+            NextStep.CloseWeek -> Triple(
+                stringResource(R.string.next_step_close),
+                stringResource(R.string.period_close_button),
+                onClosePeriod,
+            )
+        }
+        Text(text = text, style = MaterialTheme.typography.bodyLarge)
+        PrimaryButton(text = button, onClick = action, modifier = Modifier.fillMaxWidth())
+        if (step !is NextStep.MakePlan && step !is NextStep.CloseWeek) {
+            SecondaryButton(
+                text = stringResource(R.string.period_close_button),
+                onClick = onClosePeriod,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

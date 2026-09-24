@@ -2,6 +2,7 @@ package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
+import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.repository.GameRepository
@@ -40,6 +43,7 @@ import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
@@ -48,12 +52,17 @@ import ru.finny.petgame.ui.components.coinsAmount
 fun PlanScreen(
     repository: GameRepository,
     snapshot: GameSnapshot,
+    catalog: ContentCatalog?,
     onBack: () -> Unit,
     onHint: () -> Unit,
     onPlanConfirmed: () -> Unit,
     onClosePeriod: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val periodIndex = snapshot.currentPeriod?.periodIndex ?: 0
+    val week = catalog?.weekFor(periodIndex)
+    val needs = catalog?.needsFor(periodIndex).orEmpty()
+    val needsCost = needs.sumOf { it.price }
     val status = snapshot.currentPeriod?.status
     val editable = status == null || status == PeriodStatus.PLANNED.name
     val savedPlan = snapshot.plan.associate { BudgetDirection.valueOf(it.direction) to it.plannedAmount }
@@ -91,6 +100,32 @@ fun PlanScreen(
                 petLook = snapshot.profile.toPetLook(),
                 petStage = snapshot.profile.petStage,
             )
+            week?.let { current ->
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    SectionTitle(
+                        text = stringResource(R.string.plan_week_title, periodIndex + 1, current.theme),
+                        icon = Icons.Filled.Star,
+                    )
+                    Text(text = current.lesson, style = MaterialTheme.typography.bodyLarge)
+                    if (needs.isNotEmpty()) {
+                        Text(text = stringResource(R.string.plan_needs_title), style = MaterialTheme.typography.titleMedium)
+                        needs.forEach { need ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = "• ${need.title}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(text = coinsAmount(need.price), style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.plan_needs_total, coinsAmount(needsCost)),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+            }
             if (editable) {
                 Text(
                     text = stringResource(R.string.plan_available, coinsAmount(available)),
@@ -127,6 +162,20 @@ fun PlanScreen(
                     Text(
                         text = stringResource(R.string.plan_remainder, coinsAmount(remainder)),
                         style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                if (needsCost > 0L && requiredAmount < needsCost) {
+                    StatusBadge(
+                        text = stringResource(R.string.plan_needs_warning, coinsAmount(needsCost)),
+                        icon = Icons.Filled.Warning,
+                        kind = BadgeKind.ATTENTION,
+                    )
+                }
+                if (savingsAmount == 0L && total > 0L) {
+                    StatusBadge(
+                        text = stringResource(R.string.plan_savings_tip),
+                        icon = Icons.Filled.Star,
+                        kind = BadgeKind.NEUTRAL,
                     )
                 }
                 problems.forEach { problem ->

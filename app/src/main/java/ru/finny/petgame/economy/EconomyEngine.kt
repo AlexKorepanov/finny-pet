@@ -13,7 +13,20 @@ import ru.finny.petgame.economy.model.PurchaseDraft
 import ru.finny.petgame.economy.model.PurchaseRecord
 import ru.finny.petgame.economy.model.PurchaseResult
 import ru.finny.petgame.economy.model.SavingsBucket
+import ru.finny.petgame.economy.model.WeekNeed
 import ru.finny.petgame.economy.model.WithdrawResult
+
+private fun Long.coins(): String {
+    val mod100 = this % 100
+    val mod10 = this % 10
+    val word = when {
+        mod100 in 11..14 -> "монет"
+        mod10 == 1L -> "монету"
+        mod10 in 2..4 -> "монеты"
+        else -> "монет"
+    }
+    return "$this $word"
+}
 
 class EconomyEngine {
 
@@ -117,6 +130,7 @@ class EconomyEngine {
             return WithdrawResult.NeedsConfirmation(
                 newSavedAmount = newBucket.savedAmount,
                 eta = goalEta(newBucket, averageDeposit),
+                etaBefore = goalEta(bucket, averageDeposit),
             )
         }
         val newState = state.copy(
@@ -144,11 +158,36 @@ class EconomyEngine {
     fun averageDeposit(deposits: List<Long>): Long =
         if (deposits.isEmpty()) 0L else deposits.sum() / deposits.size
 
-    fun applyPetEffect(current: Int, delta: Int): Int = (current + delta).coerceIn(0, 100)
+    /**
+     * Среднее пополнение за неделю: сумма пополнений / число недель
+     * от первого пополнения до текущей недели включительно.
+     */
+    fun averageDepositPerPeriod(deposits: List<Pair<Int, Long>>, currentPeriodIndex: Int): Long {
+        if (deposits.isEmpty()) return 0L
+        val firstPeriod = deposits.minOf { it.first }
+        val periods = (currentPeriodIndex - firstPeriod + 1).coerceAtLeast(1)
+        val total = deposits.sumOf { it.second }
+        return (total / periods).coerceAtLeast(if (total > 0L) 1L else 0L)
+    }
+
+    fun applyPetEffect(current: Int, delta: Int): Int = (current + delta).coerceIn(PET_STAT_MIN, PET_STAT_MAX)
+
+    /** Полная награда с первой попытки, половина (с округлением вверх) — после ошибки. */
+    fun taskReward(baseReward: Long, previousWrongAttempts: Int): Long =
+        if (previousWrongAttempts <= 0) baseReward else (baseReward + 1L) / 2L
+
+    /** На сколько покупка выйдет за план конверта (0 — если в пределах плана). */
+    fun overPlanAmount(plan: Map<BudgetDirection, Long>, fact: Map<BudgetDirection, Long>, direction: BudgetDirection, price: Long): Long {
+        val planned = plan[direction] ?: 0L
+        val spent = fact[direction] ?: 0L
+        return (spent + price - planned).coerceAtLeast(0L)
+    }
 
     fun evaluatePeriod(
         plan: Map<BudgetDirection, Long>,
         fact: Map<BudgetDirection, Long>,
+        weekNeeds: List<WeekNeed> = emptyList(),
+        boughtItemIds: Set<String> = emptySet(),
     ): PeriodReview {
         val planRequired = plan[BudgetDirection.REQUIRED] ?: 0L
         val planOptional = plan[BudgetDirection.OPTIONAL] ?: 0L
@@ -157,33 +196,57 @@ class EconomyEngine {
         val factOptional = fact[BudgetDirection.OPTIONAL] ?: 0L
         val factSavings = fact[BudgetDirection.SAVINGS] ?: 0L
 
-        val requiredCovered = factRequired >= planRequired && planRequired > 0L
-        val planMatched = factRequired <= planRequired &&
-            factOptional <= planOptional &&
-            factSavings >= planSavings
+        val missingNeeds = weekNeeds.filter { it.itemId !in boughtItemIds }.map { it.title }
+        val requiredCovered = if (weekNeeds.isEmpty()) factRequired > 0L else missingNeeds.isEmpty()
+        val requiredOver = (factRequired - planRequired).coerceAtLeast(0L)
+        val optionalOver = (factOptional - planOptional).coerceAtLeast(0L)
+        val savingsShort = (planSavings - factSavings).coerceAtLeast(0L)
+        val planMatched = requiredOver == 0L && optionalOver == 0L && savingsShort == 0L
         val savingsRegular = factSavings > 0L
+        val economized = (planRequired - factRequired).coerceAtLeast(0L) +
+            (planOptional - factOptional).coerceAtLeast(0L)
+        val needsCost = weekNeeds.sumOf { it.price }
 
-        var moodDelta = 0
+        var moodDelta = MOOD_WEEK_DECAY
         val explanations = mutableListOf<String>()
         if (requiredCovered) {
-            moodDelta += MOOD_REQUIRED_OK
-            explanations += "Нужное куплено — питомцу спокойнее."
+            explanations += "Всё нужное куплено — Финни сыт и ухожен."
         } else {
             moodDelta += MOOD_REQUIRED_MISS
-            explanations += "Нужного не хватило. В следующий раз купи еду и уход по плану."
+            explanations += if (missingNeeds.isEmpty()) {
+                "На этой неделе Финни не получил нужного (еда и уход)."
+            } else {
+                "Не хватило нужного: ${missingNeeds.joinToString()}."
+            }
         }
         if (planMatched) {
             moodDelta += MOOD_PLAN_OK
-            explanations += "Факт совпал с планом — хорошая привычка."
+            explanations += if (economized > 0L) {
+                "Ты тратил по плану и даже сэкономил ${economized.coins()}."
+            } else {
+                "Ты потратил ровно столько, сколько запланировал."
+            }
         } else {
-            moodDelta += MOOD_PLAN_MISS
-            explanations += "Факт не совпал с планом. Посмотри, где потратил больше или меньше."
+            if (requiredOver > 0L) explanations += "На нужное потрачено на ${requiredOver.coins()} больше плана."
+            if (optionalOver > 0L) explanations += "На покупки по желанию потрачено на ${optionalOver.coins()} больше плана."
+            if (savingsShort > 0L) explanations += "В копилку отложено на ${savingsShort.coins()} меньше плана."
         }
         if (savingsRegular) {
             moodDelta += MOOD_SAVINGS_OK
-            explanations += "Ты отложил монеты в копилку — это помогает цели."
+            explanations += "Копилка пополнена — мечта стала ближе."
         } else {
-            explanations += "В этом периоде в копилку ничего не попало. Можно отложить чуть-чуть в следующий раз."
+            explanations += "В копилку ничего не попало. Даже 1 монета — уже шаг к мечте."
+        }
+        explanations += "За неделю Финни проголодался и немного соскучился — это нормально, позаботься о нём снова."
+
+        val advice = when {
+            !requiredCovered && needsCost > planRequired ->
+                "Нужное на неделю стоит ${needsCost.coins()} — запланируй на нужное не меньше."
+            !requiredCovered -> "Сначала купи всё из списка «Нужно Финни», а потом — по желанию."
+            optionalOver > 0L -> "Перед покупкой по желанию посмотри, сколько осталось в плане."
+            requiredOver > 0L -> "Сравни цены нужного с планом, прежде чем покупать."
+            savingsShort > 0L || !savingsRegular -> "Отложи в копилку сразу после получения монет — так проще не потратить."
+            else -> "Так держать! Попробуй отложить в копилку чуть больше."
         }
         return PeriodReview(
             requiredCovered = requiredCovered,
@@ -191,12 +254,25 @@ class EconomyEngine {
             savingsRegular = savingsRegular,
             moodDelta = moodDelta,
             explanations = explanations,
+            satietyDelta = SATIETY_WEEK_DECAY,
+            missingNeeds = missingNeeds,
+            economized = economized,
+            advice = advice,
         )
     }
 
-    fun nextPetStage(currentStage: Int, isGoodPeriod: Boolean): Int {
-        if (!isGoodPeriod) return currentStage.coerceIn(0, MAX_PET_STAGE)
-        return (currentStage + 1).coerceAtMost(MAX_PET_STAGE)
+    /** Стадия зависит от звёздочек за все недели и никогда не уменьшается. */
+    fun stageForStars(totalStars: Int): Int = when {
+        totalStars >= STARS_FOR_ADULT -> 2
+        totalStars >= STARS_FOR_TEEN -> 1
+        else -> 0
+    }
+
+    /** Сколько звёздочек осталось до следующей стадии (null — стадия максимальная). */
+    fun starsToNextStage(totalStars: Int): Int? = when {
+        totalStars < STARS_FOR_TEEN -> STARS_FOR_TEEN - totalStars
+        totalStars < STARS_FOR_ADULT -> STARS_FOR_ADULT - totalStars
+        else -> null
     }
 
     fun checkDistribution(
@@ -229,12 +305,18 @@ class EconomyEngine {
 
     companion object {
         const val MAX_PET_STAGE = 2
-        const val PERIOD_INCOME_AMOUNT = 20L
-        const val PERIOD_INCOME_SOURCE = "Доход за новый период"
-        private const val MOOD_REQUIRED_OK = 8
+        const val STARS_FOR_TEEN = 4
+        const val STARS_FOR_ADULT = 9
+        const val PET_STAT_MIN = 10
+        const val PET_STAT_MAX = 100
+        const val PERIOD_INCOME_AMOUNT = 30L
+        const val PERIOD_INCOME_SOURCE = "Карманные монеты на неделю"
+        const val PLAN_BONUS_AMOUNT = 5L
+        const val PLAN_BONUS_SOURCE = "Бонус за выполненный план"
+        const val MOOD_WEEK_DECAY = -10
+        const val SATIETY_WEEK_DECAY = -30
         private const val MOOD_REQUIRED_MISS = -8
         private const val MOOD_PLAN_OK = 5
-        private const val MOOD_PLAN_MISS = -3
         private const val MOOD_SAVINGS_OK = 5
         private const val EXPLANATION_SOURCE_REQUIRED = "У начисления должен быть источник."
         private const val EXPLANATION_AMOUNT_POSITIVE = "Сумма должна быть больше нуля."
