@@ -4,12 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Тёплый фон приложения -->
     <path
-        android:fillColor="#FDF6EC"
+        android:fillColor="#00000000"
         android:pathData="M0,0h108v108h-108z" />
-    <!-- Мягкий круг за питомцем -->
-    <path
-        android:fillColor="#FFE8B8"
-        android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0" />
 </vector>

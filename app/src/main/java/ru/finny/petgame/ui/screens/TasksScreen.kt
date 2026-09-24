@@ -56,6 +56,7 @@ import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.StatusBadge
@@ -120,8 +121,7 @@ fun TasksScreen(
                 accent = SectionAccent.TASKS,
                 title = stringResource(R.string.section_tasks),
                 hint = stringResource(R.string.tasks_header_hint),
-                petSpecies = snapshot.profile.petSpecies,
-                petColorIndex = snapshot.profile.petColor,
+                petLook = snapshot.profile.toPetLook(),
                 petStage = snapshot.profile.petStage,
             )
             if (taskList == null) {

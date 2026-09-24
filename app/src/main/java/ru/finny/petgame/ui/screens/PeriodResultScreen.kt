@@ -26,6 +26,7 @@ import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
@@ -35,8 +36,7 @@ import ru.finny.petgame.ui.components.coinsAmount
 @Composable
 fun PeriodResultScreen(
     result: PeriodCloseResult.Success,
-    petSpecies: Int,
-    petColorIndex: Int,
+    petLook: PetLook,
     onContinue: () -> Unit,
     onHint: () -> Unit,
 ) {
@@ -62,8 +62,7 @@ fun PeriodResultScreen(
                 accent = SectionAccent.PROGRESS,
                 title = stringResource(R.string.period_result_title),
                 hint = stringResource(R.string.period_result_hint, result.periodIndex + 1),
-                petSpecies = petSpecies,
-                petColorIndex = petColorIndex,
+                petLook = petLook,
                 petStage = result.newStage,
             )
             Column(
@@ -71,8 +70,7 @@ fun PeriodResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PetSprite(
-                    species = petSpecies,
-                    colorIndex = petColorIndex,
+                    look = petLook,
                     stage = result.newStage,
                     modifier = Modifier.size(128.dp),
                 )

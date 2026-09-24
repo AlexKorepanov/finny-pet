@@ -40,6 +40,7 @@ import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
 
@@ -87,8 +88,7 @@ fun PlanScreen(
                 accent = SectionAccent.PLAN,
                 title = stringResource(R.string.section_plan),
                 hint = stringResource(R.string.plan_edit_hint),
-                petSpecies = snapshot.profile.petSpecies,
-                petColorIndex = snapshot.profile.petColor,
+                petLook = snapshot.profile.toPetLook(),
                 petStage = snapshot.profile.petStage,
             )
             if (editable) {

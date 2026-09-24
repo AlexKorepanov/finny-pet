@@ -18,15 +18,13 @@
     <string name="next">Далее</string>
     <string name="start">Начать игру</string>
 
-    <string name="profile_title">Кто играет?</string>
-    <string name="player_name_label">Игровое имя</string>
-    <string name="player_name_hint">Например: Аня</string>
-    <string name="profile_guest_note">Имя нужно только для игры. Регистрация не нужна.</string>
-    <string name="character_title">Выбери персонажа</string>
-
-    <string name="pet_title">Как выглядит твой питомец?</string>
-    <string name="pet_species_title">Персонаж</string>
-    <string name="pet_color_title">Цвет</string>
+    <string name="pet_title">Наряди своего фенька!</string>
+    <string name="pet_subtitle">Это фенек — маленький лис с большими ушками. Выбери аксессуары!</string>
+    <string name="pet_hat_title">Головной убор</string>
+    <string name="pet_face_title">Для лица</string>
+    <string name="pet_outfit_title">Одежда</string>
+    <string name="pet_emotion_title">Настроение</string>
+    <string name="pet_eye_title">Цвет глаз</string>
     <string name="pet_name_label">Имя питомца</string>
     <string name="pet_name_hint">Например: Финни</string>
 
@@ -35,7 +33,7 @@
     <string name="save">Сохранить</string>
     <string name="edit">Изменить</string>
 
-    <string name="main_greeting">Привет, %1$s!</string>
+    <string name="main_greeting">Привет!</string>
     <string name="main_period_line">Период %1$d</string>
     <string name="main_stage_line">Стадия: %1$s</string>
     <string name="pet_stage_0">Малыш</string>
@@ -226,7 +224,6 @@
     <string name="plan_decrease">−</string>
     <string name="cd_increase">Увеличить</string>
     <string name="cd_decrease">Уменьшить</string>
-    <string name="cd_player_avatar">Аватар игрока</string>
 
     <string name="hint_title">Подсказка</string>
     <string name="hint_body">Твоя цель — заботиться о питомце и учиться обращаться с монетами. Монеты можно:</string>
@@ -237,22 +234,36 @@
 
     <string name="source_start_budget">Стартовый бюджет</string>
 
-    <string-array name="pet_species_labels">
-        <item>Котёнок</item>
-        <item>Щенок</item>
-        <item>Кролик</item>
+    <string-array name="pet_hat_labels">
+        <item>Без шапки</item>
+        <item>Кепка</item>
+        <item>Бантик</item>
+        <item>Праздничный колпак</item>
     </string-array>
-    <string-array name="pet_color_labels">
-        <item>Рыжий</item>
-        <item>Серый</item>
-        <item>Розовый</item>
+    <string-array name="pet_face_labels">
+        <item>Без очков</item>
+        <item>Круглые очки</item>
+        <item>Солнечные очки</item>
+        <item>Монокль</item>
     </string-array>
-    <string-array name="player_avatar_labels">
-        <item>Звезда</item>
-        <item>Ракета</item>
-        <item>Робот</item>
+    <string-array name="pet_outfit_labels">
+        <item>Без одежды</item>
+        <item>Шарфик</item>
+        <item>Худи</item>
+        <item>Бабочка</item>
     </string-array>
-
+    <string-array name="pet_emotion_labels">
+        <item>Радость</item>
+        <item>Улыбка</item>
+        <item>Подмигивание</item>
+        <item>Восторг</item>
+    </string-array>
+    <string-array name="pet_eye_labels">
+        <item>Тёмные</item>
+        <item>Голубые</item>
+        <item>Зелёные</item>
+        <item>Карие</item>
+    </string-array>
     <plurals name="coins">
         <item quantity="one">%1$d монета</item>
         <item quantity="few">%1$d монеты</item>

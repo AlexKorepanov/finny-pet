@@ -29,6 +29,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.theme.FinnyColors
 
@@ -73,7 +74,7 @@ fun IntroScreen(
                     borderColor = FinnyColors.Primary.copy(alpha = 0.35f),
                     minHeight = 200.dp,
                 ) {
-                    PetSprite(species = 0, colorIndex = 0, modifier = Modifier.size(168.dp))
+                    PetSprite(look = PetLook.Default, modifier = Modifier.size(168.dp))
                 }
                 Text(
                     text = stringResource(R.string.intro_body_1),

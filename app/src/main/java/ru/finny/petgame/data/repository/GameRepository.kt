@@ -56,16 +56,22 @@ class GameRepository(
     suspend fun createProfile(
         playerName: String,
         petName: String,
-        petSpecies: Int,
-        petColor: Int,
+        petHat: Int = 0,
+        petFace: Int = 0,
+        petOutfit: Int = 0,
+        petEmotion: Int = 0,
+        petEyeColor: Int = 0,
         playerAvatar: Int = 0,
     ): Long = database.withTransaction {
         val profileId = profileDao().insert(
             ProfileEntity(
                 playerName = playerName,
                 petName = petName,
-                petSpecies = petSpecies,
-                petColor = petColor,
+                petHat = petHat,
+                petFace = petFace,
+                petOutfit = petOutfit,
+                petEmotion = petEmotion,
+                petEyeColor = petEyeColor,
                 createdAt = now(),
                 playerAvatar = playerAvatar,
             ),

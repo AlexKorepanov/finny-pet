@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.ui.theme.FinnyColors
+import ru.finny.petgame.ui.model.PetLook
 
 enum class SectionAccent {
     PLAN,
@@ -52,8 +53,7 @@ fun SectionHeader(
     title: String,
     hint: String,
     modifier: Modifier = Modifier,
-    petSpecies: Int = 0,
-    petColorIndex: Int = 0,
+    petLook: PetLook = PetLook.Default,
     petStage: Int = 0,
 ) {
     val face = sectionAccentColor(accent)
@@ -88,8 +88,7 @@ fun SectionHeader(
                 )
             }
             PetSprite(
-                species = petSpecies,
-                colorIndex = petColorIndex,
+                look = petLook,
                 stage = petStage,
                 modifier = Modifier.size(72.dp),
             )

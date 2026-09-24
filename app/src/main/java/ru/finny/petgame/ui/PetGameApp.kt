@@ -1,6 +1,7 @@
 package ru.finny.petgame.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,12 +18,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
 import ru.finny.petgame.data.model.GameSnapshot
@@ -32,6 +37,8 @@ import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.model.PetLook
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.screens.AdultScreen
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
@@ -39,16 +46,22 @@ import ru.finny.petgame.ui.screens.PeriodResultScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
 import ru.finny.petgame.ui.screens.PlanScreen
-import ru.finny.petgame.ui.screens.ProfileScreen
 import ru.finny.petgame.ui.screens.ProgressScreen
 import ru.finny.petgame.ui.screens.SavingsScreen
 import ru.finny.petgame.ui.screens.ShopScreen
 import ru.finny.petgame.ui.screens.TasksScreen
 
+private val PetLookSaver = Saver<PetLook, List<Int>>(
+    save = { listOf(it.hat, it.face, it.outfit, it.emotion, it.eyeColor) },
+    restore = { PetLook(it[0], it[1], it[2], it[3], it[4]) },
+)
+
+private const val DEFAULT_PLAYER_NAME = "Друг"
+private const val SPLASH_MIN_MS = 1_800L
+
 enum class AppScreen {
     LOADING,
     INTRO,
-    PROFILE,
     PET,
     PET_CONFIRM,
     MAIN,
@@ -65,10 +78,7 @@ enum class AppScreen {
 fun PetGameApp(repository: GameRepository) {
     var screen by remember { mutableStateOf(AppScreen.LOADING) }
     var introPage by rememberSaveable { mutableIntStateOf(0) }
-    var playerName by rememberSaveable { mutableStateOf("") }
-    var avatarIndex by rememberSaveable { mutableIntStateOf(0) }
-    var speciesIndex by rememberSaveable { mutableIntStateOf(0) }
-    var colorIndex by rememberSaveable { mutableIntStateOf(0) }
+    var petLook by rememberSaveable(stateSaver = PetLookSaver) { mutableStateOf(PetLook.Default) }
     var petName by rememberSaveable { mutableStateOf("") }
     var showHint by remember { mutableStateOf(false) }
     var showPlanHint by remember { mutableStateOf(false) }
@@ -78,8 +88,13 @@ fun PetGameApp(repository: GameRepository) {
     var periodCloseResult by remember { mutableStateOf<PeriodCloseResult.Success?>(null) }
 
     LaunchedEffect(Unit) {
+        val startedAt = System.currentTimeMillis()
         val snapshot = repository.loadSnapshot()
         mainSnapshot = snapshot
+        val elapsed = System.currentTimeMillis() - startedAt
+        if (elapsed < SPLASH_MIN_MS) {
+            delay(SPLASH_MIN_MS - elapsed)
+        }
         screen = if (snapshot != null) AppScreen.MAIN else AppScreen.INTRO
     }
 
@@ -98,11 +113,10 @@ fun PetGameApp(repository: GameRepository) {
     val goBack: () -> Unit = {
         when (screen) {
             AppScreen.INTRO -> if (introPage > 0) introPage--
-            AppScreen.PROFILE -> {
+            AppScreen.PET -> {
                 introPage = 1
                 screen = AppScreen.INTRO
             }
-            AppScreen.PET -> screen = AppScreen.PROFILE
             AppScreen.PET_CONFIRM -> screen = AppScreen.PET
             AppScreen.PLAN -> screen = AppScreen.MAIN
             AppScreen.SHOP -> screen = AppScreen.MAIN
@@ -143,49 +157,38 @@ fun PetGameApp(repository: GameRepository) {
     }
 
     when (screen) {
-        AppScreen.LOADING -> LoadingScreen()
+        AppScreen.LOADING -> LaunchSplashScreen()
         AppScreen.INTRO -> IntroScreen(
             page = introPage,
             onBack = goBack,
             onHint = { showHint = true },
             onNextPage = { introPage = 1 },
-            onFinish = { screen = AppScreen.PROFILE },
-        )
-        AppScreen.PROFILE -> ProfileScreen(
-            playerName = playerName,
-            avatarIndex = avatarIndex,
-            onPlayerNameChange = { playerName = it },
-            onAvatarChange = { avatarIndex = it },
-            onBack = goBack,
-            onHint = { showHint = true },
-            onNext = { screen = AppScreen.PET },
+            onFinish = { screen = AppScreen.PET },
         )
         AppScreen.PET -> PetScreen(
-            speciesIndex = speciesIndex,
-            colorIndex = colorIndex,
+            look = petLook,
             petName = petName,
-            onSpeciesChange = { speciesIndex = it },
-            onColorChange = { colorIndex = it },
+            onLookChange = { petLook = it },
             onPetNameChange = { petName = it },
             onBack = goBack,
             onHint = { showHint = true },
             onNext = { screen = AppScreen.PET_CONFIRM },
         )
         AppScreen.PET_CONFIRM -> PetConfirmScreen(
-            playerName = playerName.trim(),
             petName = petName.trim(),
-            speciesIndex = speciesIndex,
-            colorIndex = colorIndex,
+            look = petLook,
             onBack = goBack,
             onHint = { showHint = true },
             onSave = {
                 scope.launch {
                     repository.createProfile(
-                        playerName = playerName.trim(),
+                        playerName = DEFAULT_PLAYER_NAME,
                         petName = petName.trim(),
-                        petSpecies = speciesIndex,
-                        petColor = colorIndex,
-                        playerAvatar = avatarIndex,
+                        petHat = petLook.hat,
+                        petFace = petLook.face,
+                        petOutfit = petLook.outfit,
+                        petEmotion = petLook.emotion,
+                        petEyeColor = petLook.eyeColor,
                     )
                     mainSnapshot = repository.loadSnapshot()
                     screen = AppScreen.MAIN
@@ -305,8 +308,8 @@ fun PetGameApp(repository: GameRepository) {
                     },
                     onProfileDeleted = {
                         mainSnapshot = null
-                        playerName = ""
                         petName = ""
+                        petLook = PetLook.Default
                         introPage = 0
                         screen = AppScreen.INTRO
                     },
@@ -320,8 +323,7 @@ fun PetGameApp(repository: GameRepository) {
             } else {
                 PeriodResultScreen(
                     result = result,
-                    petSpecies = mainSnapshot?.profile?.petSpecies ?: 0,
-                    petColorIndex = mainSnapshot?.profile?.petColor ?: 0,
+                    petLook = mainSnapshot?.profile?.toPetLook() ?: PetLook.Default,
                     onContinue = {
                         periodCloseResult = null
                         screen = AppScreen.MAIN
@@ -394,6 +396,16 @@ fun PetGameApp(repository: GameRepository) {
             },
         )
     }
+}
+
+@Composable
+private fun LaunchSplashScreen() {
+    Image(
+        painter = painterResource(R.drawable.splash_start),
+        contentDescription = stringResource(R.string.app_name),
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop,
+    )
 }
 
 @Composable

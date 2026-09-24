@@ -17,13 +17,13 @@ import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.PetLook
 
 @Composable
 fun SectionStubScreen(
     title: String,
     accent: SectionAccent,
-    petSpecies: Int,
-    petColorIndex: Int,
+    petLook: PetLook = PetLook.Default,
     onBack: () -> Unit,
     onHint: () -> Unit,
 ) {
@@ -48,8 +48,7 @@ fun SectionStubScreen(
                 accent = accent,
                 title = title,
                 hint = stringResource(R.string.section_hint_stub),
-                petSpecies = petSpecies,
-                petColorIndex = petColorIndex,
+                petLook = petLook,
             )
             Box(
                 modifier = Modifier.fillMaxSize(),

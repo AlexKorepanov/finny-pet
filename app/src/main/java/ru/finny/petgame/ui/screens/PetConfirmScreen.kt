@@ -24,14 +24,13 @@ import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
 fun PetConfirmScreen(
-    playerName: String,
     petName: String,
-    speciesIndex: Int,
-    colorIndex: Int,
+    look: PetLook,
     onBack: () -> Unit,
     onHint: () -> Unit,
     onSave: () -> Unit,
@@ -68,19 +67,12 @@ fun PetConfirmScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     PetSprite(
-                        species = speciesIndex,
-                        colorIndex = colorIndex,
+                        look = look,
                         modifier = Modifier.size(168.dp),
                     )
                     Text(
                         text = petName,
                         style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        text = stringResource(R.string.confirm_player, playerName),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
                 }

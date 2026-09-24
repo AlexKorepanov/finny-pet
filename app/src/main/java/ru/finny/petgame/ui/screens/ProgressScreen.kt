@@ -35,6 +35,7 @@ import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
@@ -81,8 +82,7 @@ fun ProgressScreen(
                 accent = SectionAccent.PROGRESS,
                 title = stringResource(R.string.section_progress),
                 hint = stringResource(R.string.progress_header_hint),
-                petSpecies = profile.petSpecies,
-                petColorIndex = profile.petColor,
+                petLook = profile.toPetLook(),
                 petStage = profile.petStage,
             )
 

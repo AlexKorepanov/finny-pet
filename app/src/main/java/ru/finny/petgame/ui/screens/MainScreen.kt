@@ -50,13 +50,13 @@ import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.FinnyProgressBar
 import ru.finny.petgame.ui.components.PetSprite
-import ru.finny.petgame.ui.components.PlayerAvatar
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.sectionAccentColor
 import ru.finny.petgame.ui.components.sectionAccentEdge
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
@@ -110,25 +110,14 @@ fun MainScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         PetSprite(
-                            species = profile.petSpecies,
-                            colorIndex = profile.petColor,
+                            look = profile.toPetLook(),
                             stage = profile.petStage,
                             modifier = Modifier.size(140.dp),
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            PlayerAvatar(
-                                index = profile.playerAvatar,
-                                modifier = Modifier.size(48.dp),
-                                contentDescription = stringResource(R.string.cd_player_avatar),
-                            )
-                            Text(
-                                text = stringResource(R.string.main_greeting, profile.playerName),
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.main_greeting),
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
                         Text(
                             text = stringResource(
                                 R.string.main_period_line,

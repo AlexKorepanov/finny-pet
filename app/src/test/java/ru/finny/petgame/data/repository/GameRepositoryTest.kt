@@ -51,8 +51,11 @@ class GameRepositoryTest {
         profileId = repository.createProfile(
             playerName = "Аня",
             petName = "Финни",
-            petSpecies = 0,
-            petColor = 1,
+            petHat = 1,
+            petFace = 0,
+            petOutfit = 2,
+            petEmotion = 0,
+            petEyeColor = 1,
         )
     }
 
@@ -79,8 +82,11 @@ class GameRepositoryTest {
         snapshot!!
         assertEquals("Аня", snapshot.profile.playerName)
         assertEquals("Финни", snapshot.profile.petName)
-        assertEquals(0, snapshot.profile.petSpecies)
-        assertEquals(1, snapshot.profile.petColor)
+        assertEquals(1, snapshot.profile.petHat)
+        assertEquals(0, snapshot.profile.petFace)
+        assertEquals(2, snapshot.profile.petOutfit)
+        assertEquals(0, snapshot.profile.petEmotion)
+        assertEquals(1, snapshot.profile.petEyeColor)
         assertEquals(GameRepository.START_BUDGET_AMOUNT, snapshot.balance)
         assertEquals(0L, snapshot.savingsTotal)
         assertEquals(70, snapshot.profile.mood)

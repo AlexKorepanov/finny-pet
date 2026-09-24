@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Основная тема приложения -->
+    <style name="Theme.FinnyPet" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@drawable/splash_window_background</item>
+    </style>
 
-    <style name="Theme.FinnyPet" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Экран запуска: полная картинка на фоне + SplashScreen API -->
+    <style name="Theme.FinnyPet.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/finny_splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_transparent_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.FinnyPet</item>
+        <item name="android:windowBackground">@drawable/splash_window_background</item>
+    </style>
 </resources>
