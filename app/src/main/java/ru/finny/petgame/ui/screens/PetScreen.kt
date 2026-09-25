@@ -1,48 +1,43 @@
 package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -55,15 +50,31 @@ import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.theme.FinnyColors
 
+/**
+ * Раздел гардероба. Вкладка показывает увеличенную часть Финни, к которой относится раздел:
+ * [focusX], [focusY] — точка на исходной картинке 420×445, [zoom] — увеличение.
+ */
 private enum class PetCustomizeTab(
     val titleRes: Int,
-    val icon: ImageVector,
+    val shortRes: Int,
+    val focusX: Float,
+    val focusY: Float,
+    val zoom: Float,
 ) {
-    HAT(R.string.pet_hat_title, Icons.Filled.Star),
-    FACE(R.string.pet_face_title, Icons.Filled.Info),
-    OUTFIT(R.string.pet_outfit_title, Icons.Filled.Home),
-    EMOTION(R.string.pet_emotion_title, Icons.Filled.Favorite),
-    EYES(R.string.pet_eye_title, Icons.Filled.Face),
+    HAT(R.string.pet_hat_title, R.string.pet_tab_hat, 210f, 110f, 2.1f),
+    FACE(R.string.pet_face_title, R.string.pet_tab_face, 210f, 240f, 2.4f),
+    OUTFIT(R.string.pet_outfit_title, R.string.pet_tab_outfit, 210f, 345f, 2.0f),
+    EMOTION(R.string.pet_emotion_title, R.string.pet_tab_emotion, 210f, 235f, 2.1f),
+    EYES(R.string.pet_eye_title, R.string.pet_tab_eyes, 210f, 236f, 3.2f),
+    ;
+
+    /** Как выглядит Финни на вкладке: если вещь не надета, показываем пример. */
+    fun sample(look: PetLook): PetLook = when (this) {
+        HAT -> if (look.hat == 0) look.withHat(3) else look
+        FACE -> if (look.face == 0) look.withFace(2) else look
+        OUTFIT -> if (look.outfit == 0) look.withOutfit(1) else look
+        EMOTION, EYES -> look.withFace(0)
+    }
 }
 
 @Composable
@@ -125,6 +136,7 @@ fun PetScreen(
 
             // Иконки разделов — горизонтальный слайдер (как в Duolingo)
             CategoryTabRow(
+                look = look,
                 selected = selectedTab,
                 onSelect = { selectedTab = it },
                 modifier = Modifier
@@ -162,7 +174,7 @@ fun PetScreen(
                             PetCustomizeTab.FACE -> look.withFace(index)
                             PetCustomizeTab.OUTFIT -> look.withOutfit(index)
                             PetCustomizeTab.EMOTION -> look.withEmotion(index)
-                            PetCustomizeTab.EYES -> look.withEyeColor(index)
+                            PetCustomizeTab.EYES -> look.withFace(0).withEyeColor(index)
                         },
                         onClick = {
                             onLookChange(
@@ -208,65 +220,78 @@ fun PetScreen(
 
 @Composable
 private fun CategoryTabRow(
+    look: PetLook,
     selected: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 12.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         PetCustomizeTab.entries.forEachIndexed { index, tab ->
             CategoryTab(
-                icon = tab.icon,
+                tab = tab,
+                look = look,
                 selected = index == selected,
                 onClick = { onSelect(index) },
+                modifier = Modifier.weight(1f),
             )
         }
-        Spacer(modifier = Modifier.width(4.dp))
     }
 }
 
 @Composable
 private fun CategoryTab(
-    icon: ImageVector,
+    tab: PetCustomizeTab,
+    look: PetLook,
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(16.dp)
     val border = if (selected) FinnyColors.Primary else FinnyColors.CardBorder
     val bg = if (selected) FinnyColors.SoftBlue else FinnyColors.Surface
-    val tint = if (selected) FinnyColors.Primary else FinnyColors.TextSecondary
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(bg)
+            .border(width = if (selected) 3.dp else 2.dp, color = border, shape = shape)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .padding(top = 6.dp, bottom = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        PetCloseUp(look = tab.sample(look), tab = tab, modifier = Modifier.size(44.dp))
+        Text(
+            text = stringResource(tab.shortRes),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) FinnyColors.Primary else FinnyColors.TextPrimary,
+            maxLines = 1,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+/** Увеличенный кусочек Финни вокруг точки раздела. */
+@Composable
+private fun PetCloseUp(look: PetLook, tab: PetCustomizeTab, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier.clip(RoundedCornerShape(10.dp)).clipToBounds()) {
+        val box = maxWidth
+        val sprite = box * tab.zoom
+        val scale = sprite / 445f
+        val spriteLeft = (sprite - scale * 420f) / 2f
+        val dx = box / 2f - (spriteLeft + scale * tab.focusX) + (sprite - box) / 2f
+        val dy = box / 2f - scale * tab.focusY + (sprite - box) / 2f
+        PetSprite(
+            look = look,
+            stage = 2,
             modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(bg)
-                .border(width = if (selected) 3.dp else 2.dp, color = border, shape = RoundedCornerShape(16.dp))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier.size(28.dp),
-            )
-        }
-        if (selected) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Box(
-                modifier = Modifier
-                    .size(width = 28.dp, height = 4.dp)
-                    .clip(CircleShape)
-                    .background(FinnyColors.Primary),
-            )
-        } else {
-            Spacer(modifier = Modifier.height(10.dp))
-        }
+                .requiredSize(sprite)
+                .offset(x = dx, y = dy),
+        )
     }
 }
 

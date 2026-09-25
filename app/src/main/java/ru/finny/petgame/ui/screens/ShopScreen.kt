@@ -1,6 +1,16 @@
 package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,6 +88,7 @@ fun ShopScreen(
     var successResult by remember { mutableStateOf<ShopPurchaseResult.Success?>(null) }
     var failure by remember { mutableStateOf<ShopPurchaseResult.InsufficientFunds?>(null) }
     var failedItem by remember { mutableStateOf<ShopItemContent?>(null) }
+    var tab by rememberSaveable { mutableStateOf(ShopTab.REQUIRED) }
 
     LaunchedEffect(Unit) {
         catalog = withContext(Dispatchers.IO) {
@@ -141,52 +152,31 @@ fun ShopScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                val required = items.filter { it.category == PurchaseCategory.REQUIRED }
-                ShopSection(
-                    title = stringResource(R.string.shop_tab_required),
-                    icon = Icons.Filled.Check,
-                    items = required.sortedByDescending { it.id in weekNeedIds },
-                    weekNeedIds = weekNeedIds,
-                    boughtIds = boughtIds,
-                    onBuy = { confirmItem = it },
+                ShopTabs(
+                    selected = tab,
+                    boughtCount = snapshot.periodPurchases.size,
+                    onSelect = { tab = it },
                 )
-                ShopSection(
-                    title = stringResource(R.string.shop_tab_optional),
-                    icon = Icons.Filled.Star,
-                    items = items.filter { it.category == PurchaseCategory.OPTIONAL },
-                    weekNeedIds = weekNeedIds,
-                    boughtIds = boughtIds,
-                    onBuy = { confirmItem = it },
-                )
-                SectionTitle(
-                    text = stringResource(R.string.shop_history_title),
-                    accent = SectionAccent.SHOP,
-                    icon = Icons.Filled.List,
-                )
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    if (snapshot.periodPurchases.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.shop_history_empty),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    } else {
-                        snapshot.periodPurchases.forEach { purchase ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = purchase.title,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Text(
-                                    text = coinsAmount(purchase.price),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                            }
-                        }
-                    }
+                when (tab) {
+                    ShopTab.REQUIRED -> ShopSection(
+                        title = stringResource(R.string.shop_tab_required),
+                        icon = Icons.Filled.Check,
+                        items = items
+                            .filter { it.category == PurchaseCategory.REQUIRED }
+                            .sortedByDescending { it.id in weekNeedIds },
+                        weekNeedIds = weekNeedIds,
+                        boughtIds = boughtIds,
+                        onBuy = { confirmItem = it },
+                    )
+                    ShopTab.OPTIONAL -> ShopSection(
+                        title = stringResource(R.string.shop_tab_optional),
+                        icon = Icons.Filled.Star,
+                        items = items.filter { it.category == PurchaseCategory.OPTIONAL },
+                        weekNeedIds = weekNeedIds,
+                        boughtIds = boughtIds,
+                        onBuy = { confirmItem = it },
+                    )
+                    ShopTab.HISTORY -> PurchaseHistory(snapshot)
                 }
             }
         }
@@ -471,4 +461,85 @@ private fun ConfirmPurchaseDialog(
         },
         dismissButton = {},
     )
+}
+
+private enum class ShopTab { REQUIRED, OPTIONAL, HISTORY }
+
+@Composable
+private fun PurchaseHistory(snapshot: GameSnapshot) {
+    SectionTitle(
+        text = stringResource(R.string.shop_history_title),
+        accent = SectionAccent.SHOP,
+        icon = Icons.Filled.List,
+    )
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+
+        if (snapshot.periodPurchases.isEmpty()) {
+            Text(
+                text = stringResource(R.string.shop_history_empty),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        } else {
+            snapshot.periodPurchases.forEach { purchase ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = purchase.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = coinsAmount(purchase.price),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShopTabs(selected: ShopTab, boughtCount: Int, onSelect: (ShopTab) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ShopTab.entries.forEach { tab ->
+            val label = when (tab) {
+                ShopTab.REQUIRED -> stringResource(R.string.shop_tab_short_required)
+                ShopTab.OPTIONAL -> stringResource(R.string.shop_tab_optional)
+                ShopTab.HISTORY -> stringResource(R.string.shop_tab_short_history, boughtCount)
+            }
+            val isSelected = tab == selected
+            Surface(
+                selected = isSelected,
+                onClick = { onSelect(tab) },
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                shape = RoundedCornerShape(50),
+                color = if (isSelected) FinnyColors.Optional else MaterialTheme.colorScheme.surface,
+                contentColor = if (isSelected) FinnyColors.OnPrimary else FinnyColors.TextPrimary,
+                border = BorderStroke(2.dp, if (isSelected) FinnyColors.OptionalEdge else FinnyColors.CardBorder),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (isSelected) {
+                        Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+    }
 }

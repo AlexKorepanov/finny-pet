@@ -27,6 +27,11 @@
     <string name="pet_outfit_title">Одежда</string>
     <string name="pet_emotion_title">Настроение</string>
     <string name="pet_eye_title">Цвет глаз</string>
+    <string name="pet_tab_hat">Шапка</string>
+    <string name="pet_tab_face">Очки</string>
+    <string name="pet_tab_outfit">Одежда</string>
+    <string name="pet_tab_emotion">Эмоция</string>
+    <string name="pet_tab_eyes">Глаза</string>
     <string name="pet_name_label">Имя питомца</string>
     <string name="pet_name_hint">Например: Финни</string>
     <string name="wardrobe_title">Гардероб</string>
@@ -232,6 +237,8 @@
     <string name="shop_balance_line">Монет: %1$d</string>
     <string name="shop_tab_required">Нужное (еда и уход)</string>
     <string name="shop_tab_optional">По желанию</string>
+    <string name="shop_tab_short_required">Нужное</string>
+    <string name="shop_tab_short_history">Куплено: %1$d</string>
     <string name="shop_category_required">Нужное</string>
     <string name="shop_category_optional">По желанию</string>
     <string name="shop_buy">Купить</string>
@@ -275,6 +282,10 @@
 
     <string name="savings_header_hint">Откладывай монеты в копилку на мечту.</string>
     <string name="savings_choose_title">Выбери цель</string>
+    <string name="savings_my_goal">Моя мечта</string>
+    <string name="savings_change_goal">Сменить мечту</string>
+    <string name="savings_hide_goals">Скрыть список мечт</string>
+    <string name="savings_withdraw_open">Забрать монеты из копилки</string>
     <string name="savings_goal_cost">Цена: %1$s</string>
     <string name="savings_saved_line">Накоплено: %1$s</string>
     <string name="savings_remaining_line">Осталось: %1$s</string>

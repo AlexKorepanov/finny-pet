@@ -1,6 +1,13 @@
 package ru.finny.petgame.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import ru.finny.petgame.ui.components.goalPicture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,6 +93,8 @@ fun SavingsScreen(
     var receiveGoalId by remember { mutableStateOf<String?>(null) }
     var achieved by remember { mutableStateOf<GoalAchieveResult.Success?>(null) }
     var eta by remember { mutableStateOf<GoalEta?>(null) }
+    var showGoalList by rememberSaveable { mutableStateOf(false) }
+    var showWithdraw by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         goals = withContext(Dispatchers.IO) {
@@ -127,99 +136,55 @@ fun SavingsScreen(
                 text = stringResource(R.string.shop_balance_line, snapshot.balance),
                 style = MaterialTheme.typography.titleMedium,
             )
-            SectionTitle(
-                text = stringResource(R.string.savings_choose_title),
-                accent = SectionAccent.SAVINGS,
-                icon = Icons.Filled.Star,
-            )
-            val goalList = goals
-            if (goalList == null) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (goalList.all { it.id in snapshot.achievedGoalIds }) {
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    StatusBadge(
-                        text = stringResource(R.string.savings_all_received),
-                        icon = Icons.Filled.Done,
-                        kind = BadgeKind.POSITIVE,
-                    )
-                }
-            } else {
-                if (noActiveGoal && snapshot.achievedGoalIds.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.savings_choose_new),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                goalList.forEach { goal ->
-                    val achieved = goal.id in snapshot.achievedGoalIds
-                    GoalCard(
-                        goal = goal,
-                        selected = goal.id == snapshot.selectedGoalId,
-                        achieved = achieved,
-                        onClick = {
-                            if (!achieved) {
-                                scope.launch {
-                                    repository.selectGoal(goal.id, goal.title, goal.cost)
-                                    onSavingsChanged()
-                                }
-                            }
-                        },
-                    )
-                }
-            }
             selectedRow?.let { row ->
                 val remaining = (row.goalCost - row.savedAmount).coerceAtLeast(0L)
+                LaunchedEffect(remaining, row.savedAmount) {
+                    if (remaining > 0L && depositAmount > remaining) depositAmount = remaining
+                    if (row.savedAmount > 0L && withdrawAmount > row.savedAmount) withdrawAmount = row.savedAmount
+                }
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = row.goalTitle, style = MaterialTheme.typography.titleLarge)
-                    FinnyProgressBar(
-                        progress = if (row.goalCost > 0L) row.savedAmount.toFloat() / row.goalCost else 0f,
-                        label = stringResource(R.string.plan_fact_ratio, row.savedAmount, row.goalCost),
-                    )
-                    Text(
-                        text = stringResource(R.string.savings_saved_line, coinsAmount(row.savedAmount)),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Text(
-                        text = stringResource(R.string.savings_remaining_line, coinsAmount(remaining)),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    if (remaining > 0L) {
-                        eta?.let { goalEta ->
-                            goalEta.periodsLeft?.let { periodsLeft ->
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SectionTitle(
+                            text = stringResource(R.string.savings_my_goal),
+                            accent = SectionAccent.SAVINGS,
+                            icon = Icons.Filled.Star,
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            GoalPicture(goalId = row.goalId, modifier = Modifier.size(76.dp))
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Text(text = row.goalTitle, style = MaterialTheme.typography.titleLarge)
                                 Text(
-                                    text = stringResource(
-                                        R.string.savings_eta,
-                                        coinsAmount(goalEta.averageDeposit),
-                                        weeksAmount(periodsLeft),
-                                    ),
+                                    text = stringResource(R.string.savings_saved_line, coinsAmount(row.savedAmount)),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Text(
+                                    text = stringResource(R.string.savings_remaining_line, coinsAmount(remaining)),
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             }
                         }
-                    }
-                    if (remaining == 0L) {
-                        StatusBadge(
-                            text = stringResource(R.string.savings_goal_reached),
-                            icon = Icons.Filled.Check,
-                            kind = BadgeKind.POSITIVE,
+                        FinnyProgressBar(
+                            progress = if (row.goalCost > 0L) row.savedAmount.toFloat() / row.goalCost else 0f,
+                            label = stringResource(R.string.plan_fact_ratio, row.savedAmount, row.goalCost),
                         )
-                        PrimaryButton(
-                            text = stringResource(R.string.savings_receive),
-                            onClick = { receiveGoalId = row.goalId },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-                if (remaining > 0L) {
-                    AppCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            SectionTitle(
-                                text = stringResource(R.string.savings_deposit_title),
-                                accent = SectionAccent.SAVINGS,
-                                icon = Icons.Filled.AddCircle,
-                            )
+                        if (remaining > 0L) {
+                            eta?.periodsLeft?.let { periodsLeft ->
+                                Text(
+                                    text = stringResource(
+                                        R.string.savings_eta,
+                                        coinsAmount(eta?.averageDeposit ?: 0L),
+                                        weeksAmount(periodsLeft),
+                                    ),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = FinnyColors.TextSecondary,
+                                )
+                            }
                             AmountStepper(
                                 label = stringResource(R.string.savings_amount_label),
                                 amount = depositAmount,
@@ -248,10 +213,27 @@ fun SavingsScreen(
                                 edgeColor = FinnyColors.SuccessEdge,
                                 modifier = Modifier.fillMaxWidth(),
                             )
+                        } else {
+                            StatusBadge(
+                                text = stringResource(R.string.savings_goal_reached),
+                                icon = Icons.Filled.Check,
+                                kind = BadgeKind.POSITIVE,
+                            )
+                            PrimaryButton(
+                                text = stringResource(R.string.savings_receive),
+                                onClick = { receiveGoalId = row.goalId },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    if (row.savedAmount > 0L) {
+                }
+                if (remaining > 0L && row.savedAmount > 0L) {
+                    if (!showWithdraw) {
+                        SecondaryButton(
+                            text = stringResource(R.string.savings_withdraw_open),
+                            onClick = { showWithdraw = true },
+                        )
+                    } else {
                         AppCard(modifier = Modifier.fillMaxWidth()) {
                             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 SectionTitle(
@@ -270,28 +252,90 @@ fun SavingsScreen(
                                     minAmount = 1L,
                                     maxAmount = row.savedAmount,
                                 )
-                                SecondaryButton(
-                                    text = stringResource(R.string.savings_withdraw_button),
-                                    onClick = {
-                                        scope.launch {
-                                            when (
-                                                val result = repository.withdrawFromSavings(
-                                                    row.goalId,
-                                                    withdrawAmount,
-                                                    confirmed = false,
-                                                )
-                                            ) {
-                                                is WithdrawResult.NeedsConfirmation -> withdrawPreview = result
-                                                is WithdrawResult.Invalid -> failure = result.explanation
-                                                else -> {}
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    SecondaryButton(
+                                        text = stringResource(R.string.savings_withdraw_button),
+                                        onClick = {
+                                            scope.launch {
+                                                when (
+                                                    val result = repository.withdrawFromSavings(
+                                                        row.goalId,
+                                                        withdrawAmount,
+                                                        confirmed = false,
+                                                    )
+                                                ) {
+                                                    is WithdrawResult.NeedsConfirmation -> withdrawPreview = result
+                                                    is WithdrawResult.Invalid -> failure = result.explanation
+                                                    else -> {}
+                                                }
                                             }
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    SecondaryButton(
+                                        text = stringResource(R.string.shop_cancel),
+                                        onClick = { showWithdraw = false },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
                             }
                         }
                     }
+                }
+            }
+            val goalList = goals
+            if (goalList == null) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (goalList.all { it.id in snapshot.achievedGoalIds }) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    StatusBadge(
+                        text = stringResource(R.string.savings_all_received),
+                        icon = Icons.Filled.Done,
+                        kind = BadgeKind.POSITIVE,
+                    )
+                }
+            } else {
+                if (selectedRow != null) {
+                    SecondaryButton(
+                        text = stringResource(
+                            if (showGoalList) R.string.savings_hide_goals else R.string.savings_change_goal,
+                        ),
+                        onClick = { showGoalList = !showGoalList },
+                    )
+                }
+                if (selectedRow == null || showGoalList) {
+                    SectionTitle(
+                        text = stringResource(R.string.savings_choose_title),
+                        accent = SectionAccent.SAVINGS,
+                        icon = Icons.Filled.Star,
+                    )
+                    if (noActiveGoal && snapshot.achievedGoalIds.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.savings_choose_new),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                    goalList
+                        .sortedBy { it.id in snapshot.achievedGoalIds }
+                        .forEach { goal ->
+                            val achieved = goal.id in snapshot.achievedGoalIds
+                            GoalCard(
+                                goal = goal,
+                                selected = goal.id == snapshot.selectedGoalId,
+                                achieved = achieved,
+                                onClick = {
+                                    if (!achieved) {
+                                        scope.launch {
+                                            repository.selectGoal(goal.id, goal.title, goal.cost)
+                                            showGoalList = false
+                                            onSavingsChanged()
+                                        }
+                                    }
+                                },
+                            )
+                        }
                 }
             }
         }
@@ -340,7 +384,10 @@ fun SavingsScreen(
                                             confirmed = true,
                                         )
                                     ) {
-                                        is WithdrawResult.Success -> onSavingsChanged()
+                                        is WithdrawResult.Success -> {
+                                            showWithdraw = false
+                                            onSavingsChanged()
+                                        }
                                         is WithdrawResult.Invalid -> failure = result.explanation
                                         else -> {}
                                     }
@@ -453,24 +500,31 @@ private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, achieved: Bool
             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
         ),
     ) {
-        Column(
+        Row(
             modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (selected && !achieved) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+            GoalPicture(goalId = goal.id, modifier = Modifier.size(56.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (selected && !achieved) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Text(
+                        text = goal.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f),
                     )
                 }
-                Text(
-                    text = goal.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
                 if (achieved) {
                     StatusBadge(
                         text = stringResource(R.string.savings_already_received),
@@ -481,10 +535,38 @@ private fun GoalCard(goal: SavingsGoalContent, selected: Boolean, achieved: Bool
                     Text(
                         text = stringResource(R.string.savings_goal_cost, coinsAmount(goal.cost)),
                         style = MaterialTheme.typography.titleMedium,
+                        color = FinnyColors.Success,
                     )
                 }
+                Text(text = goal.description, style = MaterialTheme.typography.bodyLarge)
             }
-            Text(text = goal.description, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+private fun GoalPicture(goalId: String, modifier: Modifier = Modifier) {
+    val picture = goalPicture(goalId)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(FinnyColors.SoftGreen),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (picture != null) {
+            Image(
+                painter = painterResource(picture),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().padding(6.dp),
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = FinnyColors.SplashBarFill,
+                modifier = Modifier.fillMaxSize(0.55f),
+            )
         }
     }
 }

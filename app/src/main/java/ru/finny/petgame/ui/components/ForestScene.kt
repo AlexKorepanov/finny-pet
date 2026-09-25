@@ -84,6 +84,10 @@ private val scenePlacements = listOf(
     ScenePlacement("goal_flowers", R.drawable.scene_flowers, R.string.forest_item_flowers, Alignment.BottomStart, 0f, 0f, 0.27f),
 )
 
+/** Картинка мечты с полянки; null, если у мечты нет предмета на сцене. */
+@DrawableRes
+fun goalPicture(goalId: String): Int? = scenePlacements.firstOrNull { it.goalId == goalId }?.drawable
+
 @Composable
 fun ForestBackground(modifier: Modifier = Modifier) {
     Image(
