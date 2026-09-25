@@ -9,12 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import ru.finny.petgame.audio.BackgroundMusic
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.ui.PetGameApp
 import ru.finny.petgame.ui.theme.FinnyPetTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var music: BackgroundMusic
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -25,11 +28,27 @@ class MainActivity : ComponentActivity() {
             database = (application as PetGameApplication).database,
             engine = EconomyEngine(),
         )
+        music = BackgroundMusic(this)
         setContent {
             SideEffect { contentReady = true }
             FinnyPetTheme {
-                PetGameApp(repository)
+                PetGameApp(repository = repository, music = music)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        music.onStart()
+    }
+
+    override fun onStop() {
+        music.onStop()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        music.release()
+        super.onDestroy()
     }
 }

@@ -695,6 +695,36 @@ class GameRepositoryTest {
     }
 
     @Test
+    fun `test profile reset returns game to initial state`() = runTest {
+        val initial = repository.loadSnapshot()!!
+        val initialLedgerSize = repository.loadLedger().size
+        repository.setAllTasksOpen(true)
+        repository.completeTask("task_budget_1", "Первые монеты", "BUDGET", true, 5L)
+        repository.purchase(PurchaseDraft("food_1", "Корм", PurchaseCategory.REQUIRED, 10L))
+        assertTrue(repository.selectGoal("goal_1", "Велосипед", 200L))
+        repository.depositToSavings("goal_1", 5L)
+        repository.closePeriod()
+
+        assertTrue(repository.deleteCurrentProfile())
+        repository.createProfile(playerName = "Аня", petName = "Финни")
+        val restarted = freshRepository().loadSnapshot()!!
+
+        assertEquals(initial.balance, restarted.balance)
+        assertEquals(0L, restarted.savingsTotal)
+        assertTrue(restarted.savings.isEmpty())
+        assertNull(restarted.selectedGoalId)
+        assertTrue(restarted.achievedGoalIds.isEmpty())
+        assertTrue(restarted.completedTasks.isEmpty())
+        assertTrue(restarted.periodPurchases.isEmpty())
+        assertEquals(0, restarted.closedPeriodCount)
+        assertEquals(initial.currentPeriod?.periodIndex, restarted.currentPeriod?.periodIndex)
+        assertEquals(initial.profile.growthStars, restarted.profile.growthStars)
+        assertEquals(initial.profile.petStage, restarted.profile.petStage)
+        assertFalse(restarted.profile.allTasksOpen)
+        assertEquals(initialLedgerSize, repository.loadLedger().size)
+    }
+
+    @Test
     fun `demo mode flag persists`() = runTest {
         assertTrue(repository.setAllTasksOpen(true))
         assertTrue(freshRepository().loadSnapshot()!!.profile.allTasksOpen)

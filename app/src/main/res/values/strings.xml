@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Питомец Финни</string>
+    <string name="splash_slogan">Учись. Копи. Расти!</string>
+    <string name="splash_loading">Загрузка..</string>
 
     <string name="cd_back">Назад</string>
     <string name="cd_hint">Подсказка</string>
@@ -36,6 +38,28 @@
     <string name="edit">Изменить</string>
 
     <string name="main_greeting">Привет!</string>
+    <string name="main_week_caps">Неделя %1$d</string>
+    <string name="main_name_stage">%1$s · %2$s</string>
+    <string name="main_pet_state">Настроение %1$d · Сытость %2$d</string>
+    <string name="main_stat_cd">%1$s: %2$s</string>
+    <string name="stat_stars_label">Звёздочки роста</string>
+    <string name="nav_adult">Взрослым</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_music_title">Музыка</string>
+    <string name="settings_music_switch">Фоновая мелодия</string>
+    <string name="settings_music_on">Играет</string>
+    <string name="settings_music_off">Выключена</string>
+    <string name="settings_volume_value">Громкость: %1$d%%</string>
+    <string name="settings_volume_down">Тише</string>
+    <string name="settings_volume_up">Громче</string>
+    <string name="forest_saving_label">Копим: %1$d из %2$d</string>
+    <string name="forest_desc_pet">%1$s гуляет на лесной полянке</string>
+    <string name="forest_desc_pet_with">%1$s гуляет на лесной полянке. Уже накоплено: %2$s</string>
+    <string name="forest_item_flowers">клумба</string>
+    <string name="forest_item_house">домик</string>
+    <string name="forest_item_kite">воздушный змей</string>
+    <string name="forest_item_slide">горка</string>
+    <string name="forest_item_swing">качели</string>
     <string name="main_period_line">Неделя %1$d</string>
     <string name="main_week_theme_line">Неделя %1$d · %2$s</string>
     <string name="main_stage_line">Стадия: %1$s</string>
@@ -155,10 +179,12 @@
     <string name="adult_stats_note">Ошибки — часть обучения: после ошибки ребёнок видит объяснение и пробует снова. Обсудите с ребёнком темы, где было больше попыток.</string>
     <string name="adult_demo_title">Демо-режим</string>
     <string name="adult_demo_body">Все задания открыты сразу, без ожидания.</string>
-    <string name="adult_reset_hint">Сброс удаляет локальный профиль. Можно начать сначала.</string>
-    <string name="adult_reset_button">Сбросить профиль</string>
-    <string name="adult_reset_confirm_title">Сбросить профиль?</string>
-    <string name="adult_reset_confirm_text">Все монеты, покупки, цели и прогресс будут удалены с этого устройства.</string>
+    <string name="adult_profile_title">Тестовый профиль</string>
+    <string name="adult_profile_local">Профиль игрока хранится только на этом устройстве: без регистрации, интернета и облачных копий.</string>
+    <string name="adult_reset_hint">Для проверки: сброс вернёт игру к исходному состоянию, к первому запуску. Обязательный сценарий можно пройти заново.</string>
+    <string name="adult_reset_button">Сбросить тестовый профиль</string>
+    <string name="adult_reset_confirm_title">Сбросить тестовый профиль?</string>
+    <string name="adult_reset_confirm_text">Монеты, покупки, план, копилка, цели, задания и прогресс будут удалены с этого устройства. Игра начнётся с первого запуска.</string>
     <string name="adult_reset_confirm">Сбросить</string>
     <string name="adult_reset_cancel">Отмена</string>
 

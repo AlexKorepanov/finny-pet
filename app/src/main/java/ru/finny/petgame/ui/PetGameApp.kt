@@ -1,12 +1,17 @@
 package ru.finny.petgame.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,15 +43,18 @@ import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
+import ru.finny.petgame.audio.BackgroundMusic
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.components.SplashLoadingBlock
 import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.screens.AdultScreen
 import ru.finny.petgame.ui.screens.IntroScreen
 import ru.finny.petgame.ui.screens.MainScreen
+import ru.finny.petgame.ui.screens.SettingsScreen
 import ru.finny.petgame.ui.screens.PeriodResultScreen
 import ru.finny.petgame.ui.screens.PetConfirmScreen
 import ru.finny.petgame.ui.screens.PetScreen
@@ -62,7 +70,7 @@ private val PetLookSaver = Saver<PetLook, List<Int>>(
 )
 
 private const val DEFAULT_PLAYER_NAME = "Друг"
-private const val SPLASH_MIN_MS = 1_800L
+private const val SPLASH_MIN_MS = 2_200L
 
 enum class AppScreen {
     LOADING,
@@ -77,11 +85,15 @@ enum class AppScreen {
     TASKS,
     PROGRESS,
     ADULT,
+    SETTINGS,
     PERIOD_RESULT,
 }
 
 @Composable
-fun PetGameApp(repository: GameRepository) {
+fun PetGameApp(
+    repository: GameRepository,
+    music: BackgroundMusic,
+) {
     var screen by remember { mutableStateOf(AppScreen.LOADING) }
     var introPage by rememberSaveable { mutableIntStateOf(0) }
     var petLook by rememberSaveable(stateSaver = PetLookSaver) { mutableStateOf(PetLook.Default) }
@@ -134,6 +146,7 @@ fun PetGameApp(repository: GameRepository) {
             AppScreen.TASKS -> screen = AppScreen.MAIN
             AppScreen.PROGRESS -> screen = AppScreen.MAIN
             AppScreen.ADULT -> screen = AppScreen.MAIN
+            AppScreen.SETTINGS -> screen = AppScreen.MAIN
             AppScreen.PERIOD_RESULT -> screen = AppScreen.MAIN
             else -> {}
         }
@@ -225,6 +238,7 @@ fun PetGameApp(repository: GameRepository) {
                 screen = AppScreen.TASKS
             },
             onClosePeriod = requestClosePeriod,
+            onSettings = { screen = AppScreen.SETTINGS },
             onWardrobe = {
                 val profile = mainSnapshot?.profile
                 if (profile != null) {
@@ -347,6 +361,15 @@ fun PetGameApp(repository: GameRepository) {
                 )
             }
         }
+        AppScreen.SETTINGS -> SettingsScreen(
+            musicOn = music.enabled,
+            volume = music.volume,
+            onMusicOnChange = music::updateEnabled,
+            onVolumeChange = music::updateVolume,
+            onVolumeChangeFinished = music::saveVolume,
+            onBack = goBack,
+            onHint = { showHint = true },
+        )
         AppScreen.ADULT -> {
             val currentSnapshot = mainSnapshot
             if (currentSnapshot == null) {
@@ -454,12 +477,28 @@ fun PetGameApp(repository: GameRepository) {
 
 @Composable
 private fun LaunchSplashScreen() {
-    Image(
-        painter = painterResource(R.drawable.splash_start),
-        contentDescription = stringResource(R.string.app_name),
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-    )
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = SPLASH_MIN_MS.toInt(), easing = LinearEasing),
+        )
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.splash_start),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        SplashLoadingBlock(
+            progress = progress.value,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 108.dp),
+        )
+    }
 }
 
 @Composable

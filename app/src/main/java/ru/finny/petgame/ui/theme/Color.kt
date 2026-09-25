@@ -30,6 +30,11 @@ object FinnyColors {
     val ProgressHighlight = Color(0xFFFFE08A)
     val OnProgressText = Color(0xFF4A3A14)
 
+    /** Цвета полосы на стартовом экране (как на макете). */
+    val SplashInk = Color(0xFF5A3A1A)
+    val SplashBarTrack = Color(0xFFFFF8EC)
+    val SplashBarFill = Color(0xFFE39A3C)
+
     val SoftBlue = Color(0xFFE8F0FF)
     val SoftGreen = Color(0xFFE3F5E7)
     val SoftOrange = Color(0xFFFCEBD3)

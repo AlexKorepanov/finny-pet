@@ -230,6 +230,14 @@ fun AdultScreen(
                 }
 
                 AppCard(modifier = Modifier.fillMaxWidth()) {
+                    SectionTitle(
+                        text = stringResource(R.string.adult_profile_title),
+                        icon = Icons.Filled.Lock,
+                    )
+                    Text(
+                        text = stringResource(R.string.adult_profile_local),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
                     Text(
                         text = stringResource(R.string.adult_reset_hint),
                         style = MaterialTheme.typography.bodyLarge,
