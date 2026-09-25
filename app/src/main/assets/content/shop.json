@@ -13,7 +13,7 @@
       "id": "food_treat",
       "title": "Лакомство «Рыбка»",
       "category": "OPTIONAL",
-      "price": 8,
+      "price": 40,
       "effect": "Финни лижет губы",
       "moodDelta": 3,
       "satietyDelta": 10
@@ -46,7 +46,7 @@
       "id": "ball",
       "title": "Мячик",
       "category": "OPTIONAL",
-      "price": 18,
+      "price": 90,
       "effect": "Финни играет и веселится",
       "moodDelta": 8
     },
@@ -54,7 +54,7 @@
       "id": "bow",
       "title": "Бантик",
       "category": "OPTIONAL",
-      "price": 12,
+      "price": 60,
       "effect": "Финни нарядный",
       "moodDelta": 3
     },
@@ -62,7 +62,7 @@
       "id": "house",
       "title": "Домик с подушкой",
       "category": "OPTIONAL",
-      "price": 40,
+      "price": 200,
       "effect": "Финни любит свой домик",
       "moodDelta": 10
     }

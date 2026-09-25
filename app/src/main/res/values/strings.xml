@@ -330,6 +330,12 @@
     <string name="tasks_start">Начать</string>
     <string name="tasks_all_done">Все задания выполнены!</string>
     <string name="tasks_week_title">Неделя %1$d · %2$s</string>
+    <string name="tasks_weekday_1">Пн</string>
+    <string name="tasks_weekday_2">Вт</string>
+    <string name="tasks_weekday_3">Ср</string>
+    <string name="tasks_weekday_4">Чт</string>
+    <string name="tasks_weekday_5">Пт</string>
+    <string name="tasks_day_title">%1$s · %2$s</string>
     <string name="tasks_week_title_short">Неделя %1$d</string>
     <string name="tasks_locked_week">Откроется на неделе %1$d</string>
     <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d. С первой попытки было бы +%2$d.</string>

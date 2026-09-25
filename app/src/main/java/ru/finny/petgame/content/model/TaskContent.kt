@@ -35,4 +35,6 @@ data class TaskContent(
     val wrongExplanation: String,
     /** Номер учебной недели (с 1), с которой задание открыто. */
     val week: Int = 1,
+    /** Учебный день недели: 1 — понедельник … 5 — пятница. */
+    val day: Int = 1,
 )

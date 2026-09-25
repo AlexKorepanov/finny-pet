@@ -153,7 +153,7 @@ fun TasksScreen(
                         },
                         accent = SectionAccent.TASKS,
                     )
-                    weekTasks.forEach { task ->
+                    weekTasks.sortedBy { it.day }.forEach { task ->
                         TaskCard(
                             task = task,
                             completed = task.id in completedIds,
@@ -267,7 +267,7 @@ private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, 
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = task.title,
+                text = stringResource(R.string.tasks_day_title, weekdayShort(task.day), task.title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f),
             )
@@ -306,7 +306,10 @@ private fun TaskPlayView(
 ) {
     val locked = feedback is TaskCompletionResult.Success && feedback.isCorrect
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = task.title, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = stringResource(R.string.tasks_day_title, weekdayShort(task.day), task.title),
+            style = MaterialTheme.typography.headlineSmall,
+        )
         AppCard(modifier = Modifier.fillMaxWidth()) {
             Text(text = task.story, style = MaterialTheme.typography.bodyLarge)
             Text(text = task.question, style = MaterialTheme.typography.titleMedium)
@@ -479,6 +482,17 @@ private fun OptionSurface(selected: Boolean, enabled: Boolean, text: String, onC
         Text(text = text, style = MaterialTheme.typography.titleMedium)
     }
 }
+
+@Composable
+private fun weekdayShort(day: Int): String = stringResource(
+    when (day) {
+        2 -> R.string.tasks_weekday_2
+        3 -> R.string.tasks_weekday_3
+        4 -> R.string.tasks_weekday_4
+        5 -> R.string.tasks_weekday_5
+        else -> R.string.tasks_weekday_1
+    },
+)
 
 @Composable
 private fun directionTitle(direction: BudgetDirection): String = when (direction) {

@@ -35,7 +35,7 @@ object ContentParser {
             }
         }
         failIfProblems(problems)
-        return tasks
+        return tasks.sortedWith(compareBy({ it.week }, { it.day }, { it.id }))
     }
 
     fun parseShopItems(json: String): List<ShopItemContent> {
@@ -157,6 +157,10 @@ object ContentParser {
         if (week < 1) {
             local += "$prefix: поле week должно быть не меньше 1"
         }
+        val day = if (obj.has("day")) optionalInt(obj, "day", prefix, local) else 1
+        if (day !in 1..5) {
+            local += "$prefix: поле day должно быть от 1 (понедельник) до 5 (пятница)"
+        }
 
         problems += local
         if (local.isNotEmpty()) return null
@@ -175,6 +179,7 @@ object ContentParser {
             correctExplanation = correctExplanation!!,
             wrongExplanation = wrongExplanation!!,
             week = week,
+            day = day,
         )
     }
 

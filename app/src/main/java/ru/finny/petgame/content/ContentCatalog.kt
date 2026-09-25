@@ -53,6 +53,16 @@ class ContentCatalog(
                         problems += "weeks[${week.index}]: товар $id должен быть из нужного (REQUIRED)"
                 }
             }
+            val weekTasks = tasks.filter { it.week == week.index }
+            if (weekTasks.size != 25) {
+                problems += "weeks[${week.index}]: нужно 25 заданий (по 5 на будний день), сейчас ${weekTasks.size}"
+            }
+            (1..5).forEach { day ->
+                val count = weekTasks.count { it.day == day }
+                if (count != 5) {
+                    problems += "weeks[${week.index}]: на день $day нужно 5 заданий, сейчас $count"
+                }
+            }
         }
         return problems
     }

@@ -109,14 +109,18 @@ class ContentLoaderTest {
     }
 
     @Test
-    fun `weeks list needs from shop and every week has two tasks`() {
+    fun `weeks list needs from shop and every week has five weekday tasks`() {
         val catalog = loader.loadCatalog()
 
         assertEquals(5, catalog.weeks.size)
-        assertEquals(10, catalog.tasks.size)
+        assertEquals(125, catalog.tasks.size)
         assertTrue(catalog.validate().isEmpty())
         catalog.weeks.forEach { week ->
-            assertEquals(2, catalog.tasksOfWeek(week.index - 1).size)
+            val weekTasks = catalog.tasksOfWeek(week.index - 1)
+            assertEquals(25, weekTasks.size)
+            (1..5).forEach { day ->
+                assertEquals(5, weekTasks.count { it.day == day })
+            }
             assertTrue(catalog.needsFor(week.index - 1).any { it.itemId == "food_basic" })
         }
     }
