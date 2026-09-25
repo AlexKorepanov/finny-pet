@@ -140,6 +140,8 @@ fun PlanScreen(
                         canDecrease = requiredAmount > 0L,
                         onIncrease = { requiredAmount += 1L },
                         onDecrease = { requiredAmount -= 1L },
+                        onAmountSet = { requiredAmount = it },
+                        maxAmount = available - (total - requiredAmount),
                     )
                     AmountStepper(
                         label = stringResource(R.string.plan_direction_optional),
@@ -149,6 +151,8 @@ fun PlanScreen(
                         canDecrease = optionalAmount > 0L,
                         onIncrease = { optionalAmount += 1L },
                         onDecrease = { optionalAmount -= 1L },
+                        onAmountSet = { optionalAmount = it },
+                        maxAmount = available - (total - optionalAmount),
                     )
                     AmountStepper(
                         label = stringResource(R.string.plan_direction_savings),
@@ -158,6 +162,8 @@ fun PlanScreen(
                         canDecrease = savingsAmount > 0L,
                         onIncrease = { savingsAmount += 1L },
                         onDecrease = { savingsAmount -= 1L },
+                        onAmountSet = { savingsAmount = it },
+                        maxAmount = available - (total - savingsAmount),
                     )
                     Text(
                         text = stringResource(R.string.plan_remainder, coinsAmount(remainder)),

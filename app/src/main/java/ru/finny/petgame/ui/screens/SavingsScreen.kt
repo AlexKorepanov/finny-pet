@@ -224,8 +224,12 @@ fun SavingsScreen(
                                 label = stringResource(R.string.savings_amount_label),
                                 amount = depositAmount,
                                 canDecrease = depositAmount > 1L,
+                                canIncrease = depositAmount < remaining,
                                 onIncrease = { depositAmount += 1L },
                                 onDecrease = { depositAmount -= 1L },
+                                onAmountSet = { depositAmount = it },
+                                minAmount = 1L,
+                                maxAmount = remaining,
                             )
                             PrimaryButton(
                                 text = stringResource(R.string.savings_deposit_button),
@@ -259,8 +263,12 @@ fun SavingsScreen(
                                     label = stringResource(R.string.savings_amount_label),
                                     amount = withdrawAmount,
                                     canDecrease = withdrawAmount > 1L,
+                                    canIncrease = withdrawAmount < row.savedAmount,
                                     onIncrease = { withdrawAmount += 1L },
                                     onDecrease = { withdrawAmount -= 1L },
+                                    onAmountSet = { withdrawAmount = it },
+                                    minAmount = 1L,
+                                    maxAmount = row.savedAmount,
                                 )
                                 SecondaryButton(
                                     text = stringResource(R.string.savings_withdraw_button),

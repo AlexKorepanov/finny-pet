@@ -338,6 +338,8 @@ private fun TaskPlayView(
                                 canDecrease = (amounts[direction] ?: 0L) > 0L,
                                 onIncrease = { onDistributeChange(direction, (amounts[direction] ?: 0L) + 1L) },
                                 onDecrease = { onDistributeChange(direction, (amounts[direction] ?: 0L) - 1L) },
+                                onAmountSet = { onDistributeChange(direction, it) },
+                                maxAmount = task.sum - (amounts.values.sum() - (amounts[direction] ?: 0L)),
                             )
                         }
                         Text(

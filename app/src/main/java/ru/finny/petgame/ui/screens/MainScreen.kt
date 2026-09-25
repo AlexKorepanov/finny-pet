@@ -66,6 +66,9 @@ import ru.finny.petgame.ui.components.LivePet
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.ScenePlate
 import ru.finny.petgame.ui.components.StarsDialog
+import ru.finny.petgame.ui.components.CoinsDialog
+import ru.finny.petgame.ui.components.SavingsDialog
+import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.coinsAmount
@@ -112,6 +115,7 @@ fun MainScreen(
                 StatsRow(
                     balance = snapshot.balance,
                     savings = snapshot.savingsTotal,
+                    savingsGoal = snapshot.savings.firstOrNull { it.goalId == snapshot.selectedGoalId },
                     stars = profile.growthStars,
                     stage = profile.petStage,
                     onHint = onHint,
@@ -190,14 +194,23 @@ private val PlateShape = RoundedCornerShape(50)
 private fun StatsRow(
     balance: Long,
     savings: Long,
+    savingsGoal: SavingsEntity?,
     stars: Int,
     stage: Int,
     onHint: () -> Unit,
     onSettings: () -> Unit,
 ) {
     var showStars by rememberSaveable { mutableStateOf(false) }
+    var showCoins by rememberSaveable { mutableStateOf(false) }
+    var showSavings by rememberSaveable { mutableStateOf(false) }
     if (showStars) {
         StarsDialog(stars = stars, stage = stage, onClose = { showStars = false })
+    }
+    if (showCoins) {
+        CoinsDialog(balance = balance, onClose = { showCoins = false })
+    }
+    if (showSavings) {
+        SavingsDialog(total = savings, goal = savingsGoal, onClose = { showSavings = false })
     }
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -208,11 +221,13 @@ private fun StatsRow(
             label = stringResource(R.string.stat_balance_label),
             value = balance.toString(),
             modifier = Modifier.weight(1f),
+            onClick = { showCoins = true },
         ) { CoinIcon(Modifier.size(22.dp)) }
         StatChip(
             label = stringResource(R.string.stat_savings_label),
             value = savings.toString(),
             modifier = Modifier.weight(1f),
+            onClick = { showSavings = true },
         ) { Icon(Icons.Filled.Favorite, null, tint = FinnyColors.Success, modifier = Modifier.size(22.dp)) }
         StatChip(
             label = stringResource(R.string.stat_stars_label),
