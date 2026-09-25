@@ -57,6 +57,7 @@ fun PetSprite(
     look: PetLook = PetLook.Default,
     modifier: Modifier = Modifier,
     stage: Int = 0,
+    eyesClosed: Boolean = false,
 ) {
     val scale = when (stage.coerceIn(0, 2)) {
         0 -> 0.78f
@@ -64,7 +65,7 @@ fun PetSprite(
         else -> 1f
     }
     val drawsMouth = look.emotion != 0
-    val drawsEyes = drawsMouth || look.eyeColor != 0
+    val drawsEyes = drawsMouth || look.eyeColor != 0 || eyesClosed
     val base = when {
         drawsMouth -> R.drawable.pet_fennec_blank
         drawsEyes -> R.drawable.pet_fennec_noeyes
@@ -85,7 +86,7 @@ fun PetSprite(
                     oy = (size.height - PNG_H * s) / 2f,
                     s = s,
                 )
-                drawPetAccessories(sp, look, drawsEyes, drawsMouth)
+                drawPetAccessories(sp, look, drawsEyes, drawsMouth, eyesClosed)
             }
         }
     }
@@ -117,14 +118,20 @@ private fun PngSpace.path(block: PathBuilder.() -> Unit): Path = PathBuilder(thi
 
 private fun PngSpace.stroke(w: Float) = Stroke(width = d(w), cap = StrokeCap.Round, join = StrokeJoin.Round)
 
-private fun DrawScope.drawPetAccessories(sp: PngSpace, look: PetLook, drawsEyes: Boolean, drawsMouth: Boolean) {
+private fun DrawScope.drawPetAccessories(
+    sp: PngSpace,
+    look: PetLook,
+    drawsEyes: Boolean,
+    drawsMouth: Boolean,
+    eyesClosed: Boolean,
+) {
     when (look.outfit) {
         1 -> drawScarf(sp)
         2 -> drawHoodie(sp)
         3 -> drawBowTie(sp)
     }
     if (drawsEyes) {
-        drawFace(sp, look.emotion, look.eyeColor.coerceIn(EYE_COLORS.indices), drawsMouth)
+        drawFace(sp, look.emotion, look.eyeColor.coerceIn(EYE_COLORS.indices), drawsMouth, eyesClosed)
     }
     when (look.face) {
         1 -> drawRoundGlasses(sp)
@@ -140,7 +147,11 @@ private fun DrawScope.drawPetAccessories(sp: PngSpace, look: PetLook, drawsEyes:
 
 // ---------- Мордочка ----------
 
-private fun DrawScope.drawFace(sp: PngSpace, emotion: Int, eyeColor: Int, drawsMouth: Boolean) {
+private fun DrawScope.drawFace(sp: PngSpace, emotion: Int, eyeColor: Int, drawsMouth: Boolean, eyesClosed: Boolean) {
+    if (eyesClosed && emotion != 1) {
+        drawFaceBlinking(sp, emotion, drawsMouth)
+        return
+    }
     when (emotion) {
         1 -> {
             drawBlush(sp, both = true)
@@ -172,6 +183,32 @@ private fun DrawScope.drawFace(sp: PngSpace, emotion: Int, eyeColor: Int, drawsM
             }
         }
     }
+}
+
+/** Та же мордочка, но оба глаза на миг закрыты. */
+private fun DrawScope.drawFaceBlinking(sp: PngSpace, emotion: Int, drawsMouth: Boolean) {
+    if (emotion == 2 || emotion == 3) drawBlush(sp, both = true, strong = emotion == 3)
+    drawClosedEye(sp, EYE_LX)
+    drawClosedEye(sp, EYE_RX)
+    if (!drawsMouth) return
+    drawNose(sp)
+    when (emotion) {
+        2 -> drawTongueSmile(sp)
+        3 -> drawBigOpenMouth(sp)
+        else -> drawOpenSmile(sp)
+    }
+}
+
+/** Закрытый глаз «◡» при моргании. */
+private fun DrawScope.drawClosedEye(sp: PngSpace, cx: Float) {
+    drawPath(
+        sp.path {
+            m(cx - 14f, EYE_Y - 1f)
+            q(cx, EYE_Y + 11f, cx + 14f, EYE_Y - 1f)
+        },
+        color = EYE_DARK,
+        style = sp.stroke(7f),
+    )
 }
 
 private fun DrawScope.drawOpenEye(sp: PngSpace, cx: Float, cy: Float, r: Float, colorIndex: Int, sparkle: Boolean) {

@@ -52,6 +52,11 @@
     <string name="settings_volume_value">Громкость: %1$d%%</string>
     <string name="settings_volume_down">Тише</string>
     <string name="settings_volume_up">Громче</string>
+    <string name="settings_animations_title">Анимации</string>
+    <string name="settings_animations_switch">Движение на экране</string>
+    <string name="settings_animations_on">Финни и предметы двигаются</string>
+    <string name="settings_animations_off">Выключены: всё неподвижно</string>
+    <string name="settings_animations_system_off">Выключены в настройках телефона</string>
     <string name="forest_saving_label">Копим: %1$d из %2$d</string>
     <string name="forest_desc_pet">%1$s гуляет на лесной полянке</string>
     <string name="forest_desc_pet_with">%1$s гуляет на лесной полянке. Уже накоплено: %2$s</string>

@@ -1,6 +1,7 @@
 package ru.finny.petgame.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -45,6 +46,7 @@ import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.audio.BackgroundMusic
 import ru.finny.petgame.data.repository.GameRepository
+import ru.finny.petgame.settings.UiSettings
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
@@ -70,7 +72,7 @@ private val PetLookSaver = Saver<PetLook, List<Int>>(
 )
 
 private const val DEFAULT_PLAYER_NAME = "Друг"
-private const val SPLASH_MIN_MS = 2_200L
+private const val SPLASH_MIN_MS = 1_400L
 
 enum class AppScreen {
     LOADING,
@@ -93,6 +95,7 @@ enum class AppScreen {
 fun PetGameApp(
     repository: GameRepository,
     music: BackgroundMusic,
+    uiSettings: UiSettings,
 ) {
     var screen by remember { mutableStateOf(AppScreen.LOADING) }
     var introPage by rememberSaveable { mutableIntStateOf(0) }
@@ -106,6 +109,8 @@ fun PetGameApp(
     var periodCloseResult by remember { mutableStateOf<PeriodCloseResult.Success?>(null) }
     var catalog by remember { mutableStateOf<ContentCatalog?>(null) }
     val context = LocalContext.current
+
+    ReportDrawnWhen { screen != AppScreen.LOADING }
 
     LaunchedEffect(Unit) {
         val startedAt = System.currentTimeMillis()
@@ -239,6 +244,8 @@ fun PetGameApp(
             },
             onClosePeriod = requestClosePeriod,
             onSettings = { screen = AppScreen.SETTINGS },
+            seenSceneGoals = uiSettings.seenSceneGoals,
+            onSceneGoalsShown = uiSettings::markSceneGoalsSeen,
             onWardrobe = {
                 val profile = mainSnapshot?.profile
                 if (profile != null) {
@@ -367,6 +374,9 @@ fun PetGameApp(
             onMusicOnChange = music::updateEnabled,
             onVolumeChange = music::updateVolume,
             onVolumeChangeFinished = music::saveVolume,
+            animationsOn = uiSettings.animationsEnabled,
+            systemAnimationsOff = uiSettings.systemAnimationsOff,
+            onAnimationsOnChange = uiSettings::updateAnimationsEnabled,
             onBack = goBack,
             onHint = { showHint = true },
         )
@@ -384,6 +394,7 @@ fun PetGameApp(
                         scope.launch { mainSnapshot = repository.loadSnapshot() }
                     },
                     onProfileDeleted = {
+                        uiSettings.clearSceneGoalsSeen()
                         mainSnapshot = null
                         petName = ""
                         petLook = PetLook.Default

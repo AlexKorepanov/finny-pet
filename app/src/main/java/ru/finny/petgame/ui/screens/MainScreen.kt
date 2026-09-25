@@ -56,7 +56,7 @@ import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.CoinIcon
 import ru.finny.petgame.ui.components.ForestBackground
 import ru.finny.petgame.ui.components.ForestMeadow
-import ru.finny.petgame.ui.components.PetSprite
+import ru.finny.petgame.ui.components.LivePet
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.ScenePlate
 import ru.finny.petgame.ui.components.SecondaryButton
@@ -83,6 +83,8 @@ fun MainScreen(
     onClosePeriod: () -> Unit,
     onWardrobe: () -> Unit,
     onSettings: () -> Unit,
+    seenSceneGoals: Set<String> = emptySet(),
+    onSceneGoalsShown: (Set<String>) -> Unit = {},
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         ForestBackground()
@@ -134,12 +136,15 @@ fun MainScreen(
                         selectedGoalId = snapshot.selectedGoalId,
                         savings = snapshot.savings,
                         pet = { petModifier ->
-                            PetSprite(
+                            LivePet(
                                 look = profile.toPetLook(),
                                 stage = profile.petStage,
+                                mood = profile.mood,
                                 modifier = petModifier,
                             )
                         },
+                        seenGoalIds = seenSceneGoals,
+                        onGoalsShown = onSceneGoalsShown,
                         modifier = Modifier.fillMaxSize(),
                     )
                     WardrobeButton(

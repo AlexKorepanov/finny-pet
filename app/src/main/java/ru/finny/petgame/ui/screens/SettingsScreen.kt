@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -43,6 +44,9 @@ fun SettingsScreen(
     onMusicOnChange: (Boolean) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onVolumeChangeFinished: () -> Unit,
+    animationsOn: Boolean,
+    systemAnimationsOff: Boolean,
+    onAnimationsOnChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onHint: () -> Unit,
 ) {
@@ -66,26 +70,12 @@ fun SettingsScreen(
         ) {
             AppCard {
                 SectionTitle(text = stringResource(R.string.settings_music_title), icon = Icons.Filled.Settings)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                        .toggleable(value = musicOn, role = Role.Switch, onValueChange = onMusicOnChange),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.settings_music_switch),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(if (musicOn) R.string.settings_music_on else R.string.settings_music_off),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = FinnyColors.TextSecondary,
-                        )
-                    }
-                    Switch(checked = musicOn, onCheckedChange = null)
-                }
+                SwitchRow(
+                    title = stringResource(R.string.settings_music_switch),
+                    status = stringResource(if (musicOn) R.string.settings_music_on else R.string.settings_music_off),
+                    checked = musicOn,
+                    onCheckedChange = onMusicOnChange,
+                )
 
                 val percent = (volume * 100).roundToInt()
                 val volumeLabel = stringResource(R.string.settings_volume_value, percent)
@@ -130,7 +120,39 @@ fun SettingsScreen(
                     )
                 }
             }
+            AppCard {
+                SectionTitle(text = stringResource(R.string.settings_animations_title), icon = Icons.Filled.Star)
+                SwitchRow(
+                    title = stringResource(R.string.settings_animations_switch),
+                    status = stringResource(
+                        when {
+                            !animationsOn -> R.string.settings_animations_off
+                            systemAnimationsOff -> R.string.settings_animations_system_off
+                            else -> R.string.settings_animations_on
+                        },
+                    ),
+                    checked = animationsOn,
+                    onCheckedChange = onAnimationsOnChange,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun SwitchRow(title: String, status: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(text = status, style = MaterialTheme.typography.bodyMedium, color = FinnyColors.TextSecondary)
+        }
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
