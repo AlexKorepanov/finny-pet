@@ -46,6 +46,9 @@ import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.audio.BackgroundMusic
 import ru.finny.petgame.data.repository.GameRepository
+import ru.finny.petgame.ui.components.LeafCurtain
+import ru.finny.petgame.ui.components.LeafPhase
+import ru.finny.petgame.ui.components.LocalAnimationsEnabled
 import ru.finny.petgame.settings.UiSettings
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
@@ -72,7 +75,10 @@ private val PetLookSaver = Saver<PetLook, List<Int>>(
 )
 
 private const val DEFAULT_PLAYER_NAME = "Друг"
-private const val SPLASH_MIN_MS = 1_400L
+private const val SPLASH_MIN_MS = 1_000L
+private const val LEAVES_FULL_BAR_PAUSE_MS = 100L
+private const val LEAVES_COVER_MS = 450
+private const val LEAVES_REVEAL_MS = 800
 
 enum class AppScreen {
     LOADING,
@@ -112,16 +118,34 @@ fun PetGameApp(
 
     ReportDrawnWhen { screen != AppScreen.LOADING }
 
+    val animationsOn = LocalAnimationsEnabled.current
+    var leafPhase by remember { mutableStateOf<LeafPhase?>(null) }
+    val leafProgress = remember { Animatable(0f) }
+    val splashProgress = remember { Animatable(0f) }
+
     LaunchedEffect(Unit) {
-        val startedAt = System.currentTimeMillis()
+        val bar = launch {
+            splashProgress.animateTo(1f, tween(SPLASH_MIN_MS.toInt(), easing = LinearEasing))
+        }
         catalog = withContext(Dispatchers.IO) { ContentLoader(context.assets).loadCatalog() }
         val snapshot = repository.loadSnapshot()
         mainSnapshot = snapshot
-        val elapsed = System.currentTimeMillis() - startedAt
-        if (elapsed < SPLASH_MIN_MS) {
-            delay(SPLASH_MIN_MS - elapsed)
+        bar.join()
+        val firstScreen = if (snapshot != null) AppScreen.MAIN else AppScreen.INTRO
+        if (!animationsOn) {
+            screen = firstScreen
+            return@LaunchedEffect
         }
-        screen = if (snapshot != null) AppScreen.MAIN else AppScreen.INTRO
+        delay(LEAVES_FULL_BAR_PAUSE_MS)
+        leafPhase = LeafPhase.COVER
+        leafProgress.snapTo(0f)
+        leafProgress.animateTo(1f, tween(LEAVES_COVER_MS, easing = LinearEasing))
+        screen = firstScreen
+        delay(90)
+        leafPhase = LeafPhase.REVEAL
+        leafProgress.snapTo(0f)
+        leafProgress.animateTo(1f, tween(LEAVES_REVEAL_MS, easing = LinearEasing))
+        leafPhase = null
     }
 
     LaunchedEffect(screen) {
@@ -186,239 +210,244 @@ fun PetGameApp(
         }
     }
 
-    when (screen) {
-        AppScreen.LOADING -> LaunchSplashScreen()
-        AppScreen.INTRO -> IntroScreen(
-            page = introPage,
-            onBack = goBack,
-            onHint = { showHint = true },
-            onNextPage = { introPage = 1 },
-            onFinish = { screen = AppScreen.PET },
-        )
-        AppScreen.PET -> PetScreen(
-            look = petLook,
-            petName = petName,
-            onLookChange = { petLook = it },
-            onPetNameChange = { petName = it },
-            onBack = goBack,
-            onHint = { showHint = true },
-            onNext = { screen = AppScreen.PET_CONFIRM },
-        )
-        AppScreen.PET_CONFIRM -> PetConfirmScreen(
-            petName = petName.trim(),
-            look = petLook,
-            onBack = goBack,
-            onHint = { showHint = true },
-            onSave = {
-                scope.launch {
-                    repository.createProfile(
-                        playerName = DEFAULT_PLAYER_NAME,
-                        petName = petName.trim(),
-                        petHat = petLook.hat,
-                        petFace = petLook.face,
-                        petOutfit = petLook.outfit,
-                        petEmotion = petLook.emotion,
-                        petEyeColor = petLook.eyeColor,
-                    )
-                    mainSnapshot = repository.loadSnapshot()
-                    screen = AppScreen.MAIN
-                }
-            },
-        )
-        AppScreen.MAIN -> MainScreen(
-            snapshot = mainSnapshot,
-            catalog = catalog,
-            onHint = { showHint = true },
-            onPlan = { screen = AppScreen.PLAN },
-            onShop = { screen = AppScreen.SHOP },
-            onSavings = { screen = AppScreen.SAVINGS },
-            onTasks = {
-                focusedTaskId = null
-                screen = AppScreen.TASKS
-            },
-            onProgress = { screen = AppScreen.PROGRESS },
-            onAdult = { screen = AppScreen.ADULT },
-            onOpenTask = { taskId ->
-                focusedTaskId = taskId
-                screen = AppScreen.TASKS
-            },
-            onClosePeriod = requestClosePeriod,
-            onSettings = { screen = AppScreen.SETTINGS },
-            seenSceneGoals = uiSettings.seenSceneGoals,
-            onSceneGoalsShown = uiSettings::markSceneGoalsSeen,
-            onWardrobe = {
-                val profile = mainSnapshot?.profile
-                if (profile != null) {
-                    petLook = profile.toPetLook()
-                    petName = profile.petName
-                    screen = AppScreen.WARDROBE
-                }
-            },
-        )
-        AppScreen.WARDROBE -> PetScreen(
-            look = petLook,
-            petName = petName,
-            onLookChange = { petLook = it },
-            onPetNameChange = { petName = it },
-            onBack = goBack,
-            onHint = { showHint = true },
-            editMode = true,
-            onNext = {
-                scope.launch {
-                    val saved = repository.updatePetAppearance(
-                        petName = petName,
-                        petHat = petLook.hat,
-                        petFace = petLook.face,
-                        petOutfit = petLook.outfit,
-                        petEmotion = petLook.emotion,
-                        petEyeColor = petLook.eyeColor,
-                    )
-                    if (saved) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (screen) {
+            AppScreen.LOADING -> LaunchSplashScreen(progress = splashProgress.value)
+            AppScreen.INTRO -> IntroScreen(
+                page = introPage,
+                onBack = goBack,
+                onHint = { showHint = true },
+                onNextPage = { introPage = 1 },
+                onFinish = { screen = AppScreen.PET },
+            )
+            AppScreen.PET -> PetScreen(
+                look = petLook,
+                petName = petName,
+                onLookChange = { petLook = it },
+                onPetNameChange = { petName = it },
+                onBack = goBack,
+                onHint = { showHint = true },
+                onNext = { screen = AppScreen.PET_CONFIRM },
+            )
+            AppScreen.PET_CONFIRM -> PetConfirmScreen(
+                petName = petName.trim(),
+                look = petLook,
+                onBack = goBack,
+                onHint = { showHint = true },
+                onSave = {
+                    scope.launch {
+                        repository.createProfile(
+                            playerName = DEFAULT_PLAYER_NAME,
+                            petName = petName.trim(),
+                            petHat = petLook.hat,
+                            petFace = petLook.face,
+                            petOutfit = petLook.outfit,
+                            petEmotion = petLook.emotion,
+                            petEyeColor = petLook.eyeColor,
+                        )
                         mainSnapshot = repository.loadSnapshot()
                         screen = AppScreen.MAIN
                     }
+                },
+            )
+            AppScreen.MAIN -> MainScreen(
+                snapshot = mainSnapshot,
+                catalog = catalog,
+                onHint = { showHint = true },
+                onPlan = { screen = AppScreen.PLAN },
+                onShop = { screen = AppScreen.SHOP },
+                onSavings = { screen = AppScreen.SAVINGS },
+                onTasks = {
+                    focusedTaskId = null
+                    screen = AppScreen.TASKS
+                },
+                onProgress = { screen = AppScreen.PROGRESS },
+                onAdult = { screen = AppScreen.ADULT },
+                onOpenTask = { taskId ->
+                    focusedTaskId = taskId
+                    screen = AppScreen.TASKS
+                },
+                onClosePeriod = requestClosePeriod,
+                onSettings = { screen = AppScreen.SETTINGS },
+                seenSceneGoals = uiSettings.seenSceneGoals,
+                onSceneGoalsShown = uiSettings::markSceneGoalsSeen,
+                onWardrobe = {
+                    val profile = mainSnapshot?.profile
+                    if (profile != null) {
+                        petLook = profile.toPetLook()
+                        petName = profile.petName
+                        screen = AppScreen.WARDROBE
+                    }
+                },
+            )
+            AppScreen.WARDROBE -> PetScreen(
+                look = petLook,
+                petName = petName,
+                onLookChange = { petLook = it },
+                onPetNameChange = { petName = it },
+                onBack = goBack,
+                onHint = { showHint = true },
+                editMode = true,
+                onNext = {
+                    scope.launch {
+                        val saved = repository.updatePetAppearance(
+                            petName = petName,
+                            petHat = petLook.hat,
+                            petFace = petLook.face,
+                            petOutfit = petLook.outfit,
+                            petEmotion = petLook.emotion,
+                            petEyeColor = petLook.eyeColor,
+                        )
+                        if (saved) {
+                            mainSnapshot = repository.loadSnapshot()
+                            screen = AppScreen.MAIN
+                        }
+                    }
+                },
+            )
+            AppScreen.PLAN -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    PlanScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        catalog = catalog,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                        onPlanConfirmed = {
+                            scope.launch { mainSnapshot = repository.loadSnapshot() }
+                        },
+                        onClosePeriod = requestClosePeriod,
+                    )
                 }
-            },
-        )
-        AppScreen.PLAN -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                PlanScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    catalog = catalog,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                    onPlanConfirmed = {
-                        scope.launch { mainSnapshot = repository.loadSnapshot() }
-                    },
-                    onClosePeriod = requestClosePeriod,
-                )
+            }
+            AppScreen.SHOP -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    ShopScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                        onShopChanged = {
+                            scope.launch { mainSnapshot = repository.loadSnapshot() }
+                        },
+                        onOpenTasks = {
+                            focusedTaskId = null
+                            screen = AppScreen.TASKS
+                        },
+                        onOpenSavings = { screen = AppScreen.SAVINGS },
+                    )
+                }
+            }
+            AppScreen.SAVINGS -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    SavingsScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                        onSavingsChanged = {
+                            scope.launch { mainSnapshot = repository.loadSnapshot() }
+                        },
+                    )
+                }
+            }
+            AppScreen.TASKS -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    TasksScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        focusedTaskId = focusedTaskId,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                        onTasksChanged = {
+                            scope.launch { mainSnapshot = repository.loadSnapshot() }
+                        },
+                        onOpenPlan = { screen = AppScreen.PLAN },
+                        onOpenShop = { screen = AppScreen.SHOP },
+                        onOpenSavings = { screen = AppScreen.SAVINGS },
+                    )
+                }
+            }
+            AppScreen.PROGRESS -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    ProgressScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                    )
+                }
+            }
+            AppScreen.SETTINGS -> SettingsScreen(
+                musicOn = music.enabled,
+                volume = music.volume,
+                onMusicOnChange = music::updateEnabled,
+                onVolumeChange = music::updateVolume,
+                onVolumeChangeFinished = music::saveVolume,
+                animationsOn = uiSettings.animationsEnabled,
+                systemAnimationsOff = uiSettings.systemAnimationsOff,
+                onAnimationsOnChange = uiSettings::updateAnimationsEnabled,
+                onBack = goBack,
+                onHint = { showHint = true },
+            )
+            AppScreen.ADULT -> {
+                val currentSnapshot = mainSnapshot
+                if (currentSnapshot == null) {
+                    LoadingScreen()
+                } else {
+                    AdultScreen(
+                        repository = repository,
+                        snapshot = currentSnapshot,
+                        onBack = goBack,
+                        onHint = { showHint = true },
+                        onDemoChanged = {
+                            scope.launch { mainSnapshot = repository.loadSnapshot() }
+                        },
+                        onProfileDeleted = {
+                            uiSettings.clearSceneGoalsSeen()
+                            mainSnapshot = null
+                            petName = ""
+                            petLook = PetLook.Default
+                            introPage = 0
+                            screen = AppScreen.INTRO
+                        },
+                    )
+                }
+            }
+            AppScreen.PERIOD_RESULT -> {
+                val result = periodCloseResult
+                if (result == null) {
+                    LoadingScreen()
+                } else {
+                    PeriodResultScreen(
+                        result = result,
+                        petLook = mainSnapshot?.profile?.toPetLook() ?: PetLook.Default,
+                        onContinue = {
+                            periodCloseResult = null
+                            screen = AppScreen.MAIN
+                        },
+                        onHint = { showHint = true },
+                    )
+                }
             }
         }
-        AppScreen.SHOP -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                ShopScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                    onShopChanged = {
-                        scope.launch { mainSnapshot = repository.loadSnapshot() }
-                    },
-                    onOpenTasks = {
-                        focusedTaskId = null
-                        screen = AppScreen.TASKS
-                    },
-                    onOpenSavings = { screen = AppScreen.SAVINGS },
-                )
-            }
-        }
-        AppScreen.SAVINGS -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                SavingsScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                    onSavingsChanged = {
-                        scope.launch { mainSnapshot = repository.loadSnapshot() }
-                    },
-                )
-            }
-        }
-        AppScreen.TASKS -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                TasksScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    focusedTaskId = focusedTaskId,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                    onTasksChanged = {
-                        scope.launch { mainSnapshot = repository.loadSnapshot() }
-                    },
-                    onOpenPlan = { screen = AppScreen.PLAN },
-                    onOpenShop = { screen = AppScreen.SHOP },
-                    onOpenSavings = { screen = AppScreen.SAVINGS },
-                )
-            }
-        }
-        AppScreen.PROGRESS -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                ProgressScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                )
-            }
-        }
-        AppScreen.SETTINGS -> SettingsScreen(
-            musicOn = music.enabled,
-            volume = music.volume,
-            onMusicOnChange = music::updateEnabled,
-            onVolumeChange = music::updateVolume,
-            onVolumeChangeFinished = music::saveVolume,
-            animationsOn = uiSettings.animationsEnabled,
-            systemAnimationsOff = uiSettings.systemAnimationsOff,
-            onAnimationsOnChange = uiSettings::updateAnimationsEnabled,
-            onBack = goBack,
-            onHint = { showHint = true },
-        )
-        AppScreen.ADULT -> {
-            val currentSnapshot = mainSnapshot
-            if (currentSnapshot == null) {
-                LoadingScreen()
-            } else {
-                AdultScreen(
-                    repository = repository,
-                    snapshot = currentSnapshot,
-                    onBack = goBack,
-                    onHint = { showHint = true },
-                    onDemoChanged = {
-                        scope.launch { mainSnapshot = repository.loadSnapshot() }
-                    },
-                    onProfileDeleted = {
-                        uiSettings.clearSceneGoalsSeen()
-                        mainSnapshot = null
-                        petName = ""
-                        petLook = PetLook.Default
-                        introPage = 0
-                        screen = AppScreen.INTRO
-                    },
-                )
-            }
-        }
-        AppScreen.PERIOD_RESULT -> {
-            val result = periodCloseResult
-            if (result == null) {
-                LoadingScreen()
-            } else {
-                PeriodResultScreen(
-                    result = result,
-                    petLook = mainSnapshot?.profile?.toPetLook() ?: PetLook.Default,
-                    onContinue = {
-                        periodCloseResult = null
-                        screen = AppScreen.MAIN
-                    },
-                    onHint = { showHint = true },
-                )
-            }
+        leafPhase?.let { phase ->
+            LeafCurtain(phase = phase, progress = leafProgress.value)
         }
     }
 
@@ -487,14 +516,7 @@ fun PetGameApp(
 }
 
 @Composable
-private fun LaunchSplashScreen() {
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = SPLASH_MIN_MS.toInt(), easing = LinearEasing),
-        )
-    }
+private fun LaunchSplashScreen(progress: Float) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.splash_start),
@@ -503,7 +525,7 @@ private fun LaunchSplashScreen() {
             contentScale = ContentScale.Crop,
         )
         SplashLoadingBlock(
-            progress = progress.value,
+            progress = progress,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()

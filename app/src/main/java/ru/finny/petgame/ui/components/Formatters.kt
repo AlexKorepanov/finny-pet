@@ -24,5 +24,9 @@ fun coinsAmount(amount: Long): String =
     russianPlural(amount, R.string.coins_one, R.string.coins_few, R.string.coins_many)
 
 @Composable
+fun starsAmount(count: Int): String =
+    russianPlural(count.toLong(), R.string.stars_one, R.string.stars_few, R.string.stars_many)
+
+@Composable
 fun weeksAmount(count: Int): String =
     russianPlural(count.toLong(), R.string.weeks_one, R.string.weeks_few, R.string.weeks_many)

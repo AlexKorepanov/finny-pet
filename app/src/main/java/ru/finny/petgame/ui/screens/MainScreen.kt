@@ -34,6 +34,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +47,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +65,7 @@ import ru.finny.petgame.ui.components.ForestMeadow
 import ru.finny.petgame.ui.components.LivePet
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.ScenePlate
+import ru.finny.petgame.ui.components.StarsDialog
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.coinsAmount
@@ -106,6 +113,7 @@ fun MainScreen(
                     balance = snapshot.balance,
                     savings = snapshot.savingsTotal,
                     stars = profile.growthStars,
+                    stage = profile.petStage,
                     onHint = onHint,
                     onSettings = onSettings,
                 )
@@ -183,9 +191,14 @@ private fun StatsRow(
     balance: Long,
     savings: Long,
     stars: Int,
+    stage: Int,
     onHint: () -> Unit,
     onSettings: () -> Unit,
 ) {
+    var showStars by rememberSaveable { mutableStateOf(false) }
+    if (showStars) {
+        StarsDialog(stars = stars, stage = stage, onClose = { showStars = false })
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -205,6 +218,7 @@ private fun StatsRow(
             label = stringResource(R.string.stat_stars_label),
             value = stars.toString(),
             modifier = Modifier.weight(1f),
+            onClick = { showStars = true },
         ) { Icon(Icons.Filled.Star, null, tint = FinnyColors.SplashBarFill, modifier = Modifier.size(24.dp)) }
         RoundIconButton(onClick = onSettings) {
             Icon(
@@ -243,17 +257,29 @@ private fun StatChip(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     icon: @Composable () -> Unit,
 ) {
-    val description = stringResource(R.string.main_stat_cd, label, value)
+    val description = stringResource(
+        if (onClick != null) R.string.cd_stars_open else R.string.main_stat_cd,
+        label,
+        value,
+    )
     Row(
         modifier = modifier
             .height(48.dp)
             .clip(PlateShape)
             .background(FinnyColors.SplashBarTrack.copy(alpha = 0.94f))
             .border(2.dp, FinnyColors.SplashInk, PlateShape)
+            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(horizontal = 10.dp)
-            .clearAndSetSemantics { contentDescription = description },
+            .clearAndSetSemantics {
+                contentDescription = description
+                if (onClick != null) {
+                    role = Role.Button
+                    onClick { onClick(); true }
+                }
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
