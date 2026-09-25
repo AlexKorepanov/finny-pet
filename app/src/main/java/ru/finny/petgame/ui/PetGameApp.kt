@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -123,7 +124,8 @@ fun PetGameApp(
     var leafPhase by remember { mutableStateOf<LeafPhase?>(null) }
     val leafProgress = remember { Animatable(0f) }
     val splashProgress = remember { Animatable(0f) }
-    val leafHaptics = remember { LeafHaptics(context.applicationContext) }
+    val view = LocalView.current
+    val leafHaptics = remember(view) { LeafHaptics(view) }
 
     LaunchedEffect(Unit) {
         val bar = launch {
@@ -141,14 +143,14 @@ fun PetGameApp(
         delay(LEAVES_FULL_BAR_PAUSE_MS)
         leafPhase = LeafPhase.COVER
         leafProgress.snapTo(0f)
-        leafHaptics.cover(LEAVES_COVER_MS)
+        launch { leafHaptics.cover(LEAVES_COVER_MS) }
         leafProgress.animateTo(1f, tween(LEAVES_COVER_MS, easing = LinearEasing))
         leafHaptics.covered()
         screen = firstScreen
         delay(90)
         leafPhase = LeafPhase.REVEAL
         leafProgress.snapTo(0f)
-        leafHaptics.reveal(LEAVES_REVEAL_MS)
+        launch { leafHaptics.reveal(LEAVES_REVEAL_MS) }
         leafProgress.animateTo(1f, tween(LEAVES_REVEAL_MS, easing = LinearEasing))
         leafPhase = null
     }
