@@ -46,6 +46,7 @@ import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.audio.BackgroundMusic
 import ru.finny.petgame.data.repository.GameRepository
+import ru.finny.petgame.feedback.LeafHaptics
 import ru.finny.petgame.ui.components.LeafCurtain
 import ru.finny.petgame.ui.components.LeafPhase
 import ru.finny.petgame.ui.components.LocalAnimationsEnabled
@@ -122,6 +123,7 @@ fun PetGameApp(
     var leafPhase by remember { mutableStateOf<LeafPhase?>(null) }
     val leafProgress = remember { Animatable(0f) }
     val splashProgress = remember { Animatable(0f) }
+    val leafHaptics = remember { LeafHaptics(context.applicationContext) }
 
     LaunchedEffect(Unit) {
         val bar = launch {
@@ -139,11 +141,14 @@ fun PetGameApp(
         delay(LEAVES_FULL_BAR_PAUSE_MS)
         leafPhase = LeafPhase.COVER
         leafProgress.snapTo(0f)
+        leafHaptics.cover(LEAVES_COVER_MS)
         leafProgress.animateTo(1f, tween(LEAVES_COVER_MS, easing = LinearEasing))
+        leafHaptics.covered()
         screen = firstScreen
         delay(90)
         leafPhase = LeafPhase.REVEAL
         leafProgress.snapTo(0f)
+        leafHaptics.reveal(LEAVES_REVEAL_MS)
         leafProgress.animateTo(1f, tween(LEAVES_REVEAL_MS, easing = LinearEasing))
         leafPhase = null
     }
