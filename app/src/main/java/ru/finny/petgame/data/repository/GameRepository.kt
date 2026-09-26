@@ -529,7 +529,8 @@ class GameRepository(
             ),
         )
         val newMood = engine.applyPetEffect(profile.mood, GOAL_MOOD_REWARD)
-        profileDao().update(profile.copy(mood = newMood))
+        val outfit = if (goalId == GOAL_OUTFIT_ID) ProfileEntity.FESTIVE_OUTFIT else profile.petOutfit
+        profileDao().update(profile.copy(mood = newMood, petOutfit = outfit))
         progressDao().deleteByKind(profile.id, PROGRESS_SELECTED_GOAL)
         GoalAchieveResult.Success(
             goalTitle = row.goalTitle,
@@ -792,6 +793,7 @@ class GameRepository(
     }
 
     companion object {
+        const val GOAL_OUTFIT_ID = "goal_outfit"
         const val PROGRESS_SELECTED_GOAL = "SELECTED_GOAL"
         const val PROGRESS_GOAL_ACHIEVED = "GOAL_ACHIEVED"
         const val START_BUDGET_SOURCE = "START_BUDGET"

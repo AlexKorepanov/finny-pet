@@ -42,6 +42,7 @@ import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
+import ru.finny.petgame.data.entity.ProfileEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
@@ -167,6 +168,22 @@ fun PetGameApp(
         }
     }
 
+    val ownsFestiveOutfit = GameRepository.GOAL_OUTFIT_ID in mainSnapshot?.achievedGoalIds.orEmpty()
+    val profileId = mainSnapshot?.profile?.id
+    LaunchedEffect(profileId, ownsFestiveOutfit) {
+        val profile = mainSnapshot?.profile ?: return@LaunchedEffect
+        if (!ownsFestiveOutfit || profile.petOutfit == ProfileEntity.FESTIVE_OUTFIT) return@LaunchedEffect
+        val saved = repository.updatePetAppearance(
+            petName = profile.petName,
+            petHat = profile.petHat,
+            petFace = profile.petFace,
+            petOutfit = ProfileEntity.FESTIVE_OUTFIT,
+            petEmotion = profile.petEmotion,
+            petEyeColor = profile.petEyeColor,
+        )
+        if (saved) mainSnapshot = repository.loadSnapshot()
+    }
+
     val goBack: () -> Unit = {
         when (screen) {
             AppScreen.INTRO -> if (introPage > 0) introPage--
@@ -288,6 +305,7 @@ fun PetGameApp(
                 },
             )
             AppScreen.WARDROBE -> PetScreen(
+                festiveUnlocked = GameRepository.GOAL_OUTFIT_ID in mainSnapshot?.achievedGoalIds.orEmpty(),
                 look = petLook,
                 petName = petName,
                 onLookChange = { petLook = it },

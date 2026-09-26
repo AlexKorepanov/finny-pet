@@ -87,16 +87,20 @@ fun PetScreen(
     onHint: () -> Unit,
     onNext: () -> Unit,
     editMode: Boolean = false,
+    festiveUnlocked: Boolean = false,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tab = PetCustomizeTab.entries[selectedTab.coerceIn(0, PetCustomizeTab.entries.lastIndex)]
 
-    val labels = when (tab) {
-        PetCustomizeTab.HAT -> stringArrayResource(R.array.pet_hat_labels)
-        PetCustomizeTab.FACE -> stringArrayResource(R.array.pet_face_labels)
-        PetCustomizeTab.OUTFIT -> stringArrayResource(R.array.pet_outfit_labels)
-        PetCustomizeTab.EMOTION -> stringArrayResource(R.array.pet_emotion_labels)
-        PetCustomizeTab.EYES -> stringArrayResource(R.array.pet_eye_labels)
+    val labels: List<String> = when (tab) {
+        PetCustomizeTab.HAT -> stringArrayResource(R.array.pet_hat_labels).toList()
+        PetCustomizeTab.FACE -> stringArrayResource(R.array.pet_face_labels).toList()
+        PetCustomizeTab.OUTFIT -> {
+            val base = stringArrayResource(R.array.pet_outfit_labels).toList()
+            if (festiveUnlocked) base + stringResource(R.string.pet_outfit_festive) else base
+        }
+        PetCustomizeTab.EMOTION -> stringArrayResource(R.array.pet_emotion_labels).toList()
+        PetCustomizeTab.EYES -> stringArrayResource(R.array.pet_eye_labels).toList()
     }
     val selectedIndex = when (tab) {
         PetCustomizeTab.HAT -> look.hat
@@ -165,7 +169,7 @@ fun PetScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                itemsIndexed(labels.toList()) { index, label ->
+                itemsIndexed(labels) { index, label ->
                     AccessoryTile(
                         label = label,
                         selected = index == selectedIndex,

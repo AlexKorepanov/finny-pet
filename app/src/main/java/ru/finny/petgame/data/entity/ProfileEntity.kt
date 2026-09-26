@@ -21,4 +21,9 @@ data class ProfileEntity(
     val goodPeriods: Int = 0,
     val growthStars: Int = 0,
     val allTasksOpen: Boolean = false,
-)
+) {
+    companion object {
+        /** Праздничный наряд из копилки. Совпадает с индексом в PetLook. */
+        const val FESTIVE_OUTFIT = 4
+    }
+}

@@ -22,7 +22,8 @@ data class PetLook(
     companion object {
         const val HAT_COUNT = 4
         const val FACE_COUNT = 4
-        const val OUTFIT_COUNT = 4
+        const val FESTIVE_OUTFIT = ProfileEntity.FESTIVE_OUTFIT
+        const val OUTFIT_COUNT = 5
         const val EMOTION_COUNT = 4
         const val EYE_COLOR_COUNT = 4
 

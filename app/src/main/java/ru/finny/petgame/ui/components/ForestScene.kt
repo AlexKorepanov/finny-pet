@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
 import ru.finny.petgame.data.entity.SavingsEntity
+import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.theme.FinnyColors
 
 private enum class SceneItemState { HIDDEN, SAVING, OWNED }
@@ -115,7 +116,12 @@ fun ForestMeadow(
         LaunchedEffect(achievedGoalIds) { onGoalsShown(achievedGoalIds) }
     }
     val savingRow = savings.firstOrNull { it.goalId == selectedGoalId }
-    val owned = scenePlacements.filter { it.goalId in achievedGoalIds }.map { stringResource(it.name) }
+    val owned = buildList {
+        addAll(scenePlacements.filter { it.goalId in achievedGoalIds }.map { stringResource(it.name) })
+        if (GameRepository.GOAL_OUTFIT_ID in achievedGoalIds) {
+            add(stringResource(R.string.forest_item_outfit))
+        }
+    }
     val description = if (owned.isEmpty()) {
         stringResource(R.string.forest_desc_pet, petName)
     } else {

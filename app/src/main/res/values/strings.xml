@@ -25,6 +25,7 @@
     <string name="pet_hat_title">Головной убор</string>
     <string name="pet_face_title">Для лица</string>
     <string name="pet_outfit_title">Одежда</string>
+    <string name="pet_outfit_festive">Праздничный наряд</string>
     <string name="pet_emotion_title">Настроение</string>
     <string name="pet_eye_title">Цвет глаз</string>
     <string name="pet_tab_hat">Шапка</string>
@@ -105,6 +106,7 @@
     <string name="forest_item_kite">воздушный змей</string>
     <string name="forest_item_slide">горка</string>
     <string name="forest_item_swing">качели</string>
+    <string name="forest_item_outfit">праздничный наряд</string>
     <string name="main_period_line">Неделя %1$d</string>
     <string name="main_week_theme_line">Неделя %1$d · %2$s</string>
     <string name="main_stage_line">Стадия: %1$s</string>

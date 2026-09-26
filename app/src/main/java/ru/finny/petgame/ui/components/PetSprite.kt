@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.model.PetLook
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -129,6 +130,7 @@ private fun DrawScope.drawPetAccessories(
         1 -> drawScarf(sp)
         2 -> drawHoodie(sp)
         3 -> drawBowTie(sp)
+        PetLook.FESTIVE_OUTFIT -> drawFestiveCoat(sp)
     }
     if (drawsEyes) {
         drawFace(sp, look.emotion, look.eyeColor.coerceIn(EYE_COLORS.indices), drawsMouth, eyesClosed)
@@ -923,6 +925,92 @@ private fun DrawScope.drawHoodie(sp: PngSpace) {
     }
     drawCircle(color = INK, radius = sp.d(3f), center = sp.o(199f, 312f))
     drawCircle(color = INK, radius = sp.d(3f), center = sp.o(223f, 312f))
+}
+
+private fun DrawScope.drawFestiveCoat(sp: PngSpace) {
+    val red = Color(0xFFE53935)
+    val redLight = Color(0xFFFF8A80)
+    val redDark = Color(0xFFB71C1C)
+    val gold = Color(0xFFFFE082)
+    val goldDeep = Color(0xFFF9A825)
+
+    val cape = sp.path {
+        m(124f, 296f)
+        q(211f, 274f, 298f, 296f)
+        l(288f, 352f)
+        q(211f, 368f, 134f, 352f)
+        z()
+    }
+    drawPath(
+        cape,
+        brush = Brush.verticalGradient(listOf(gold, goldDeep), startY = sp.y(274f), endY = sp.y(368f)),
+    )
+    drawPath(cape, color = INK, style = sp.stroke(5f))
+
+    val torso = sp.path {
+        m(152f, 292f)
+        q(211f, 302f, 270f, 292f)
+        c(282f, 304f, 286f, 322f, 284f, 340f)
+        l(282f, 366f)
+        q(211f, 378f, 148f, 366f)
+        l(146f, 340f)
+        c(144f, 322f, 140f, 304f, 152f, 292f)
+        z()
+    }
+    drawPath(
+        torso,
+        brush = Brush.verticalGradient(listOf(redLight, red, redDark), startY = sp.y(292f), endY = sp.y(376f)),
+    )
+    clipPath(torso) {
+        drawPath(
+            sp.path {
+                m(130f, 352f)
+                q(211f, 364f, 300f, 352f)
+                l(300f, 390f)
+                l(130f, 390f)
+                z()
+            },
+            color = goldDeep,
+        )
+    }
+    drawPath(torso, color = INK, style = sp.stroke(6f))
+    drawPath(
+        sp.path {
+            m(156f, 354f)
+            q(211f, 366f, 266f, 354f)
+        },
+        color = gold,
+        style = sp.stroke(5f),
+    )
+
+    val collar = sp.path {
+        m(148f, 290f)
+        q(211f, 304f, 274f, 290f)
+        c(284f, 292f, 282f, 306f, 270f, 308f)
+        q(211f, 322f, 152f, 308f)
+        c(140f, 306f, 138f, 292f, 148f, 290f)
+        z()
+    }
+    drawPath(collar, color = gold)
+    drawPath(collar, color = INK, style = sp.stroke(5f))
+
+    val star = sp.star(211f, 334f, 16f)
+    drawPath(star, color = gold)
+    drawPath(star, color = INK, style = sp.stroke(3.5f))
+}
+
+private fun PngSpace.star(cx: Float, cy: Float, outer: Float): Path {
+    val path = Path()
+    val inner = outer * 0.45f
+    for (i in 0 until 10) {
+        val angle = -PI / 2.0 + i * PI / 5.0
+        val radius = if (i % 2 == 0) outer else inner
+        val px = cx + (radius * cos(angle)).toFloat()
+        val py = cy + (radius * sin(angle)).toFloat()
+        if (i == 0) path.moveTo(x(px), y(py)) else path.lineTo(x(px), y(py))
+    }
+    path.close()
+    return path
 }
 
 private fun DrawScope.drawBowTie(sp: PngSpace) {

@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import ru.finny.petgame.data.PetDatabase
+import ru.finny.petgame.data.entity.ProfileEntity
 import ru.finny.petgame.data.model.GoalAchieveResult
 import ru.finny.petgame.data.model.LedgerKind
 import ru.finny.petgame.data.model.PeriodCloseResult
@@ -246,6 +247,22 @@ class GameRepositoryTest {
         val progress = db.progressDao().getByKind(profileId, GameRepository.PROGRESS_GOAL_ACHIEVED)
         assertEquals(1, progress.size)
         assertEquals("goal_1", progress.first().itemId)
+        assertEquals(2, snapshot.profile.petOutfit)
+    }
+
+    @Test
+    fun `receiving the festive outfit dresses the pet`() = runTest {
+        repository.earn(source = "TASK", amount = 450L)
+        assertTrue(repository.selectGoal(GameRepository.GOAL_OUTFIT_ID, "Праздничный наряд", 450L))
+        repository.depositToSavings(GameRepository.GOAL_OUTFIT_ID, 450L)
+
+        val result = repository.achieveGoal(GameRepository.GOAL_OUTFIT_ID)
+
+        assertTrue(result is GoalAchieveResult.Success)
+        assertEquals(
+            ProfileEntity.FESTIVE_OUTFIT,
+            freshRepository().loadSnapshot()!!.profile.petOutfit,
+        )
     }
 
     @Test

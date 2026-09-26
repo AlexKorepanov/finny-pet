@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -64,10 +68,12 @@ import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.AmountStepper
 import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.FinnyProgressBar
+import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.StatusBadge
@@ -553,20 +559,43 @@ private fun GoalPicture(goalId: String, modifier: Modifier = Modifier) {
             .background(FinnyColors.SoftGreen),
         contentAlignment = Alignment.Center,
     ) {
-        if (picture != null) {
-            Image(
+        when {
+            goalId == GameRepository.GOAL_OUTFIT_ID -> FestiveOutfitPreview(Modifier.fillMaxSize())
+            picture != null -> Image(
                 painter = painterResource(picture),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().padding(6.dp),
             )
-        } else {
-            Icon(
+            else -> Icon(
                 imageVector = Icons.Filled.Star,
                 contentDescription = null,
                 tint = FinnyColors.SplashBarFill,
                 modifier = Modifier.fillMaxSize(0.55f),
             )
         }
+    }
+}
+
+/** Крупно грудь Финни: так наряд виден и в списке мечт, и на карточке копилки. */
+@Composable
+private fun FestiveOutfitPreview(modifier: Modifier = Modifier) {
+    val focusX = 210f
+    val focusY = 340f
+    val zoom = 2.2f
+    BoxWithConstraints(modifier = modifier.clipToBounds()) {
+        val box = maxWidth
+        val sprite = box * zoom
+        val scale = sprite / 445f
+        val spriteLeft = (sprite - scale * 420f) / 2f
+        val dx = box / 2f - (spriteLeft + scale * focusX) + (sprite - box) / 2f
+        val dy = box / 2f - scale * focusY + (sprite - box) / 2f
+        PetSprite(
+            look = PetLook(outfit = PetLook.FESTIVE_OUTFIT, emotion = 1),
+            stage = 2,
+            modifier = Modifier
+                .requiredSize(sprite)
+                .offset(x = dx, y = dy),
+        )
     }
 }
