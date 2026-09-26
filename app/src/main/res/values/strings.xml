@@ -308,21 +308,25 @@
     <string name="savings_all_received">Все цели получены!</string>
     <string name="savings_choose_new">Выбери новую цель из оставшихся.</string>
 
-    <string name="tasks_header_hint">Выполняй задания и получай монеты.</string>
+    <string name="tasks_header_hint">Помоги Финни решить, что сделать с монетами.</string>
     <string name="tasks_all_open">Все задания открыты</string>
     <string name="tasks_demo_badge">Демо: все задания открыты</string>
     <string name="tasks_done_badge">Выполнено</string>
     <string name="tasks_theme_budget">Планирование бюджета</string>
     <string name="tasks_theme_savings">Сбережения</string>
     <string name="tasks_theme_payments">Платежи и покупки</string>
-    <string name="tasks_check_button">Проверить</string>
+    <string name="tasks_check_button">Разложить так</string>
     <string name="tasks_distribute_sum">Распредели ровно %1$s.</string>
     <string name="tasks_distribute_left">Осталось распределить: %1$s</string>
-    <string name="tasks_correct_badge">Верно!</string>
+    <string name="tasks_correct_badge">Финни рад</string>
     <string name="tasks_already_badge">Уже выполнено</string>
-    <string name="tasks_try_again">Попробовать ещё раз</string>
+    <string name="tasks_try_again">Другой ход</string>
+    <string name="tasks_again_badge">Давай иначе</string>
+    <string name="tasks_happened">Вот что вышло</string>
+    <string name="tasks_remember">Финни запомнил</string>
+    <string name="tasks_finny_says">Финни: %1$s</string>
     <string name="tasks_reward_line">Монеты: +%1$d.</string>
-    <string name="tasks_no_reward_line">Награды нет, но и ничего не отняли. Попробуй ещё раз!</string>
+    <string name="tasks_no_reward_line">Монеты пока не пришли. Можно выбрать другой ход.</string>
     <string name="tasks_already_rewarded">Награда за это задание уже получена.</string>
     <string name="tasks_next">Следующее задание</string>
     <string name="tasks_to_shop">В магазин</string>
@@ -338,11 +342,11 @@
     <string name="tasks_day_title">%1$s · %2$s</string>
     <string name="tasks_week_title_short">Неделя %1$d</string>
     <string name="tasks_locked_week">Откроется на неделе %1$d</string>
-    <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d. С первой попытки было бы +%2$d.</string>
-    <string name="tasks_try_in_game_hint">Теперь попробуй это в игре с Финни.</string>
-    <string name="tasks_try_plan">Попробуй в игре: план</string>
-    <string name="tasks_try_savings">Попробуй в игре: копилка</string>
-    <string name="tasks_try_shop">Попробуй в игре: магазин</string>
+    <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d.</string>
+    <string name="tasks_try_in_game_hint">Так же можно сделать на этой неделе.</string>
+    <string name="tasks_try_plan">Открыть план</string>
+    <string name="tasks_try_savings">Открыть копилку</string>
+    <string name="tasks_try_shop">Открыть магазин</string>
 
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
     <string name="plan_week_title">Неделя %1$d · %2$s</string>

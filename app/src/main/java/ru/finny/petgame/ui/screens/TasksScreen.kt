@@ -8,13 +8,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -55,9 +56,11 @@ import ru.finny.petgame.ui.components.ChunkySurface
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.AmountStepper
 import ru.finny.petgame.ui.components.BadgeKind
+import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
+import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.SecondaryButton
@@ -175,6 +178,8 @@ fun TasksScreen(
                         BudgetDirection.SAVINGS to savingsAmount,
                     ),
                     nextTaskId = nextIncompleteTask?.id,
+                    petLook = snapshot.profile.toPetLook(),
+                    petStage = snapshot.profile.petStage,
                     onDistributeChange = { direction, value ->
                         when (direction) {
                             BudgetDirection.REQUIRED -> requiredAmount = value
@@ -296,6 +301,8 @@ private fun TaskPlayView(
     distributionCheck: DistributionCheck?,
     amounts: Map<BudgetDirection, Long>,
     nextTaskId: String?,
+    petLook: PetLook,
+    petStage: Int,
     onDistributeChange: (BudgetDirection, Long) -> Unit,
     onChooseOption: (TaskOption) -> Unit,
     onCheck: () -> Unit,
@@ -305,14 +312,33 @@ private fun TaskPlayView(
     onBackToList: () -> Unit,
 ) {
     val locked = feedback is TaskCompletionResult.Success && feedback.isCorrect
+    val sceneLook = when {
+        feedback is TaskCompletionResult.Success && feedback.isCorrect -> petLook.withEmotion(3)
+        feedback is TaskCompletionResult.Success -> petLook.withEmotion(2)
+        else -> petLook
+    }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.tasks_day_title, weekdayShort(task.day), task.title),
             style = MaterialTheme.typography.headlineSmall,
         )
         AppCard(modifier = Modifier.fillMaxWidth()) {
-            Text(text = task.story, style = MaterialTheme.typography.bodyLarge)
-            Text(text = task.question, style = MaterialTheme.typography.titleMedium)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PetSprite(look = sceneLook, stage = petStage, modifier = Modifier.size(112.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(text = task.story, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = stringResource(R.string.tasks_finny_says, task.question),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            }
         }
         when (task.type) {
             TaskType.CHOICE -> {
@@ -384,7 +410,7 @@ private fun TaskPlayView(
                                         text = if (result.firstTry) {
                                             stringResource(R.string.tasks_reward_line, result.reward)
                                         } else {
-                                            stringResource(R.string.tasks_retry_reward_line, result.reward, result.fullReward)
+                                            stringResource(R.string.tasks_retry_reward_line, result.reward)
                                         },
                                         style = MaterialTheme.typography.bodyLarge,
                                     )
@@ -397,9 +423,9 @@ private fun TaskPlayView(
                                 }
                             } else {
                                 StatusBadge(
-                                    text = stringResource(R.string.tasks_try_again),
-                                    icon = Icons.Filled.Warning,
-                                    kind = BadgeKind.ATTENTION,
+                                    text = stringResource(R.string.tasks_again_badge),
+                                    icon = Icons.Filled.Refresh,
+                                    kind = BadgeKind.NEUTRAL,
                                 )
                                 Text(
                                     text = stringResource(R.string.tasks_no_reward_line),
@@ -423,10 +449,20 @@ private fun TaskPlayView(
                         }
                     }
                     chosenOption?.let { option ->
+                        Text(
+                            text = stringResource(R.string.tasks_happened),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         Text(text = option.result, style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            text = stringResource(R.string.tasks_remember),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = FinnyColors.TextSecondary,
+                        )
                         Text(
                             text = if (option.isGood) task.correctExplanation else task.wrongExplanation,
                             style = MaterialTheme.typography.bodyLarge,
+                            color = FinnyColors.TextSecondary,
                         )
                     }
                     val done = locked || result is TaskCompletionResult.AlreadyCompleted
