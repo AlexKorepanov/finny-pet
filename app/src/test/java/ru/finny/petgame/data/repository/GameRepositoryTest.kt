@@ -725,6 +725,20 @@ class GameRepositoryTest {
     }
 
     @Test
+    fun `demo coins top the balance up to the purse and do not stack`() = runTest {
+        val added = repository.grantDemoCoins(100L)
+        assertEquals(70L, added)
+        assertEquals(100L, freshRepository().loadSnapshot()!!.balance)
+
+        val again = repository.grantDemoCoins(100L)
+        assertEquals(0L, again)
+        assertEquals(100L, freshRepository().loadSnapshot()!!.balance)
+
+        val titles = repository.loadLedger().map { it.title }
+        assertTrue(GameRepository.DEMO_COINS_SOURCE in titles)
+    }
+
+    @Test
     fun `demo mode flag persists`() = runTest {
         assertTrue(repository.setAllTasksOpen(true))
         assertTrue(freshRepository().loadSnapshot()!!.profile.allTasksOpen)

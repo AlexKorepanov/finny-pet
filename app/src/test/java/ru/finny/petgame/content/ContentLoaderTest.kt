@@ -10,6 +10,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import ru.finny.petgame.content.model.TaskType
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.PurchaseCategory
@@ -126,13 +129,35 @@ class ContentLoaderTest {
     }
 
     @Test
-    fun `tasks open by week unless all opened`() {
+    fun `tasks open by week and weekday unless all opened`() {
         val catalog = loader.loadCatalog()
-        val late = catalog.tasks.first { it.week == 5 }
+        val monday = catalog.tasks.first { it.week == 1 && it.day == 1 }
+        val tuesday = catalog.tasks.first { it.week == 1 && it.day == 2 }
+        val late = catalog.tasks.first { it.week == 5 && it.day == 1 }
+        val lateTuesday = catalog.tasks.first { it.week == 5 && it.day == 2 }
 
-        assertFalse(catalog.isTaskOpen(late, periodIndex = 0, allOpen = false))
-        assertTrue(catalog.isTaskOpen(late, periodIndex = 4, allOpen = false))
-        assertTrue(catalog.isTaskOpen(late, periodIndex = 0, allOpen = true))
+        assertTrue(catalog.isTaskOpen(monday, periodIndex = 0, openDay = 1, allOpen = false))
+        assertFalse(catalog.isTaskOpen(tuesday, periodIndex = 0, openDay = 1, allOpen = false))
+        assertTrue(catalog.isTaskOpen(tuesday, periodIndex = 0, openDay = 2, allOpen = false))
+        assertFalse(catalog.isTaskOpen(late, periodIndex = 0, openDay = 5, allOpen = false))
+        assertTrue(catalog.isTaskOpen(late, periodIndex = 4, openDay = 1, allOpen = false))
+        assertFalse(catalog.isTaskOpen(lateTuesday, periodIndex = 4, openDay = 1, allOpen = false))
+        assertTrue(catalog.isTaskOpen(tuesday, periodIndex = 1, openDay = 1, allOpen = false))
+        assertTrue(catalog.isTaskOpen(tuesday, periodIndex = 0, openDay = 1, allOpen = true))
         assertEquals(catalog.weeks.first(), catalog.weekFor(5))
+        assertEquals(2_090L, catalog.accessoryPurse())
+    }
+
+    @Test
+    fun `weekday opens on the next calendar day not after 24 hours`() {
+        val zone = ZoneId.of("Europe/Moscow")
+        val start = LocalDate.of(2026, 9, 27).atTime(LocalTime.of(23, 0)).atZone(zone).toInstant().toEpochMilli()
+        val laterSameNight = LocalDate.of(2026, 9, 27).atTime(LocalTime.of(23, 40)).atZone(zone).toInstant().toEpochMilli()
+        val nextMorning = LocalDate.of(2026, 9, 28).atTime(LocalTime.of(0, 10)).atZone(zone).toInstant().toEpochMilli()
+        val nextWeek = LocalDate.of(2026, 10, 4).atTime(LocalTime.NOON).atZone(zone).toInstant().toEpochMilli()
+
+        assertEquals(1, openTaskDay(start, laterSameNight, zone))
+        assertEquals(2, openTaskDay(start, nextMorning, zone))
+        assertEquals(5, openTaskDay(start, nextWeek, zone))
     }
 }

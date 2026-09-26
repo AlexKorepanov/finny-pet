@@ -224,6 +224,10 @@
     <string name="adult_stats_note">Ошибки — часть обучения: после ошибки ребёнок видит объяснение и пробует снова. Обсудите с ребёнком темы, где было больше попыток.</string>
     <string name="adult_demo_title">Демо-режим</string>
     <string name="adult_demo_body">Все задания открыты сразу, без ожидания.</string>
+    <string name="adult_demo_coins_button">Начислить монеты</string>
+    <string name="adult_demo_coins_body">Хватит купить всё по желанию и отложить на каждую мечту, чтобы увидеть их на полянке.</string>
+    <string name="adult_demo_coins_done">Готово. На балансе %1$s.</string>
+    <string name="adult_demo_coins_enough">Монет уже хватает на все аксессуары и мечты.</string>
     <string name="adult_profile_title">Тестовый профиль</string>
     <string name="adult_profile_local">Профиль игрока хранится только на этом устройстве: без регистрации, интернета и облачных копий.</string>
     <string name="adult_reset_hint">Для проверки: сброс вернёт игру к исходному состоянию, к первому запуску. Обязательный сценарий можно пройти заново.</string>
@@ -342,6 +346,12 @@
     <string name="tasks_day_title">%1$s · %2$s</string>
     <string name="tasks_week_title_short">Неделя %1$d</string>
     <string name="tasks_locked_week">Откроется на неделе %1$d</string>
+    <string name="tasks_locked_day">Откроется %1$s</string>
+    <string name="tasks_day_when_1">в понедельник</string>
+    <string name="tasks_day_when_2">во вторник</string>
+    <string name="tasks_day_when_3">в среду</string>
+    <string name="tasks_day_when_4">в четверг</string>
+    <string name="tasks_day_when_5">в пятницу</string>
     <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d.</string>
     <string name="tasks_try_in_game_hint">Так же можно сделать на этой неделе.</string>
     <string name="tasks_try_plan">Открыть план</string>

@@ -545,6 +545,20 @@ class GameRepository(
         true
     }
 
+    /**
+     * Доводит баланс до [purse], если монет меньше.
+     * Возвращает, сколько монет добавлено (0, если уже хватает).
+     */
+    suspend fun grantDemoCoins(purse: Long): Long = database.withTransaction {
+        if (purse <= 0L) return@withTransaction 0L
+        val profile = profileDao().getCurrentProfile() ?: return@withTransaction 0L
+        val current = balanceDao().getByProfileId(profile.id)?.amount ?: 0L
+        val grant = purse - current
+        if (grant <= 0L) return@withTransaction 0L
+        val updated = grantIncome(profile.id, DEMO_COINS_SOURCE, grant, currentPeriodIndex(profile.id))
+        updated - current
+    }
+
     fun checkTaskDistribution(
         amounts: Map<BudgetDirection, Long>,
         sum: Long,
@@ -782,6 +796,7 @@ class GameRepository(
         const val PROGRESS_GOAL_ACHIEVED = "GOAL_ACHIEVED"
         const val START_BUDGET_SOURCE = "START_BUDGET"
         const val START_BUDGET_AMOUNT = 30L
+        const val DEMO_COINS_SOURCE = "Демо-монеты"
         private const val START_BUDGET_TITLE = "Стартовые монеты"
         private const val GOAL_MOOD_REWARD = 15
         private const val TASK_MOOD_REWARD = 5

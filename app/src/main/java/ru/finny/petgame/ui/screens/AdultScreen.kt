@@ -42,6 +42,7 @@ import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
 import ru.finny.petgame.ui.components.PrimaryButton
 import ru.finny.petgame.ui.components.SecondaryButton
+import ru.finny.petgame.ui.components.coinsAmount
 import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.ui.components.SectionHeader
 import ru.finny.petgame.ui.model.toPetLook
@@ -54,6 +55,7 @@ import kotlin.random.Random
 fun AdultScreen(
     repository: GameRepository,
     snapshot: GameSnapshot,
+    accessoryPurse: Long,
     onBack: () -> Unit,
     onHint: () -> Unit,
     onDemoChanged: () -> Unit,
@@ -66,6 +68,7 @@ fun AdultScreen(
     var b by rememberSaveable { mutableIntStateOf(Random.nextInt(2, 10)) }
     var gateError by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var coinsNote by remember { mutableStateOf<CoinsNote>(CoinsNote.None) }
 
     val themesDone = snapshot.completedTasks
         .filter { it.isCorrect == true }
@@ -227,6 +230,36 @@ fun AdultScreen(
                             },
                         )
                     }
+                    Text(
+                        text = stringResource(R.string.adult_demo_coins_body),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.adult_demo_coins_button),
+                        onClick = {
+                            scope.launch {
+                                val added = repository.grantDemoCoins(accessoryPurse)
+                                val balance = repository.loadSnapshot()?.balance ?: snapshot.balance
+                                coinsNote = if (added == 0L) CoinsNote.Enough else CoinsNote.Granted(balance)
+                                onDemoChanged()
+                            }
+                        },
+                        enabled = accessoryPurse > 0L,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    when (val note = coinsNote) {
+                        CoinsNote.None -> Unit
+                        CoinsNote.Enough -> Text(
+                            text = stringResource(R.string.adult_demo_coins_enough),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        is CoinsNote.Granted -> Text(
+                            text = stringResource(R.string.adult_demo_coins_done, coinsAmount(note.balance)),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
 
                 AppCard(modifier = Modifier.fillMaxWidth()) {
@@ -290,6 +323,12 @@ fun AdultScreen(
             },
         )
     }
+}
+
+private sealed interface CoinsNote {
+    data object None : CoinsNote
+    data object Enough : CoinsNote
+    data class Granted(val balance: Long) : CoinsNote
 }
 
 @Composable

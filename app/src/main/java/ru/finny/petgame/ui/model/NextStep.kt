@@ -1,6 +1,7 @@
 package ru.finny.petgame.ui.model
 
 import ru.finny.petgame.content.ContentCatalog
+import ru.finny.petgame.content.openTaskDay
 import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodStatus
@@ -24,9 +25,10 @@ fun missingNeedTitles(snapshot: GameSnapshot, catalog: ContentCatalog?): List<St
 fun nextOpenTask(snapshot: GameSnapshot, catalog: ContentCatalog?): TaskContent? {
     catalog ?: return null
     val periodIndex = snapshot.currentPeriod?.periodIndex ?: 0
+    val openDay = snapshot.currentPeriod?.let { openTaskDay(it.createdAt) } ?: 1
     val done = snapshot.completedTasks.filter { it.isCorrect == true }.map { it.taskId }.toSet()
     return catalog.tasks.firstOrNull {
-        it.id !in done && catalog.isTaskOpen(it, periodIndex, snapshot.profile.allTasksOpen)
+        it.id !in done && catalog.isTaskOpen(it, periodIndex, openDay, snapshot.profile.allTasksOpen)
     }
 }
 

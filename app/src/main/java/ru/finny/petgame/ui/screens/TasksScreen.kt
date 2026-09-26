@@ -42,6 +42,7 @@ import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
+import ru.finny.petgame.content.openTaskDay
 import ru.finny.petgame.content.model.TaskContent
 import ru.finny.petgame.content.model.TaskOption
 import ru.finny.petgame.content.model.TaskTheme
@@ -100,6 +101,7 @@ fun TasksScreen(
 
     val completedIds = snapshot.completedTasks.filter { it.isCorrect == true }.map { it.taskId }.toSet()
     val periodIndex = snapshot.currentPeriod?.periodIndex ?: 0
+    val openDay = snapshot.currentPeriod?.let { openTaskDay(it.createdAt) } ?: 1
     val allOpen = snapshot.profile.allTasksOpen
     val loadedCatalog = catalog
     val taskList = loadedCatalog?.tasks
@@ -107,7 +109,7 @@ fun TasksScreen(
     val shuffledOptions = remember(currentTask, attempt) { currentTask?.options?.shuffled().orEmpty() }
     val nextIncompleteTask = taskList
         ?.filter { it.id != currentTaskId && it.id !in completedIds }
-        ?.firstOrNull { loadedCatalog.isTaskOpen(it, periodIndex, allOpen) }
+        ?.firstOrNull { loadedCatalog.isTaskOpen(it, periodIndex, openDay, allOpen) }
 
     Scaffold(
         topBar = {
@@ -157,10 +159,12 @@ fun TasksScreen(
                         accent = SectionAccent.TASKS,
                     )
                     weekTasks.sortedBy { it.day }.forEach { task ->
+                        val available = loadedCatalog.isTaskOpen(task, periodIndex, openDay, allOpen)
                         TaskCard(
                             task = task,
                             completed = task.id in completedIds,
-                            available = loadedCatalog.isTaskOpen(task, periodIndex, allOpen),
+                            available = available,
+                            lockedDay = !available && task.week == loadedCatalog.weekNumber(periodIndex),
                             onClick = { currentTaskId = task.id },
                         )
                     }
@@ -254,7 +258,13 @@ private fun tryInGameLabel(theme: TaskTheme): String = when (theme) {
 }
 
 @Composable
-private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, onClick: () -> Unit) {
+private fun TaskCard(
+    task: TaskContent,
+    completed: Boolean,
+    available: Boolean,
+    lockedDay: Boolean,
+    onClick: () -> Unit,
+) {
     ChunkySurface(
         onClick = onClick,
         enabled = available,
@@ -283,7 +293,11 @@ private fun TaskCard(task: TaskContent, completed: Boolean, available: Boolean, 
                     kind = BadgeKind.POSITIVE,
                 )
                 !available -> StatusBadge(
-                    text = stringResource(R.string.tasks_locked_week, task.week),
+                    text = if (lockedDay) {
+                        stringResource(R.string.tasks_locked_day, weekdayWhen(task.day))
+                    } else {
+                        stringResource(R.string.tasks_locked_week, task.week)
+                    },
                     icon = Icons.Filled.Lock,
                     kind = BadgeKind.NEUTRAL,
                 )
@@ -518,6 +532,17 @@ private fun OptionSurface(selected: Boolean, enabled: Boolean, text: String, onC
         Text(text = text, style = MaterialTheme.typography.titleMedium)
     }
 }
+
+@Composable
+private fun weekdayWhen(day: Int): String = stringResource(
+    when (day) {
+        2 -> R.string.tasks_day_when_2
+        3 -> R.string.tasks_day_when_3
+        4 -> R.string.tasks_day_when_4
+        5 -> R.string.tasks_day_when_5
+        else -> R.string.tasks_day_when_1
+    },
+)
 
 @Composable
 private fun weekdayShort(day: Int): String = stringResource(

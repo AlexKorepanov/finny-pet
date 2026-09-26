@@ -1,5 +1,8 @@
 package ru.finny.petgame.content
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import ru.finny.petgame.content.model.SavingsGoalContent
 import ru.finny.petgame.content.model.ShopItemContent
 import ru.finny.petgame.content.model.TaskContent
@@ -32,9 +35,27 @@ class ContentCatalog(
             shopItemById(id)?.let { item -> WeekNeed(itemId = item.id, title = item.title, price = item.price) }
         }
 
-    /** Задание открыто, если его неделя уже наступила (или включён демо-режим). */
-    fun isTaskOpen(task: TaskContent, periodIndex: Int, allOpen: Boolean): Boolean =
-        allOpen || task.week <= weekNumber(periodIndex)
+    /**
+     * Задание открыто, если его неделя уже прошла,
+     * а в текущей неделе наступил его будний день. Демо-режим открывает всё.
+     */
+    fun isTaskOpen(task: TaskContent, periodIndex: Int, openDay: Int, allOpen: Boolean): Boolean {
+        if (allOpen) return true
+        val currentWeek = weekNumber(periodIndex)
+        return when {
+            task.week < currentWeek -> true
+            task.week > currentWeek -> false
+            else -> task.day <= openDay.coerceIn(1, 5)
+        }
+    }
+
+    /**
+     * Сколько монет нужно, чтобы купить всё по желанию и отложить на каждую мечту.
+     * Так можно посмотреть аксессуары в магазине и вещи на полянке.
+     */
+    fun accessoryPurse(): Long =
+        shopItems.filter { it.category == PurchaseCategory.OPTIONAL }.sumOf { it.price } +
+            goals.sumOf { it.cost }
 
     fun tasksOfWeek(periodIndex: Int): List<TaskContent> {
         val cycleWeek = weekFor(periodIndex)?.index ?: weekNumber(periodIndex)
@@ -66,4 +87,16 @@ class ContentCatalog(
         }
         return problems
     }
+}
+
+/** Какой будний день недели уже наступил: 1 в день старта периода, 2 на следующий календарный день. */
+fun openTaskDay(
+    periodStartedAt: Long,
+    now: Long = System.currentTimeMillis(),
+    zone: ZoneId = ZoneId.systemDefault(),
+): Int {
+    val start = Instant.ofEpochMilli(periodStartedAt).atZone(zone).toLocalDate()
+    val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+    val passed = ChronoUnit.DAYS.between(start, today).toInt()
+    return (passed + 1).coerceIn(1, 5)
 }

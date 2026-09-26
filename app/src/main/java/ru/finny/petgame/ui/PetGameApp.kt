@@ -420,6 +420,7 @@ fun PetGameApp(
                     AdultScreen(
                         repository = repository,
                         snapshot = currentSnapshot,
+                        accessoryPurse = catalog?.accessoryPurse() ?: 0L,
                         onBack = goBack,
                         onHint = { showHint = true },
                         onDemoChanged = {
