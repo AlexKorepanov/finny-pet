@@ -38,7 +38,9 @@ fun AppTopBar(
     onBack: () -> Unit,
     onHint: () -> Unit,
     closeStyle: Boolean = false,
+    accent: SectionAccent? = null,
 ) {
+    val accentColor = accent?.let(::sectionAccentColor)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,7 +52,7 @@ fun AppTopBar(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = FinnyColors.TextPrimary,
+            color = accentColor ?: FinnyColors.TextPrimary,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -90,7 +92,7 @@ fun AppTopBar(
                 Icon(
                     imageVector = Icons.Filled.Info,
                     contentDescription = stringResource(R.string.cd_hint),
-                    tint = FinnyColors.Primary,
+                    tint = accentColor ?: FinnyColors.Primary,
                     modifier = Modifier.size(24.dp),
                 )
             }

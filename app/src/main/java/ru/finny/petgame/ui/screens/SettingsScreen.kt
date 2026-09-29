@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +48,8 @@ fun SettingsScreen(
     onVolumeChangeFinished: () -> Unit,
     soundsOn: Boolean,
     onSoundsOnChange: (Boolean) -> Unit,
+    vibrationOn: Boolean,
+    onVibrationOnChange: (Boolean) -> Unit,
     animationsOn: Boolean,
     systemAnimationsOff: Boolean,
     onAnimationsOnChange: (Boolean) -> Unit,
@@ -130,6 +133,17 @@ fun SettingsScreen(
                     status = stringResource(if (soundsOn) R.string.settings_sounds_on else R.string.settings_sounds_off),
                     checked = soundsOn,
                     onCheckedChange = onSoundsOnChange,
+                )
+            }
+            AppCard {
+                SectionTitle(text = stringResource(R.string.settings_vibration_title), icon = Icons.Filled.Phone)
+                SwitchRow(
+                    title = stringResource(R.string.settings_vibration_switch),
+                    status = stringResource(
+                        if (vibrationOn) R.string.settings_vibration_on else R.string.settings_vibration_off,
+                    ),
+                    checked = vibrationOn,
+                    onCheckedChange = onVibrationOnChange,
                 )
             }
             AppCard {

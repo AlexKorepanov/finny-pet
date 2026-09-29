@@ -47,6 +47,26 @@ fun sectionAccentEdge(accent: SectionAccent): Color = when (accent) {
     SectionAccent.ADULT -> FinnyColors.AdultEdge
 }
 
+/** Фон всего экрана раздела: мягкий оттенок цвета иконки в нижнем меню. */
+fun sectionBackground(accent: SectionAccent): Color = when (accent) {
+    SectionAccent.PLAN -> Color(0xFFDDE8FC)
+    SectionAccent.SHOP -> Color(0xFFFCE6CC)
+    SectionAccent.TASKS -> Color(0xFFE9DFFA)
+    SectionAccent.SAVINGS -> Color(0xFFDDF1E1)
+    SectionAccent.PROGRESS -> Color(0xFFD8EFEB)
+    SectionAccent.ADULT -> Color(0xFFE6E9EC)
+}
+
+/** Панели и ряд вкладок внутри раздела — на тон глубже фона. */
+fun sectionPanel(accent: SectionAccent): Color = when (accent) {
+    SectionAccent.PLAN -> Color(0xFFC9DAFA)
+    SectionAccent.SHOP -> Color(0xFFF8D4AA)
+    SectionAccent.TASKS -> Color(0xFFD9C9F5)
+    SectionAccent.SAVINGS -> Color(0xFFC6E7CD)
+    SectionAccent.PROGRESS -> Color(0xFFBFE3DD)
+    SectionAccent.ADULT -> Color(0xFFD3D8DD)
+}
+
 @Composable
 fun SectionHeader(
     accent: SectionAccent,

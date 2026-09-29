@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.components.AppCard
@@ -83,8 +84,10 @@ fun AdultScreen(
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
+                accent = SectionAccent.ADULT,
             )
         },
+        containerColor = sectionBackground(SectionAccent.ADULT),
     ) { padding ->
         Column(
             modifier = Modifier

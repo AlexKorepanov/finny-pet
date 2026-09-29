@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -127,8 +127,8 @@ fun PetGameApp(
     var leafPhase by remember { mutableStateOf<LeafPhase?>(null) }
     val leafProgress = remember { Animatable(0f) }
     val splashProgress = remember { Animatable(0f) }
-    val view = LocalView.current
-    val leafHaptics = remember(view) { LeafHaptics(view) }
+    val leafHaptics = remember(context) { LeafHaptics(context.applicationContext) }
+    DisposableEffect(leafHaptics) { onDispose { leafHaptics.cancel() } }
 
     LaunchedEffect(Unit) {
         val bar = launch {
@@ -146,15 +146,16 @@ fun PetGameApp(
         delay(LEAVES_FULL_BAR_PAUSE_MS)
         leafPhase = LeafPhase.COVER
         leafProgress.snapTo(0f)
-        launch { leafHaptics.cover(LEAVES_COVER_MS) }
+        val coverBuzz = launch { leafHaptics.follow(LeafPhase.COVER, LEAVES_COVER_MS) { leafProgress.value } }
         leafProgress.animateTo(1f, tween(LEAVES_COVER_MS, easing = LinearEasing))
-        leafHaptics.covered()
+        coverBuzz.cancel()
         screen = firstScreen
         delay(90)
         leafPhase = LeafPhase.REVEAL
         leafProgress.snapTo(0f)
-        launch { leafHaptics.reveal(LEAVES_REVEAL_MS) }
+        val revealBuzz = launch { leafHaptics.follow(LeafPhase.REVEAL, LEAVES_REVEAL_MS) { leafProgress.value } }
         leafProgress.animateTo(1f, tween(LEAVES_REVEAL_MS, easing = LinearEasing))
+        revealBuzz.cancel()
         leafPhase = null
     }
 
@@ -429,6 +430,8 @@ fun PetGameApp(
                 onVolumeChangeFinished = music::saveVolume,
                 soundsOn = sounds.enabled,
                 onSoundsOnChange = sounds::updateEnabled,
+                vibrationOn = leafHaptics.enabled,
+                onVibrationOnChange = leafHaptics::updateEnabled,
                 animationsOn = uiSettings.animationsEnabled,
                 systemAnimationsOff = uiSettings.systemAnimationsOff,
                 onAnimationsOnChange = uiSettings::updateAnimationsEnabled,

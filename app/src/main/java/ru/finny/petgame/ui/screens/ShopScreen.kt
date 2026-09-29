@@ -59,6 +59,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.components.sectionAccentColor
+import ru.finny.petgame.ui.components.sectionPanel
+import ru.finny.petgame.ui.components.sectionBackground
+import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.content.model.ShopItemContent
@@ -119,8 +123,10 @@ fun ShopScreen(
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
+                accent = SectionAccent.SHOP,
             )
         },
+        containerColor = sectionBackground(SectionAccent.SHOP),
     ) { padding ->
         Column(
             modifier = Modifier
@@ -135,7 +141,7 @@ fun ShopScreen(
                 optionalLeft = envelopeLeft(BudgetDirection.OPTIONAL),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FinnyColors.SoftBlue)
+                    .background(sectionPanel(SectionAccent.SHOP))
                     .padding(horizontal = 20.dp, vertical = 12.dp),
             )
 
@@ -145,7 +151,7 @@ fun ShopScreen(
                 onSelect = { tab = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FinnyColors.SurfaceVariant)
+                    .background(sectionPanel(SectionAccent.SHOP))
                     .padding(vertical = 10.dp),
             )
 
@@ -488,10 +494,10 @@ private fun ShopTabTile(
         modifier = modifier
             .heightIn(min = 72.dp)
             .clip(shape)
-            .background(if (selected) FinnyColors.SoftBlue else FinnyColors.Surface)
+            .background(if (selected) sectionBackground(SectionAccent.SHOP) else FinnyColors.Surface)
             .border(
                 width = if (selected) 3.dp else 2.dp,
-                color = if (selected) FinnyColors.Primary else FinnyColors.CardBorder,
+                color = if (selected) sectionAccentColor(SectionAccent.SHOP) else FinnyColors.CardBorder,
                 shape = shape,
             )
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
@@ -504,7 +510,7 @@ private fun ShopTabTile(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) FinnyColors.Primary else FinnyColors.TextPrimary,
+            color = if (selected) sectionAccentColor(SectionAccent.SHOP) else FinnyColors.TextPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 2.dp),
@@ -587,7 +593,7 @@ private fun ShopItemTile(
 private fun PricePill(price: Long, affordable: Boolean) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = if (affordable) FinnyColors.Primary else FinnyColors.BadgeNeutralContainer,
+        color = if (affordable) FinnyColors.Optional else FinnyColors.BadgeNeutralContainer,
         contentColor = if (affordable) FinnyColors.OnPrimary else FinnyColors.BadgeNeutralContent,
     ) {
         Text(

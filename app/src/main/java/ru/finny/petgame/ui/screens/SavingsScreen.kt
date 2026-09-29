@@ -55,6 +55,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.content.model.SavingsGoalContent
 import ru.finny.petgame.data.model.GameSnapshot
@@ -120,8 +121,10 @@ fun SavingsScreen(
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
+                accent = SectionAccent.SAVINGS,
             )
         },
+        containerColor = sectionBackground(SectionAccent.SAVINGS),
     ) { padding ->
         Column(
             modifier = Modifier

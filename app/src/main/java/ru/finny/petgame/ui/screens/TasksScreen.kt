@@ -86,6 +86,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.components.sectionBackground
+import ru.finny.petgame.ui.components.SectionAccent
 import ru.finny.petgame.audio.SoundEffect
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
@@ -199,8 +201,10 @@ fun TasksScreen(
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
+                accent = SectionAccent.TASKS,
             )
         },
+        containerColor = sectionBackground(SectionAccent.TASKS),
     ) { padding ->
         if (loadedCatalog == null) {
             Box(

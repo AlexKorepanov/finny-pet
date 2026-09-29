@@ -92,33 +92,67 @@ fun LeafCurtain(phase: LeafPhase, progress: Float, modifier: Modifier = Modifier
         val w = size.width
         val h = size.height
         leaves.forEach { leaf ->
-            val delay = if (phase == LeafPhase.COVER) leaf.coverDelay else leaf.revealDelay
-            val t = ((progress - delay) / (1f - delay)).coerceIn(0f, 1f)
-            val targetX = leaf.tx * w
-            val targetY = leaf.ty * h
-            val x: Float
-            val y: Float
-            val rotation: Float
-            if (phase == LeafPhase.COVER) {
-                if (t <= 0f) return@forEach
-                val e = FastOutSlowInEasing.transform(t)
-                x = targetX + leaf.startDx * w * (1f - e)
-                y = targetY + leaf.startDy * h * (1f - e)
-                rotation = leaf.angle + leaf.spin * (1f - e)
-            } else {
-                if (t >= 1f) return@forEach
-                val e = FastOutLinearInEasing.transform(t)
-                val dx = leaf.tx - 0.5f
-                val dy = leaf.ty - 0.5f
-                val len = hypot(dx, dy).coerceAtLeast(0.05f)
-                val push = 1.4f * e
-                x = targetX + dx / len * w * push
-                y = targetY + dy / len * h * push * 0.8f + h * 0.15f * e
-                rotation = leaf.angle + leaf.spin * e
-            }
-            drawLeaf(Offset(x, y), leaf.size * w, leaf.wide, rotation, leaf.color)
+            val pose = leafPose(leaf, phase, progress) ?: return@forEach
+            drawLeaf(Offset(pose.x * w, pose.y * h), leaf.size * w, leaf.wide, pose.rotation, leaf.color)
         }
     }
+}
+
+private class LeafPose(val x: Float, val y: Float, val rotation: Float)
+
+/** Где лист в долях экрана при данном [progress]; null — листа не видно. */
+private fun leafPose(leaf: Leaf, phase: LeafPhase, progress: Float): LeafPose? {
+    val delay = if (phase == LeafPhase.COVER) leaf.coverDelay else leaf.revealDelay
+    val t = ((progress - delay) / (1f - delay)).coerceIn(0f, 1f)
+    return if (phase == LeafPhase.COVER) {
+        if (t <= 0f) return null
+        val e = FastOutSlowInEasing.transform(t)
+        LeafPose(
+            x = leaf.tx + leaf.startDx * (1f - e),
+            y = leaf.ty + leaf.startDy * (1f - e),
+            rotation = leaf.angle + leaf.spin * (1f - e),
+        )
+    } else {
+        if (t >= 1f) return null
+        val e = FastOutLinearInEasing.transform(t)
+        val dx = leaf.tx - 0.5f
+        val dy = leaf.ty - 0.5f
+        val len = hypot(dx, dy).coerceAtLeast(0.05f)
+        val push = 1.4f * e
+        LeafPose(
+            x = leaf.tx + dx / len * push,
+            y = leaf.ty + dy / len * push * 0.8f + 0.15f * e,
+            rotation = leaf.angle + leaf.spin * e,
+        )
+    }
+}
+
+/**
+ * «Шелест» листьев по кадрам: суммарная скорость листьев, которые сейчас на экране,
+ * от 0 до 1 для каждого из [steps] равных отрезков фазы. По этой кривой строится
+ * вибрация, поэтому она повторяет саму анимацию, а не идёт по своему таймеру.
+ */
+fun leafRustle(phase: LeafPhase, steps: Int): FloatArray {
+    val leaves = makeLeaves()
+    val out = FloatArray(steps)
+    for (i in 0 until steps) {
+        val p0 = i.toFloat() / steps
+        val p1 = (i + 1).toFloat() / steps
+        var energy = 0f
+        for (leaf in leaves) {
+            val a = leafPose(leaf, phase, p0)
+            val b = leafPose(leaf, phase, p1) ?: continue
+            if (b.x !in -0.1f..1.1f || b.y !in -0.1f..1.1f) continue
+            // Лист только что появился — считаем, что он влетел с края кадра.
+            val from = a ?: LeafPose(b.x, b.y - 0.05f, b.rotation)
+            // Экран примерно вдвое выше, чем шире: вертикальный путь «длиннее».
+            energy += hypot(b.x - from.x, (b.y - from.y) * 2f)
+        }
+        out[i] = energy
+    }
+    val max = out.maxOrNull()?.takeIf { it > 0f } ?: return out
+    for (i in out.indices) out[i] /= max
+    return out
 }
 
 private fun smooth(v: Float): Float {

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
@@ -48,8 +49,10 @@ fun PeriodResultScreen(
                 showBack = false,
                 onBack = {},
                 onHint = onHint,
+                accent = SectionAccent.PROGRESS,
             )
         },
+        containerColor = sectionBackground(SectionAccent.PROGRESS),
     ) { padding ->
         Column(
             modifier = Modifier
