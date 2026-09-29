@@ -1,6 +1,7 @@
 package ru.finny.petgame.data.repository
 
 import androidx.room.withTransaction
+import ru.finny.petgame.content.model.SavingsGoalContent
 import ru.finny.petgame.data.PetDatabase
 import ru.finny.petgame.data.entity.BalanceEntity
 import ru.finny.petgame.data.entity.BudgetPlanItemEntity
@@ -336,6 +337,21 @@ class GameRepository(
         }
     }
 
+    /** Подтягивает актуальные цены из каталога, не трогая уже накопленную сумму. */
+    suspend fun syncGoalCosts(goals: List<SavingsGoalContent>): Boolean =
+        database.withTransaction {
+            val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
+            val ts = now()
+            var changed = false
+            for (goal in goals) {
+                val row = savingsDao().getByGoal(profile.id, goal.id) ?: continue
+                if (row.goalCost == goal.cost && row.goalTitle == goal.title) continue
+                savingsDao().update(row.copy(goalTitle = goal.title, goalCost = goal.cost, updatedAt = ts))
+                changed = true
+            }
+            changed
+        }
+
     suspend fun selectGoal(goalId: String, goalTitle: String, goalCost: Long): Boolean =
         database.withTransaction {
             val profile = profileDao().getCurrentProfile() ?: return@withTransaction false
@@ -358,6 +374,10 @@ class GameRepository(
                         createdAt = ts,
                         updatedAt = ts,
                     ),
+                )
+            } else if (existing.goalCost != goalCost || existing.goalTitle != goalTitle) {
+                savingsDao().update(
+                    existing.copy(goalTitle = goalTitle, goalCost = goalCost, updatedAt = ts),
                 )
             }
             progressDao().deleteByKind(profile.id, PROGRESS_SELECTED_GOAL)
