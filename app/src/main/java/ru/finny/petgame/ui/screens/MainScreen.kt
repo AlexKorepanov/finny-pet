@@ -141,6 +141,16 @@ fun MainScreen(
                     text = stringResource(R.string.main_pet_state, profile.mood, profile.saturation),
                     small = true,
                 )
+                Spacer(Modifier.height(6.dp))
+                val goalRow = snapshot.savings.firstOrNull { it.goalId == snapshot.selectedGoalId }
+                ScenePlate(
+                    text = if (goalRow != null) {
+                        stringResource(R.string.main_goal_plate, goalRow.goalTitle, goalRow.savedAmount, goalRow.goalCost)
+                    } else {
+                        stringResource(R.string.main_goal_none)
+                    },
+                    small = true,
+                )
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     ForestMeadow(
                         petName = profile.petName,

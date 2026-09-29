@@ -49,6 +49,8 @@
     <string name="main_week_caps">Неделя %1$d</string>
     <string name="main_name_stage">%1$s · %2$s</string>
     <string name="main_pet_state">Настроение %1$d · Сытость %2$d</string>
+    <string name="main_goal_plate">Цель: %1$s · %2$d из %3$d</string>
+    <string name="main_goal_none">Цель: выбери в копилке</string>
     <string name="main_stat_cd">%1$s: %2$s</string>
     <string name="stat_stars_label">Звёздочки роста</string>
     <string name="stars_one">%1$d звёздочка</string>
