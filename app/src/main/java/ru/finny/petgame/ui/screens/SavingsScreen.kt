@@ -104,9 +104,12 @@ fun SavingsScreen(
     var showWithdraw by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        goals = withContext(Dispatchers.IO) {
+        val loaded = withContext(Dispatchers.IO) {
             ContentLoader(context.assets).loadCatalog().goals
         }
+        goals = loaded
+        val changed = withContext(Dispatchers.IO) { repository.syncGoalCosts(loaded) }
+        if (changed) onSavingsChanged()
     }
     val selectedRow = snapshot.savings.firstOrNull { it.goalId == snapshot.selectedGoalId }
     LaunchedEffect(snapshot) {
@@ -147,7 +150,8 @@ fun SavingsScreen(
                 style = MaterialTheme.typography.titleMedium,
             )
             selectedRow?.let { row ->
-                val remaining = (row.goalCost - row.savedAmount).coerceAtLeast(0L)
+                val goalCost = goals?.firstOrNull { it.id == row.goalId }?.cost ?: row.goalCost
+                val remaining = (goalCost - row.savedAmount).coerceAtLeast(0L)
                 LaunchedEffect(remaining, row.savedAmount) {
                     if (remaining > 0L && depositAmount > remaining) depositAmount = remaining
                     if (row.savedAmount > 0L && withdrawAmount > row.savedAmount) withdrawAmount = row.savedAmount
@@ -180,8 +184,12 @@ fun SavingsScreen(
                             }
                         }
                         FinnyProgressBar(
-                            progress = if (row.goalCost > 0L) row.savedAmount.toFloat() / row.goalCost else 0f,
-                            label = stringResource(R.string.plan_fact_ratio, row.savedAmount, row.goalCost),
+                            progress = if (goalCost > 0L) {
+                                (row.savedAmount.toFloat() / goalCost).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            },
+                            label = stringResource(R.string.plan_fact_ratio, row.savedAmount, goalCost),
                         )
                         if (remaining > 0L) {
                             eta?.periodsLeft?.let { periodsLeft ->
@@ -328,7 +336,10 @@ fun SavingsScreen(
                         )
                     }
                     goalList
-                        .sortedBy { it.id in snapshot.achievedGoalIds }
+                        .sortedWith(
+                            compareBy<SavingsGoalContent> { it.id in snapshot.achievedGoalIds }
+                                .thenBy { it.cost },
+                        )
                         .forEach { goal ->
                             val achieved = goal.id in snapshot.achievedGoalIds
                             GoalCard(
