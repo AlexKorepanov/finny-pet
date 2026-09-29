@@ -239,7 +239,7 @@ private fun StatsRow(
             Icon(
                 imageVector = Icons.Filled.Settings,
                 contentDescription = stringResource(R.string.settings_title),
-                tint = FinnyColors.SplashInk,
+                tint = FinnyColors.HudInk,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -260,8 +260,8 @@ private fun RoundIconButton(onClick: () -> Unit, icon: @Composable () -> Unit) {
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(FinnyColors.SplashBarTrack.copy(alpha = 0.94f))
-            .border(2.dp, FinnyColors.SplashInk, CircleShape)
+            .background(FinnyColors.HudSurface.copy(alpha = 0.94f))
+            .border(2.dp, FinnyColors.HudBorder, CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { icon() }
@@ -284,8 +284,8 @@ private fun StatChip(
         modifier = modifier
             .height(48.dp)
             .clip(PlateShape)
-            .background(FinnyColors.SplashBarTrack.copy(alpha = 0.94f))
-            .border(2.dp, FinnyColors.SplashInk, PlateShape)
+            .background(FinnyColors.HudSurface.copy(alpha = 0.94f))
+            .border(2.dp, FinnyColors.HudBorder, PlateShape)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(horizontal = 10.dp)
             .clearAndSetSemantics {
@@ -301,7 +301,7 @@ private fun StatChip(
         icon()
         Text(
             text = value,
-            color = FinnyColors.SplashInk,
+            color = FinnyColors.HudInk,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
@@ -355,8 +355,8 @@ private fun WardrobeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(52.dp)
                 .clip(CircleShape)
-                .background(FinnyColors.SplashBarTrack.copy(alpha = 0.94f))
-                .border(2.dp, FinnyColors.SplashInk, CircleShape),
+                .background(FinnyColors.HudSurface.copy(alpha = 0.94f))
+                .border(2.dp, FinnyColors.HudBorder, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Filled.Face, null, tint = FinnyColors.Tasks, modifier = Modifier.size(30.dp))
@@ -408,14 +408,14 @@ private fun NextStepPanel(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(FinnyColors.SplashBarTrack.copy(alpha = 0.95f))
-            .border(2.dp, FinnyColors.SplashInk, shape)
+            .background(FinnyColors.HudSurface.copy(alpha = 0.95f))
+            .border(2.dp, FinnyColors.HudBorder, shape)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = text,
-            color = FinnyColors.SplashInk,
+            color = FinnyColors.HudInk,
             style = MaterialTheme.typography.bodyLarge,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -440,8 +440,8 @@ private fun BottomNav(
     onProgress: () -> Unit,
     onAdult: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().background(FinnyColors.SplashBarTrack)) {
-        Box(Modifier.fillMaxWidth().height(2.dp).background(FinnyColors.SplashInk))
+    Column(modifier = Modifier.fillMaxWidth().background(FinnyColors.HudSurface)) {
+        Box(Modifier.fillMaxWidth().height(2.dp).background(FinnyColors.HudBorder))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -484,7 +484,7 @@ private fun RowScope.NavItem(label: String, icon: ImageVector, accent: SectionAc
         Spacer(Modifier.height(3.dp))
         Text(
             text = label,
-            color = FinnyColors.SplashInk,
+            color = FinnyColors.HudInk,
             style = MaterialTheme.typography.labelSmall,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,

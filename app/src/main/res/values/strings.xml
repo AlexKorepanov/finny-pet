@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Питомец Финни</string>
+    <string name="splash_title_top">Питомец</string>
+    <string name="splash_title_bottom">Финни</string>
     <string name="splash_slogan">Учись. Копи. Расти!</string>
     <string name="splash_loading">Загрузка..</string>
 
@@ -94,6 +96,10 @@
     <string name="settings_sounds_switch">Звук ответа</string>
     <string name="settings_sounds_on">Слышно «верно» и «не совсем»</string>
     <string name="settings_sounds_off">Выключены</string>
+    <string name="settings_theme_title">Оформление</string>
+    <string name="settings_theme_switch">Тёмная тема</string>
+    <string name="settings_theme_on">Спокойные тёмные цвета — удобно вечером</string>
+    <string name="settings_theme_off">Светлая</string>
     <string name="settings_vibration_title">Вибрация</string>
     <string name="settings_vibration_switch">Дрожь листопада</string>
     <string name="settings_vibration_on">Телефон шуршит вместе с листьями</string>

@@ -927,76 +927,106 @@ private fun DrawScope.drawHoodie(sp: PngSpace) {
     drawCircle(color = INK, radius = sp.d(3f), center = sp.o(223f, 312f))
 }
 
+/** Праздничный фрак из копилки: сидит по фигуре, золотая кайма, манишка, бабочка и медаль. */
 private fun DrawScope.drawFestiveCoat(sp: PngSpace) {
-    val red = Color(0xFFE53935)
-    val redLight = Color(0xFFFF8A80)
-    val redDark = Color(0xFFB71C1C)
-    val gold = Color(0xFFFFE082)
-    val goldDeep = Color(0xFFF9A825)
+    val redLight = Color(0xFFE8474A)
+    val red = Color(0xFFC62834)
+    val redDark = Color(0xFF8E1623)
+    val seam = Color(0x966E0F1C)
+    val goldLight = Color(0xFFFFE68A)
+    val gold = Color(0xFFF7C548)
+    val goldDark = Color(0xFFC98A1B)
+    val shirt = Color(0xFFFFF8EA)
+    val cx = FACE_CX
 
-    val cape = sp.path {
-        m(124f, 296f)
-        q(211f, 274f, 298f, 296f)
-        l(288f, 352f)
-        q(211f, 368f, 134f, 352f)
+    val jacket = sp.path {
+        m(154f, 289f)
+        q(cx, 300f, 268f, 289f)
+        c(277f, 302f, 281f, 322f, 281f, 342f)
+        c(281f, 356f, 279f, 366f, 270f, 370f)
+        q(244f, 378f, cx + 4f, 377f)
+        l(cx, 371f)
+        l(cx - 4f, 377f)
+        q(178f, 378f, 152f, 370f)
+        c(143f, 366f, 141f, 356f, 141f, 342f)
+        c(141f, 322f, 145f, 302f, 154f, 289f)
         z()
     }
     drawPath(
-        cape,
-        brush = Brush.verticalGradient(listOf(gold, goldDeep), startY = sp.y(274f), endY = sp.y(368f)),
+        jacket,
+        brush = Brush.verticalGradient(listOf(redLight, red, redDark), startY = sp.y(290f), endY = sp.y(380f)),
     )
-    drawPath(cape, color = INK, style = sp.stroke(5f))
-
-    val torso = sp.path {
-        m(152f, 292f)
-        q(211f, 302f, 270f, 292f)
-        c(282f, 304f, 286f, 322f, 284f, 340f)
-        l(282f, 366f)
-        q(211f, 378f, 148f, 366f)
-        l(146f, 340f)
-        c(144f, 322f, 140f, 304f, 152f, 292f)
-        z()
-    }
-    drawPath(
-        torso,
-        brush = Brush.verticalGradient(listOf(redLight, red, redDark), startY = sp.y(292f), endY = sp.y(376f)),
-    )
-    clipPath(torso) {
+    clipPath(jacket) {
         drawPath(
-            sp.path {
-                m(130f, 352f)
-                q(211f, 364f, 300f, 352f)
-                l(300f, 390f)
-                l(130f, 390f)
-                z()
-            },
-            color = goldDeep,
+            sp.path { m(262f, 285f); q(296f, 330f, 286f, 380f); l(300f, 380f); l(300f, 285f); z() },
+            color = Color(0x465A0A14),
+        )
+        drawPath(
+            sp.path { m(160f, 285f); q(132f, 330f, 138f, 380f); l(120f, 380f); l(120f, 285f); z() },
+            color = Color(0x325A0A14),
+        )
+        // Рукава поверх передних лап
+        drawPath(sp.path { m(172f, 300f); q(182f, 330f, 190f, 372f) }, color = seam, style = sp.stroke(3.2f))
+        drawPath(sp.path { m(250f, 300f); q(240f, 330f, 232f, 372f) }, color = seam, style = sp.stroke(3.2f))
+        // Кайма по подолу
+        drawPath(sp.path { m(146f, 364f); c(150f, 372f, 180f, 375f, cx - 4f, 374f) }, color = gold, style = sp.stroke(5f))
+        drawPath(sp.path { m(276f, 364f); c(272f, 372f, 242f, 375f, cx + 4f, 374f) }, color = gold, style = sp.stroke(5f))
+    }
+
+    val bib = sp.path {
+        m(184f, 294f)
+        q(cx, 302f, 238f, 294f)
+        l(cx, 346f)
+        z()
+    }
+    drawPath(bib, color = shirt)
+    clipPath(bib) {
+        drawPath(
+            sp.path { m(cx + 6f, 300f); l(240f, 294f); l(cx + 2f, 346f); z() },
+            color = Color(0x78EADFC8),
         )
     }
-    drawPath(torso, color = INK, style = sp.stroke(6f))
-    drawPath(
-        sp.path {
-            m(156f, 354f)
-            q(211f, 366f, 266f, 354f)
-        },
-        color = gold,
-        style = sp.stroke(5f),
-    )
 
-    val collar = sp.path {
-        m(148f, 290f)
-        q(211f, 304f, 274f, 290f)
-        c(284f, 292f, 282f, 306f, 270f, 308f)
-        q(211f, 322f, 152f, 308f)
-        c(140f, 306f, 138f, 292f, 148f, 290f)
-        z()
+    // Лацканы — золотая кайма по краю выреза
+    drawPath(sp.path { m(176f, 293f); l(186f, 294f); l(cx, 346f); l(cx - 5f, 352f); z() }, color = gold)
+    drawPath(sp.path { m(246f, 293f); l(236f, 294f); l(cx, 346f); l(cx + 5f, 352f); z() }, color = gold)
+    drawLine(goldLight, sp.o(181f, 294f), sp.o(cx - 1f, 347f), sp.d(1.6f), StrokeCap.Round)
+    drawLine(goldLight, sp.o(241f, 294f), sp.o(cx + 1f, 347f), sp.d(1.6f), StrokeCap.Round)
+
+    drawPath(jacket, color = INK, style = sp.stroke(5.5f))
+    drawPath(bib, color = INK, style = sp.stroke(3f))
+    drawLine(INK, sp.o(cx, 348f), sp.o(cx, 371f), sp.d(3f), StrokeCap.Round)
+
+    listOf(353f, 364f).forEach { y ->
+        drawCircle(color = gold, radius = sp.d(4.2f), center = sp.o(cx + 10f, y))
+        drawCircle(color = INK, radius = sp.d(4.2f), center = sp.o(cx + 10f, y), style = Stroke(width = sp.d(2.2f)))
+        drawCircle(color = goldLight, radius = sp.d(1.3f), center = sp.o(cx + 8.8f, y - 1.3f))
     }
-    drawPath(collar, color = gold)
-    drawPath(collar, color = INK, style = sp.stroke(5f))
 
-    val star = sp.star(211f, 334f, 16f)
-    drawPath(star, color = gold)
-    drawPath(star, color = INK, style = sp.stroke(3.5f))
+    // Бабочка
+    val by = 302f
+    listOf(-1f, 1f).forEach { side ->
+        val wing = sp.path {
+            m(cx + side * 4f, by)
+            c(cx + side * 10f, by - 8f, cx + side * 20f, by - 10f, cx + side * 22f, by - 5f)
+            c(cx + side * 24f, by, cx + side * 24f, by + 3f, cx + side * 22f, by + 7f)
+            c(cx + side * 20f, by + 11f, cx + side * 10f, by + 8f, cx + side * 4f, by)
+            z()
+        }
+        drawPath(wing, brush = Brush.verticalGradient(listOf(goldLight, gold), startY = sp.y(by - 10f), endY = sp.y(by + 10f)))
+        drawPath(wing, color = INK, style = sp.stroke(3f))
+    }
+    drawRect(color = goldDark, topLeft = sp.o(cx - 5f, by - 6f), size = sp.sz(10f, 12f))
+    drawRect(color = INK, topLeft = sp.o(cx - 5f, by - 6f), size = sp.sz(10f, 12f), style = sp.stroke(3f))
+
+    // Медаль на ленточке
+    val ribbon = sp.path { m(172f, 314f); l(184f, 314f); l(182f, 320f); l(174f, 320f); z() }
+    drawPath(ribbon, color = Color(0xFF2E7FD9))
+    drawPath(ribbon, color = INK, style = sp.stroke(2.2f))
+    drawCircle(color = gold, radius = sp.d(11f), center = sp.o(178f, 330f))
+    drawCircle(color = INK, radius = sp.d(11f), center = sp.o(178f, 330f), style = Stroke(width = sp.d(2.8f)))
+    drawPath(sp.star(178f, 330.5f, 7.5f), color = Color.White)
+    drawPath(sp.star(178f, 330.5f, 5.8f), color = goldDark)
 }
 
 private fun PngSpace.star(cx: Float, cy: Float, outer: Float): Path {

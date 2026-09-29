@@ -16,28 +16,21 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
+import ru.finny.petgame.ui.theme.LocalTimeOfDay
 import kotlin.math.hypot
 import kotlin.random.Random
 
 enum class LeafPhase { COVER, REVEAL }
 
-private val leafColors = listOf(
-    Color(0xFF7FA23A),
-    Color(0xFF93B548),
-    Color(0xFF6B8F2E),
-    Color(0xFFA9C25A),
-    Color(0xFF5E8129),
-    Color(0xFFB9C96A),
-)
-private val leafVein = Color(0xFF4A6A1E)
-private val curtainFill = Color(0xFF6E9334)
+// Цвета листьев, прожилок и сплошного занавеса берутся из времени суток (TimeOfDay).
+private const val LEAF_COLOR_COUNT = 6
 
 private class Leaf(
     val tx: Float,
     val ty: Float,
     val size: Float,
     val angle: Float,
-    val color: Color,
+    val colorIndex: Int,
     val startDx: Float,
     val startDy: Float,
     val spin: Float,
@@ -61,7 +54,7 @@ private fun makeLeaves(): List<Leaf> {
                     ty = ty,
                     size = 0.30f + rnd.nextFloat() * 0.16f,
                     angle = rnd.nextFloat() * 360f,
-                    color = leafColors[rnd.nextInt(leafColors.size)],
+                    colorIndex = rnd.nextInt(LEAF_COLOR_COUNT),
                     startDx = (rnd.nextFloat() - 0.5f) * 0.8f,
                     startDy = -(0.4f + ty + rnd.nextFloat() * 0.5f),
                     spin = (rnd.nextFloat() - 0.5f) * 540f,
@@ -83,17 +76,26 @@ private fun makeLeaves(): List<Leaf> {
 @Composable
 fun LeafCurtain(phase: LeafPhase, progress: Float, modifier: Modifier = Modifier) {
     val leaves = remember { makeLeaves() }
+    val time = LocalTimeOfDay.current
+    val leafVein = time.leafVein
     Canvas(modifier = modifier.fillMaxSize().pointerInput(Unit) {}) {
         val fillAlpha = when (phase) {
             LeafPhase.COVER -> smooth((progress - 0.55f) / 0.35f)
             LeafPhase.REVEAL -> 1f - smooth(progress / 0.25f)
         }
-        if (fillAlpha > 0f) drawRect(curtainFill.copy(alpha = fillAlpha))
+        if (fillAlpha > 0f) drawRect(time.curtainFill.copy(alpha = fillAlpha))
         val w = size.width
         val h = size.height
         leaves.forEach { leaf ->
             val pose = leafPose(leaf, phase, progress) ?: return@forEach
-            drawLeaf(Offset(pose.x * w, pose.y * h), leaf.size * w, leaf.wide, pose.rotation, leaf.color)
+            drawLeaf(
+                center = Offset(pose.x * w, pose.y * h),
+                length = leaf.size * w,
+                wide = leaf.wide,
+                rotation = pose.rotation,
+                color = time.leafColors[leaf.colorIndex],
+                leafVein = leafVein,
+            )
         }
     }
 }
@@ -160,7 +162,14 @@ private fun smooth(v: Float): Float {
     return x * x * (3f - 2f * x)
 }
 
-private fun DrawScope.drawLeaf(center: Offset, length: Float, wide: Float, rotation: Float, color: Color) {
+private fun DrawScope.drawLeaf(
+    center: Offset,
+    length: Float,
+    wide: Float,
+    rotation: Float,
+    color: Color,
+    leafVein: Color,
+) {
     val half = length / 2f
     val bulge = length * wide
     translate(center.x, center.y) {

@@ -1,6 +1,7 @@
 package ru.finny.petgame.settings
 
 import android.content.Context
+import android.content.res.Configuration
 import android.provider.Settings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,19 @@ class UiSettings(context: Context) {
 
     val animationsActive: Boolean
         get() = animationsEnabled && !systemAnimationsOff
+
+    /** Пока ребёнок сам не переключал тему, она такая же, как в системе. */
+    var darkTheme by mutableStateOf(prefs.getBoolean(KEY_DARK_THEME, systemDark()))
+        private set
+
+    fun updateDarkTheme(value: Boolean) {
+        darkTheme = value
+        prefs.edit { putBoolean(KEY_DARK_THEME, value) }
+    }
+
+    private fun systemDark(): Boolean =
+        (appContext.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
 
     var seenSceneGoals by mutableStateOf(prefs.getStringSet(KEY_SEEN_GOALS, emptySet()).orEmpty().toSet())
         private set
@@ -52,5 +66,6 @@ class UiSettings(context: Context) {
         const val PREFS = "finny_settings"
         const val KEY_ANIMATIONS = "animations_enabled"
         const val KEY_SEEN_GOALS = "scene_seen_goals"
+        const val KEY_DARK_THEME = "dark_theme"
     }
 }

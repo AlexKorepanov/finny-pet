@@ -88,6 +88,7 @@ fun AdultScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.ADULT),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier

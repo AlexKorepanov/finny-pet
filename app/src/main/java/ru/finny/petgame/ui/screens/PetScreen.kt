@@ -131,7 +131,7 @@ fun PetScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FinnyColors.SoftBlue)
+                    .background(if (FinnyColors.isDark()) MaterialTheme.colorScheme.surface else FinnyColors.SoftBlue)
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -145,7 +145,7 @@ fun PetScreen(
                 onSelect = { selectedTab = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FinnyColors.SurfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(vertical = 10.dp),
             )
 
@@ -198,7 +198,7 @@ fun PetScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FinnyColors.Surface)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -256,8 +256,8 @@ private fun CategoryTab(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(16.dp)
-    val border = if (selected) FinnyColors.Primary else FinnyColors.CardBorder
-    val bg = if (selected) FinnyColors.SoftBlue else FinnyColors.Surface
+    val border = if (selected) FinnyColors.Primary else MaterialTheme.colorScheme.outlineVariant
+    val bg = if (selected) FinnyColors.SoftBlue else MaterialTheme.colorScheme.surface
     Column(
         modifier = modifier
             .clip(shape)
@@ -307,8 +307,8 @@ private fun AccessoryTile(
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(18.dp)
-    val border = if (selected) FinnyColors.Primary else FinnyColors.CardBorder
-    val bg = if (selected) FinnyColors.SoftBlue else FinnyColors.Surface
+    val border = if (selected) FinnyColors.Primary else MaterialTheme.colorScheme.outlineVariant
+    val bg = if (selected) FinnyColors.SoftBlue else MaterialTheme.colorScheme.surface
     Column(
         modifier = Modifier
             .fillMaxWidth()

@@ -205,6 +205,7 @@ fun TasksScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.TASKS),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         if (loadedCatalog == null) {
             Box(
@@ -437,7 +438,7 @@ private fun StartBubble() {
         modifier = Modifier
             .padding(bottom = 6.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(FinnyColors.Surface)
+            .background(MaterialTheme.colorScheme.surface)
             .border(2.dp, FinnyColors.Tasks, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 6.dp),
     ) {
@@ -550,7 +551,10 @@ private fun LessonScreen(
         dayTasks.groupingBy { it.theme }.eachCount().maxByOrNull { it.value }?.key ?: TaskTheme.BUDGET
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = sectionBackground(SectionAccent.TASKS),
+        contentColor = FinnyColors.TextPrimary,
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -627,7 +631,7 @@ private fun LessonTopBar(solved: Int, total: Int, earned: Long, onClose: () -> U
                 .weight(1f)
                 .height(18.dp)
                 .clip(RoundedCornerShape(50))
-                .background(FinnyColors.CardBorder)
+                .background(MaterialTheme.colorScheme.outlineVariant)
                 .semantics { contentDescription = progressLabel },
         ) {
             if (shown > 0f) {
@@ -883,7 +887,7 @@ private enum class AnswerState { IDLE, SELECTED, CORRECT, WRONG, DIMMED }
 @Composable
 private fun AnswerButton(text: String, state: AnswerState, onClick: () -> Unit) {
     val (container, edge, border) = when (state) {
-        AnswerState.IDLE, AnswerState.DIMMED -> Triple(FinnyColors.Surface, FinnyColors.CardBorder, FinnyColors.CardBorder)
+        AnswerState.IDLE, AnswerState.DIMMED -> Triple(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.colorScheme.outlineVariant)
         AnswerState.SELECTED -> Triple(FinnyColors.SoftBlue, FinnyColors.PrimaryEdge, FinnyColors.Primary)
         AnswerState.CORRECT -> Triple(FinnyColors.SoftGreen, FinnyColors.SuccessEdge, FinnyColors.Success)
         AnswerState.WRONG -> Triple(FinnyColors.WrongContainer, FinnyColors.WrongEdge, FinnyColors.Wrong)
@@ -1102,7 +1106,7 @@ private fun StatTile(value: String, label: String, color: Color, modifier: Modif
         modifier = modifier
             .clip(shape)
             .border(2.dp, color, shape)
-            .background(FinnyColors.Surface)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1139,7 +1143,7 @@ private fun ThemeChip(theme: TaskTheme) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = FinnyColors.TasksEdge,
+            color = FinnyColors.TasksText,
             modifier = Modifier.padding(start = 6.dp),
         )
     }
@@ -1159,8 +1163,8 @@ private fun FinnySays(text: String, look: PetLook, stage: Int, spriteSize: Dp) {
                 .weight(1f)
                 .padding(start = 4.dp)
                 .clip(shape)
-                .background(FinnyColors.Surface)
-                .border(2.dp, FinnyColors.CardBorder, shape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.outlineVariant, shape)
                 .padding(start = 12.dp + 12.dp, end = 14.dp, top = 12.dp, bottom = 12.dp),
         ) {
             Text(text = text, style = MaterialTheme.typography.bodyLarge, color = FinnyColors.TextPrimary)

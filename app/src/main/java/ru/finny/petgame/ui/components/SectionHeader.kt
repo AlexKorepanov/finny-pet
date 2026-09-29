@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import ru.finny.petgame.ui.theme.FinnyColors
 import ru.finny.petgame.ui.model.PetLook
@@ -38,6 +39,20 @@ fun sectionAccentColor(accent: SectionAccent): Color = when (accent) {
     SectionAccent.ADULT -> FinnyColors.Adult
 }
 
+/** Цвет раздела для текста и значков: в тёмной теме светлее, иначе сливается с подкрашенным фоном. */
+fun sectionAccentText(accent: SectionAccent): Color = if (FinnyColors.isDark()) {
+    when (accent) {
+        SectionAccent.PLAN -> Color(0xFF9DBBF7)
+        SectionAccent.SHOP -> Color(0xFFF2B26E)
+        SectionAccent.TASKS -> Color(0xFFC9B0F4)
+        SectionAccent.SAVINGS -> Color(0xFF8DD9A2)
+        SectionAccent.PROGRESS -> Color(0xFF7ED8CA)
+        SectionAccent.ADULT -> Color(0xFFC0CAD3)
+    }
+} else {
+    sectionAccentColor(accent)
+}
+
 fun sectionAccentEdge(accent: SectionAccent): Color = when (accent) {
     SectionAccent.PLAN -> FinnyColors.PrimaryEdge
     SectionAccent.SHOP -> FinnyColors.OptionalEdge
@@ -48,23 +63,76 @@ fun sectionAccentEdge(accent: SectionAccent): Color = when (accent) {
 }
 
 /** Фон всего экрана раздела: мягкий оттенок цвета иконки в нижнем меню. */
-fun sectionBackground(accent: SectionAccent): Color = when (accent) {
-    SectionAccent.PLAN -> Color(0xFFDDE8FC)
-    SectionAccent.SHOP -> Color(0xFFFCE6CC)
-    SectionAccent.TASKS -> Color(0xFFE9DFFA)
-    SectionAccent.SAVINGS -> Color(0xFFDDF1E1)
-    SectionAccent.PROGRESS -> Color(0xFFD8EFEB)
-    SectionAccent.ADULT -> Color(0xFFE6E9EC)
+fun sectionBackground(accent: SectionAccent): Color = if (FinnyColors.isDark()) {
+    when (accent) {
+        SectionAccent.PLAN -> Color(0xFF1B2333)
+        SectionAccent.SHOP -> Color(0xFF2E2216)
+        SectionAccent.TASKS -> Color(0xFF251D35)
+        SectionAccent.SAVINGS -> Color(0xFF182A1D)
+        SectionAccent.PROGRESS -> Color(0xFF152A27)
+        SectionAccent.ADULT -> Color(0xFF22262A)
+    }
+} else {
+    when (accent) {
+        SectionAccent.PLAN -> Color(0xFFDDE8FC)
+        SectionAccent.SHOP -> Color(0xFFFCE6CC)
+        SectionAccent.TASKS -> Color(0xFFE9DFFA)
+        SectionAccent.SAVINGS -> Color(0xFFDDF1E1)
+        SectionAccent.PROGRESS -> Color(0xFFD8EFEB)
+        SectionAccent.ADULT -> Color(0xFFE6E9EC)
+    }
 }
 
-/** Панели и ряд вкладок внутри раздела — на тон глубже фона. */
-fun sectionPanel(accent: SectionAccent): Color = when (accent) {
-    SectionAccent.PLAN -> Color(0xFFC9DAFA)
-    SectionAccent.SHOP -> Color(0xFFF8D4AA)
-    SectionAccent.TASKS -> Color(0xFFD9C9F5)
-    SectionAccent.SAVINGS -> Color(0xFFC6E7CD)
-    SectionAccent.PROGRESS -> Color(0xFFBFE3DD)
-    SectionAccent.ADULT -> Color(0xFFD3D8DD)
+/** Панели и ряд вкладок внутри раздела — на тон глубже фона (в тёмной теме — светлее). */
+fun sectionPanel(accent: SectionAccent): Color = if (FinnyColors.isDark()) {
+    when (accent) {
+        SectionAccent.PLAN -> Color(0xFF24314A)
+        SectionAccent.SHOP -> Color(0xFF3E2D1B)
+        SectionAccent.TASKS -> Color(0xFF33284A)
+        SectionAccent.SAVINGS -> Color(0xFF20392A)
+        SectionAccent.PROGRESS -> Color(0xFF1C3934)
+        SectionAccent.ADULT -> Color(0xFF2E343A)
+    }
+} else {
+    when (accent) {
+        SectionAccent.PLAN -> Color(0xFFC9DAFA)
+        SectionAccent.SHOP -> Color(0xFFF8D4AA)
+        SectionAccent.TASKS -> Color(0xFFD9C9F5)
+        SectionAccent.SAVINGS -> Color(0xFFC6E7CD)
+        SectionAccent.PROGRESS -> Color(0xFFBFE3DD)
+        SectionAccent.ADULT -> Color(0xFFD3D8DD)
+    }
+}
+
+/**
+ * Тема раздела. В тёмной теме карточки, дорожки и рамки берут оттенок раздела,
+ * чтобы тёплые коричневые карточки не лежали на синем или зелёном фоне.
+ */
+@Composable
+fun SectionTheme(accent: SectionAccent, content: @Composable () -> Unit) {
+    val base = MaterialTheme.colorScheme
+    if (!FinnyColors.isDark()) {
+        content()
+        return
+    }
+    val (surface, border) = when (accent) {
+        SectionAccent.PLAN -> Color(0xFF2A3752) to Color(0xFF3B4B6C)
+        SectionAccent.SHOP -> Color(0xFF45331F) to Color(0xFF5B4631)
+        SectionAccent.TASKS -> Color(0xFF3A2E54) to Color(0xFF4E406D)
+        SectionAccent.SAVINGS -> Color(0xFF25402F) to Color(0xFF345740)
+        SectionAccent.PROGRESS -> Color(0xFF21413B) to Color(0xFF2F5851)
+        SectionAccent.ADULT -> Color(0xFF353C43) to Color(0xFF48505A)
+    }
+    MaterialTheme(
+        colorScheme = base.copy(
+            background = sectionBackground(accent),
+            surface = surface,
+            surfaceVariant = sectionPanel(accent),
+            outline = lerp(border, Color.White, 0.18f),
+            outlineVariant = border,
+        ),
+        content = content,
+    )
 }
 
 @Composable

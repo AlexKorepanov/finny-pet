@@ -33,7 +33,11 @@ fun StatusBadge(
     val colors: Pair<Color, Color> = when (kind) {
         BadgeKind.POSITIVE -> FinnyColors.BadgePositiveContainer to FinnyColors.BadgePositiveContent
         BadgeKind.ATTENTION -> FinnyColors.BadgeAttentionContainer to FinnyColors.BadgeAttentionContent
-        BadgeKind.NEUTRAL -> FinnyColors.BadgeNeutralContainer to FinnyColors.BadgeNeutralContent
+        BadgeKind.NEUTRAL -> if (FinnyColors.isDark()) {
+            MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            FinnyColors.BadgeNeutralContainer to FinnyColors.BadgeNeutralContent
+        }
     }
     Surface(
         modifier = modifier,

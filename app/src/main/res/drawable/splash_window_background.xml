@@ -3,6 +3,6 @@
     <item>
         <bitmap
             android:gravity="fill"
-            android:src="@drawable/splash_start" />
+            android:src="@drawable/splash_day" />
     </item>
 </layer-list>

@@ -54,6 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.sectionAccentColor
+import ru.finny.petgame.ui.components.sectionAccentText
 import ru.finny.petgame.ui.components.sectionPanel
 import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.ui.components.SectionAccent
@@ -111,6 +112,7 @@ fun ProgressScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.PROGRESS),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -294,7 +296,7 @@ private fun GoalPicture(goalId: String, size: Int) {
         modifier = Modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(FinnyColors.SoftGreen),
+            .background(if (FinnyColors.isDark()) MaterialTheme.colorScheme.surfaceVariant else FinnyColors.SoftGreen),
         contentAlignment = Alignment.Center,
     ) {
         val picture = goalPicture(goalId)
@@ -393,7 +395,7 @@ private fun WeekTab(snapshot: GameSnapshot) {
             direction == BudgetDirection.SAVINGS -> stringResource(R.string.progress_week_saved_less)
             else -> stringResource(R.string.progress_week_over)
         }
-        Tile(borderColor = if (ok) FinnyColors.CardBorder else FinnyColors.Optional) {
+        Tile(borderColor = if (ok) MaterialTheme.colorScheme.outlineVariant else FinnyColors.Optional) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 EmojiCircle(emoji = directionEmoji(direction), color = directionColor(direction))
                 Column(
@@ -546,8 +548,8 @@ private fun WordCard(word: Word, open: Boolean, onClick: () -> Unit, modifier: M
             .fillMaxHeight()
             .heightIn(min = 150.dp)
             .clip(shape)
-            .background(if (open) sectionBackground(SectionAccent.PROGRESS) else FinnyColors.Surface)
-            .border(if (open) 3.dp else 2.dp, if (open) sectionAccentColor(SectionAccent.PROGRESS) else FinnyColors.CardBorder, shape)
+            .background(if (open) sectionBackground(SectionAccent.PROGRESS) else MaterialTheme.colorScheme.surface)
+            .border(if (open) 3.dp else 2.dp, if (open) sectionAccentColor(SectionAccent.PROGRESS) else MaterialTheme.colorScheme.outlineVariant, shape)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -558,7 +560,7 @@ private fun WordCard(word: Word, open: Boolean, onClick: () -> Unit, modifier: M
                 text = stringResource(word.termRes),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = FinnyColors.Teal,
+                color = sectionAccentText(SectionAccent.PROGRESS),
             )
             Text(
                 text = stringResource(word.bodyRes),
@@ -590,10 +592,10 @@ private fun TabTile(emoji: String, label: String, selected: Boolean, onClick: ()
         modifier = modifier
             .heightIn(min = 64.dp)
             .clip(shape)
-            .background(if (selected) sectionBackground(SectionAccent.PROGRESS) else FinnyColors.Surface)
+            .background(if (selected) sectionBackground(SectionAccent.PROGRESS) else MaterialTheme.colorScheme.surface)
             .border(
                 width = if (selected) 3.dp else 2.dp,
-                color = if (selected) sectionAccentColor(SectionAccent.PROGRESS) else FinnyColors.CardBorder,
+                color = if (selected) sectionAccentColor(SectionAccent.PROGRESS) else MaterialTheme.colorScheme.outlineVariant,
                 shape = shape,
             )
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
@@ -606,7 +608,7 @@ private fun TabTile(emoji: String, label: String, selected: Boolean, onClick: ()
             text = label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) sectionAccentColor(SectionAccent.PROGRESS) else FinnyColors.TextPrimary,
+            color = if (selected) sectionAccentText(SectionAccent.PROGRESS) else FinnyColors.TextPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 2.dp),
@@ -615,12 +617,12 @@ private fun TabTile(emoji: String, label: String, selected: Boolean, onClick: ()
 }
 
 @Composable
-private fun StatPill(text: String, color: Color = FinnyColors.Surface) {
+private fun StatPill(text: String, color: Color = MaterialTheme.colorScheme.surface) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(color)
-            .border(1.dp, FinnyColors.CardBorder, RoundedCornerShape(50))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, color = FinnyColors.TextPrimary)
@@ -630,7 +632,7 @@ private fun StatPill(text: String, color: Color = FinnyColors.Surface) {
 @Composable
 private fun Tile(
     modifier: Modifier = Modifier,
-    borderColor: Color = FinnyColors.CardBorder,
+    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(18.dp)
@@ -638,7 +640,7 @@ private fun Tile(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(FinnyColors.Surface)
+            .background(MaterialTheme.colorScheme.surface)
             .border(2.dp, borderColor, shape)
             .padding(12.dp),
     ) {

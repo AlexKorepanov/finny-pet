@@ -20,8 +20,8 @@ fun AppCard(
         onClick = null,
         modifier = modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.surface,
-        edgeColor = FinnyColors.CardBorder,
-        borderColor = FinnyColors.CardBorder,
+        edgeColor = FinnyColors.CardEdge,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 2.dp,
         minHeight = 48.dp,
     ) {

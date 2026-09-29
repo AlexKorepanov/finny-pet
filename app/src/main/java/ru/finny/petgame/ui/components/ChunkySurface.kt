@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,8 +35,8 @@ fun ChunkySurface(
     enabled: Boolean = true,
     selected: Boolean = false,
     containerColor: Color = MaterialTheme.colorScheme.surface,
-    edgeColor: Color = FinnyColors.CardBorder,
-    borderColor: Color = if (selected) MaterialTheme.colorScheme.primary else FinnyColors.CardBorder,
+    edgeColor: Color = FinnyColors.CardEdge,
+    borderColor: Color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
     borderWidth: Dp = if (selected) 3.dp else 2.dp,
     minHeight: Dp = 56.dp,
     contentAlignment: Alignment = Alignment.Center,
@@ -76,8 +78,12 @@ fun ChunkySurface(
                 )
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             contentAlignment = contentAlignment,
-            content = content,
-        )
+        ) {
+            // Текст без явного цвета берёт цвет темы, а не чёрный по умолчанию.
+            CompositionLocalProvider(LocalContentColor provides FinnyColors.TextPrimary) {
+                content()
+            }
+        }
     }
 }
 

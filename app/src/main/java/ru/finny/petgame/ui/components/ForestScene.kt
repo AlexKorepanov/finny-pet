@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
@@ -59,6 +60,7 @@ import ru.finny.petgame.R
 import ru.finny.petgame.data.entity.SavingsEntity
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.ui.theme.FinnyColors
+import ru.finny.petgame.ui.theme.LocalTimeOfDay
 
 private enum class SceneItemState { HIDDEN, SAVING, OWNED }
 
@@ -91,13 +93,22 @@ fun goalPicture(goalId: String): Int? = scenePlacements.firstOrNull { it.goalId 
 
 @Composable
 fun ForestBackground(modifier: Modifier = Modifier) {
+    val time = LocalTimeOfDay.current
     Image(
-        painter = painterResource(R.drawable.scene_forest_bg),
+        painter = painterResource(time.forest),
         contentDescription = null,
         contentScale = ContentScale.Crop,
+        // Днём в тёмной теме полянку приглушаем синеватым светом; вечером и ночью картинка и так тёмная.
+        colorFilter = if (FinnyColors.isDark() && !time.darkScene) {
+            ColorFilter.tint(DUSK_TINT, BlendMode.Multiply)
+        } else {
+            null
+        },
         modifier = modifier.fillMaxSize(),
     )
 }
+
+private val DUSK_TINT = Color(0xFF6A7394)
 
 /** Поляна с питомцем: купленные цели стоят рядом, копимая цель — полупрозрачный силуэт с подписью. */
 @Composable
@@ -267,14 +278,14 @@ fun ScenePlate(text: String, modifier: Modifier = Modifier, small: Boolean = fal
     Box(
         modifier = modifier
             .clip(shape)
-            .background(FinnyColors.SplashBarTrack.copy(alpha = 0.94f))
-            .border(2.dp, FinnyColors.SplashInk, shape)
+            .background(FinnyColors.HudSurface.copy(alpha = 0.94f))
+            .border(2.dp, FinnyColors.HudBorder, shape)
             .padding(horizontal = if (small) 12.dp else 18.dp, vertical = if (small) 4.dp else 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            color = FinnyColors.SplashInk,
+            color = FinnyColors.HudInk,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 1,

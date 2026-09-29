@@ -21,7 +21,7 @@ fun SectionTitle(
     accent: SectionAccent? = null,
     icon: ImageVector? = null,
 ) {
-    val color = accent?.let { sectionAccentColor(it) } ?: MaterialTheme.colorScheme.onSurface
+    val color = accent?.let { sectionAccentText(it) } ?: MaterialTheme.colorScheme.onSurface
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,

@@ -125,6 +125,7 @@ fun SavingsScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.SAVINGS),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier

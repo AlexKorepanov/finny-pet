@@ -34,8 +34,8 @@ fun OptionCard(
         } else {
             MaterialTheme.colorScheme.surface
         },
-        edgeColor = if (selected) FinnyColors.PrimaryEdge else FinnyColors.CardBorder,
-        borderColor = if (selected) MaterialTheme.colorScheme.primary else FinnyColors.CardBorder,
+        edgeColor = if (selected) FinnyColors.PrimaryEdge else FinnyColors.CardEdge,
+        borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
         borderWidth = if (selected) 3.dp else 2.dp,
         minHeight = 72.dp,
         contentAlignment = Alignment.CenterStart,

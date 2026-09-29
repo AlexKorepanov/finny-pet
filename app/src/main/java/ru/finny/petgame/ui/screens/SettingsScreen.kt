@@ -41,6 +41,8 @@ private const val VOLUME_STEP = 0.1f
 
 @Composable
 fun SettingsScreen(
+    darkThemeOn: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit,
     musicOn: Boolean,
     volume: Float,
     onMusicOnChange: (Boolean) -> Unit,
@@ -74,6 +76,15 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            AppCard {
+                SectionTitle(text = stringResource(R.string.settings_theme_title), icon = Icons.Filled.Settings)
+                SwitchRow(
+                    title = stringResource(R.string.settings_theme_switch),
+                    status = stringResource(if (darkThemeOn) R.string.settings_theme_on else R.string.settings_theme_off),
+                    checked = darkThemeOn,
+                    onCheckedChange = onDarkThemeChange,
+                )
+            }
             AppCard {
                 SectionTitle(text = stringResource(R.string.settings_music_title), icon = Icons.Filled.Settings)
                 SwitchRow(

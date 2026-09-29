@@ -40,7 +40,7 @@ fun AppTopBar(
     closeStyle: Boolean = false,
     accent: SectionAccent? = null,
 ) {
-    val accentColor = accent?.let(::sectionAccentColor)
+    val accentColor = accent?.let(::sectionAccentText)
     Box(
         modifier = Modifier
             .fillMaxWidth()

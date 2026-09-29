@@ -53,6 +53,7 @@ fun PeriodResultScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.PROGRESS),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier

@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,8 +57,12 @@ import ru.finny.petgame.ui.components.LocalAnimationsEnabled
 import ru.finny.petgame.settings.UiSettings
 import ru.finny.petgame.ui.components.HintDialog
 import ru.finny.petgame.ui.components.PrimaryButton
+import ru.finny.petgame.ui.components.SectionAccent
+import ru.finny.petgame.ui.components.SectionTheme
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.SplashLoadingBlock
+import ru.finny.petgame.ui.components.SplashTitle
+import ru.finny.petgame.ui.theme.LocalTimeOfDay
 import ru.finny.petgame.ui.model.PetLook
 import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.screens.AdultScreen
@@ -338,17 +343,19 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    PlanScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        catalog = catalog,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                        onPlanConfirmed = {
-                            scope.launch { mainSnapshot = repository.loadSnapshot() }
-                        },
-                        onClosePeriod = requestClosePeriod,
-                    )
+                    SectionTheme(SectionAccent.PLAN) {
+                        PlanScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            catalog = catalog,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                            onPlanConfirmed = {
+                                scope.launch { mainSnapshot = repository.loadSnapshot() }
+                            },
+                            onClosePeriod = requestClosePeriod,
+                        )
+                    }
                 }
             }
             AppScreen.SHOP -> {
@@ -356,20 +363,22 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    ShopScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                        onShopChanged = {
-                            scope.launch { mainSnapshot = repository.loadSnapshot() }
-                        },
-                        onOpenTasks = {
-                            focusedTaskId = null
-                            screen = AppScreen.TASKS
-                        },
-                        onOpenSavings = { screen = AppScreen.SAVINGS },
-                    )
+                    SectionTheme(SectionAccent.SHOP) {
+                        ShopScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                            onShopChanged = {
+                                scope.launch { mainSnapshot = repository.loadSnapshot() }
+                            },
+                            onOpenTasks = {
+                                focusedTaskId = null
+                                screen = AppScreen.TASKS
+                            },
+                            onOpenSavings = { screen = AppScreen.SAVINGS },
+                        )
+                    }
                 }
             }
             AppScreen.SAVINGS -> {
@@ -377,15 +386,17 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    SavingsScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                        onSavingsChanged = {
-                            scope.launch { mainSnapshot = repository.loadSnapshot() }
-                        },
-                    )
+                    SectionTheme(SectionAccent.SAVINGS) {
+                        SavingsScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                            onSavingsChanged = {
+                                scope.launch { mainSnapshot = repository.loadSnapshot() }
+                            },
+                        )
+                    }
                 }
             }
             AppScreen.TASKS -> {
@@ -393,20 +404,22 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    TasksScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        focusedTaskId = focusedTaskId,
-                        onSound = sounds::play,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                        onTasksChanged = {
-                            scope.launch { mainSnapshot = repository.loadSnapshot() }
-                        },
-                        onOpenPlan = { screen = AppScreen.PLAN },
-                        onOpenShop = { screen = AppScreen.SHOP },
-                        onOpenSavings = { screen = AppScreen.SAVINGS },
-                    )
+                    SectionTheme(SectionAccent.TASKS) {
+                        TasksScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            focusedTaskId = focusedTaskId,
+                            onSound = sounds::play,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                            onTasksChanged = {
+                                scope.launch { mainSnapshot = repository.loadSnapshot() }
+                            },
+                            onOpenPlan = { screen = AppScreen.PLAN },
+                            onOpenShop = { screen = AppScreen.SHOP },
+                            onOpenSavings = { screen = AppScreen.SAVINGS },
+                        )
+                    }
                 }
             }
             AppScreen.PROGRESS -> {
@@ -414,15 +427,19 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    ProgressScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                    )
+                    SectionTheme(SectionAccent.PROGRESS) {
+                        ProgressScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                        )
+                    }
                 }
             }
             AppScreen.SETTINGS -> SettingsScreen(
+                darkThemeOn = uiSettings.darkTheme,
+                onDarkThemeChange = uiSettings::updateDarkTheme,
                 musicOn = music.enabled,
                 volume = music.volume,
                 onMusicOnChange = music::updateEnabled,
@@ -443,24 +460,26 @@ fun PetGameApp(
                 if (currentSnapshot == null) {
                     LoadingScreen()
                 } else {
-                    AdultScreen(
-                        repository = repository,
-                        snapshot = currentSnapshot,
-                        accessoryPurse = catalog?.accessoryPurse() ?: 0L,
-                        onBack = goBack,
-                        onHint = { showHint = true },
-                        onDemoChanged = {
-                            scope.launch { mainSnapshot = repository.loadSnapshot() }
-                        },
-                        onProfileDeleted = {
-                            uiSettings.clearSceneGoalsSeen()
-                            mainSnapshot = null
-                            petName = ""
-                            petLook = PetLook.Default
-                            introPage = 0
-                            screen = AppScreen.INTRO
-                        },
-                    )
+                    SectionTheme(SectionAccent.ADULT) {
+                        AdultScreen(
+                            repository = repository,
+                            snapshot = currentSnapshot,
+                            accessoryPurse = catalog?.accessoryPurse() ?: 0L,
+                            onBack = goBack,
+                            onHint = { showHint = true },
+                            onDemoChanged = {
+                                scope.launch { mainSnapshot = repository.loadSnapshot() }
+                            },
+                            onProfileDeleted = {
+                                uiSettings.clearSceneGoalsSeen()
+                                mainSnapshot = null
+                                petName = ""
+                                petLook = PetLook.Default
+                                introPage = 0
+                                screen = AppScreen.INTRO
+                            },
+                        )
+                    }
                 }
             }
             AppScreen.PERIOD_RESULT -> {
@@ -468,15 +487,17 @@ fun PetGameApp(
                 if (result == null) {
                     LoadingScreen()
                 } else {
-                    PeriodResultScreen(
-                        result = result,
-                        petLook = mainSnapshot?.profile?.toPetLook() ?: PetLook.Default,
-                        onContinue = {
-                            periodCloseResult = null
-                            screen = AppScreen.MAIN
-                        },
-                        onHint = { showHint = true },
-                    )
+                    SectionTheme(SectionAccent.PROGRESS) {
+                        PeriodResultScreen(
+                            result = result,
+                            petLook = mainSnapshot?.profile?.toPetLook() ?: PetLook.Default,
+                            onContinue = {
+                                periodCloseResult = null
+                                screen = AppScreen.MAIN
+                            },
+                            onHint = { showHint = true },
+                        )
+                    }
                 }
             }
         }
@@ -551,12 +572,18 @@ fun PetGameApp(
 
 @Composable
 private fun LaunchSplashScreen(progress: Float) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.splash_start),
+            painter = painterResource(LocalTimeOfDay.current.splash),
             contentDescription = stringResource(R.string.app_name),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
+        )
+        // Над ушами Финни: на всех трёх картинках они начинаются примерно на 40% высоты.
+        SplashTitle(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = maxHeight * 0.16f),
         )
         SplashLoadingBlock(
             progress = progress,

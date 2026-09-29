@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.finny.petgame.R
+import ru.finny.petgame.ui.theme.FinnyColors
 import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.data.model.GameSnapshot
@@ -87,6 +88,7 @@ fun PlanScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.PLAN),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier

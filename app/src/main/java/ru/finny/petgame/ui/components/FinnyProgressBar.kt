@@ -48,7 +48,8 @@ fun FinnyProgressBar(
         }
         Text(
             text = label,
-            color = FinnyColors.OnProgressText,
+            // Подпись стоит посередине: на жёлтой заливке — тёмная, на пустой дорожке — цвета текста темы.
+            color = if (progress >= 0.5f) FinnyColors.OnProgressText else FinnyColors.TextPrimary,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),

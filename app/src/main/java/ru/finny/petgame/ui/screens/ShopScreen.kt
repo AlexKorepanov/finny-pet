@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.finny.petgame.R
 import ru.finny.petgame.ui.components.sectionAccentColor
+import ru.finny.petgame.ui.components.sectionAccentText
 import ru.finny.petgame.ui.components.sectionPanel
 import ru.finny.petgame.ui.components.sectionBackground
 import ru.finny.petgame.ui.components.SectionAccent
@@ -127,6 +128,7 @@ fun ShopScreen(
             )
         },
         containerColor = sectionBackground(SectionAccent.SHOP),
+        contentColor = FinnyColors.TextPrimary,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -430,8 +432,8 @@ private fun PlanPill(label: String, left: Long) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (over) FinnyColors.BadgeAttentionContainer else FinnyColors.Surface)
-            .border(1.dp, FinnyColors.CardBorder, RoundedCornerShape(50))
+            .background(if (over) FinnyColors.BadgeAttentionContainer else MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -494,10 +496,10 @@ private fun ShopTabTile(
         modifier = modifier
             .heightIn(min = 72.dp)
             .clip(shape)
-            .background(if (selected) sectionBackground(SectionAccent.SHOP) else FinnyColors.Surface)
+            .background(if (selected) sectionBackground(SectionAccent.SHOP) else MaterialTheme.colorScheme.surface)
             .border(
                 width = if (selected) 3.dp else 2.dp,
-                color = if (selected) sectionAccentColor(SectionAccent.SHOP) else FinnyColors.CardBorder,
+                color = if (selected) sectionAccentColor(SectionAccent.SHOP) else MaterialTheme.colorScheme.outlineVariant,
                 shape = shape,
             )
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
@@ -510,7 +512,7 @@ private fun ShopTabTile(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) sectionAccentColor(SectionAccent.SHOP) else FinnyColors.TextPrimary,
+            color = if (selected) sectionAccentText(SectionAccent.SHOP) else FinnyColors.TextPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 2.dp),
@@ -531,14 +533,14 @@ private fun ShopItemTile(
     val borderColor = when {
         bought -> FinnyColors.Success
         weekNeed -> FinnyColors.Optional
-        else -> FinnyColors.CardBorder
+        else -> MaterialTheme.colorScheme.outlineVariant
     }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.78f)
             .clip(shape)
-            .background(FinnyColors.Surface)
+            .background(MaterialTheme.colorScheme.surface)
             .border(width = if (bought || weekNeed) 3.dp else 2.dp, color = borderColor, shape = shape)
             .clickable(onClick = onClick)
             .padding(10.dp),
@@ -569,7 +571,13 @@ private fun ShopItemTile(
                 .weight(1f)
                 .aspectRatio(1f)
                 .clip(CircleShape)
-                .background(if (required) FinnyColors.SoftGreen else FinnyColors.SoftOrange),
+                .background(
+                    when {
+                        FinnyColors.isDark() -> MaterialTheme.colorScheme.surfaceVariant
+                        required -> FinnyColors.SoftGreen
+                        else -> FinnyColors.SoftOrange
+                    },
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Text(text = item.emoji, fontSize = 40.sp)
@@ -639,8 +647,8 @@ private fun HistoryTile(purchase: PurchaseEntity, emoji: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(FinnyColors.Surface)
-            .border(width = 2.dp, color = FinnyColors.CardBorder, shape = shape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 2.dp, color = MaterialTheme.colorScheme.outlineVariant, shape = shape)
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
