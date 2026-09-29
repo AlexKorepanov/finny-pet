@@ -10,4 +10,10 @@ data class ShopItemContent(
     val effect: String,
     val moodDelta: Int = 0,
     val satietyDelta: Int = 0,
-)
+    /** Картинка товара в магазине; если в контенте не задана — корзинка. */
+    val emoji: String = DEFAULT_EMOJI,
+) {
+    companion object {
+        const val DEFAULT_EMOJI = "🛒"
+    }
+}

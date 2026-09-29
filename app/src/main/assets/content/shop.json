@@ -7,7 +7,8 @@
       "price": 10,
       "effect": "Финни сыт всю неделю",
       "moodDelta": 5,
-      "satietyDelta": 35
+      "satietyDelta": 35,
+      "emoji": "🥣"
     },
     {
       "id": "food_treat",
@@ -16,7 +17,8 @@
       "price": 40,
       "effect": "Финни лижет губы",
       "moodDelta": 3,
-      "satietyDelta": 10
+      "satietyDelta": 10,
+      "emoji": "🐟"
     },
     {
       "id": "vitamins",
@@ -24,23 +26,27 @@
       "category": "REQUIRED",
       "price": 12,
       "effect": "Финни бодрый",
-      "moodDelta": 5
+      "moodDelta": 5,
+      "emoji": "💊"
     },
     {
-      "id": "bath",
-      "title": "Купание с шампунем",
+      "id": "water",
+      "title": "Чистая вода",
       "category": "REQUIRED",
       "price": 15,
-      "effect": "Финни чистый",
-      "moodDelta": 5
+      "effect": "Финни пьёт вдоволь всю неделю",
+      "moodDelta": 5,
+      "satietyDelta": 10,
+      "emoji": "💧"
     },
     {
-      "id": "bed",
-      "title": "Мягкая подстилка",
+      "id": "vet",
+      "title": "Осмотр у врача",
       "category": "REQUIRED",
       "price": 20,
-      "effect": "Финни крепко спит",
-      "moodDelta": 5
+      "effect": "Врач проверил: Финни здоров",
+      "moodDelta": 5,
+      "emoji": "🩺"
     },
     {
       "id": "ball",
@@ -48,7 +54,8 @@
       "category": "OPTIONAL",
       "price": 90,
       "effect": "Финни играет и веселится",
-      "moodDelta": 8
+      "moodDelta": 8,
+      "emoji": "⚽"
     },
     {
       "id": "bow",
@@ -56,7 +63,8 @@
       "category": "OPTIONAL",
       "price": 60,
       "effect": "Финни нарядный",
-      "moodDelta": 3
+      "moodDelta": 3,
+      "emoji": "🎀"
     },
     {
       "id": "house",
@@ -64,7 +72,8 @@
       "category": "OPTIONAL",
       "price": 200,
       "effect": "Финни любит свой домик",
-      "moodDelta": 10
+      "moodDelta": 10,
+      "emoji": "🏠"
     }
   ]
 }

@@ -1,33 +1,35 @@
 package ru.finny.petgame.ui.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -38,13 +40,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,23 +62,21 @@ import ru.finny.petgame.R
 import ru.finny.petgame.content.ContentCatalog
 import ru.finny.petgame.content.ContentLoader
 import ru.finny.petgame.content.model.ShopItemContent
+import ru.finny.petgame.data.entity.PurchaseEntity
 import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.data.model.ShopPurchaseResult
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.model.BudgetDirection
 import ru.finny.petgame.economy.model.PurchaseCategory
-import ru.finny.petgame.ui.components.AppCard
 import ru.finny.petgame.ui.components.AppTopBar
 import ru.finny.petgame.ui.components.BadgeKind
+import ru.finny.petgame.ui.components.PetSprite
 import ru.finny.petgame.ui.components.PrimaryButton
-import ru.finny.petgame.ui.components.SectionAccent
-import ru.finny.petgame.ui.components.SectionHeader
-import ru.finny.petgame.ui.model.toPetLook
-import ru.finny.petgame.ui.components.SectionTitle
 import ru.finny.petgame.ui.components.SecondaryButton
 import ru.finny.petgame.ui.components.StatusBadge
 import ru.finny.petgame.ui.components.coinsAmount
+import ru.finny.petgame.ui.model.toPetLook
 import ru.finny.petgame.ui.theme.FinnyColors
 
 @Composable
@@ -107,7 +115,7 @@ fun ShopScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = stringResource(R.string.app_name),
+                title = stringResource(R.string.section_shop),
                 showBack = true,
                 onBack = onBack,
                 onHint = onHint,
@@ -117,66 +125,101 @@ fun ShopScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .fillMaxSize(),
         ) {
-            SectionHeader(
-                accent = SectionAccent.SHOP,
-                title = stringResource(R.string.section_shop),
-                hint = stringResource(R.string.shop_header_hint),
-                petLook = snapshot.profile.toPetLook(),
-                petStage = snapshot.profile.petStage,
+            // Финни и кошелёк всегда наверху — не уезжают при прокрутке товаров
+            ShopPreview(
+                snapshot = snapshot,
+                planActive = planActive,
+                requiredLeft = envelopeLeft(BudgetDirection.REQUIRED),
+                optionalLeft = envelopeLeft(BudgetDirection.OPTIONAL),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(FinnyColors.SoftBlue)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             )
-            Text(
-                text = stringResource(R.string.shop_balance_line, snapshot.balance),
-                style = MaterialTheme.typography.titleMedium,
+
+            ShopTabRow(
+                selected = tab,
+                boughtCount = snapshot.periodPurchases.size,
+                onSelect = { tab = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(FinnyColors.SurfaceVariant)
+                    .padding(vertical = 10.dp),
             )
-            if (planActive) {
-                AppCard(modifier = Modifier.fillMaxWidth()) {
-                    SectionTitle(text = stringResource(R.string.shop_envelopes_title), icon = Icons.Filled.List)
-                    EnvelopeLine(
-                        title = stringResource(R.string.plan_direction_required),
-                        left = envelopeLeft(BudgetDirection.REQUIRED),
-                    )
-                    EnvelopeLine(
-                        title = stringResource(R.string.plan_direction_optional),
-                        left = envelopeLeft(BudgetDirection.OPTIONAL),
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    text = stringResource(tab.titleRes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FinnyColors.TextPrimary,
+                )
+                if (tab != ShopTab.HISTORY) {
+                    Text(
+                        text = stringResource(R.string.shop_tap_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FinnyColors.TextSecondary,
                     )
                 }
             }
+
             val items = shopItems
             if (items == null) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
                     CircularProgressIndicator()
                 }
             } else {
-                ShopTabs(
-                    selected = tab,
-                    boughtCount = snapshot.periodPurchases.size,
-                    onSelect = { tab = it },
-                )
-                when (tab) {
-                    ShopTab.REQUIRED -> ShopSection(
-                        title = stringResource(R.string.shop_tab_required),
-                        icon = Icons.Filled.Check,
-                        items = items
-                            .filter { it.category == PurchaseCategory.REQUIRED }
-                            .sortedByDescending { it.id in weekNeedIds },
-                        weekNeedIds = weekNeedIds,
-                        boughtIds = boughtIds,
-                        onBuy = { confirmItem = it },
-                    )
-                    ShopTab.OPTIONAL -> ShopSection(
-                        title = stringResource(R.string.shop_tab_optional),
-                        icon = Icons.Filled.Star,
-                        items = items.filter { it.category == PurchaseCategory.OPTIONAL },
-                        weekNeedIds = weekNeedIds,
-                        boughtIds = boughtIds,
-                        onBuy = { confirmItem = it },
-                    )
-                    ShopTab.HISTORY -> PurchaseHistory(snapshot)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    when (tab) {
+                        ShopTab.REQUIRED, ShopTab.OPTIONAL -> {
+                            val shown = items
+                                .filter { it.category == tab.category }
+                                .sortedByDescending { it.id in weekNeedIds }
+                            items(shown, key = { it.id }) { item ->
+                                ShopItemTile(
+                                    item = item,
+                                    weekNeed = item.id in weekNeedIds,
+                                    bought = item.id in boughtIds,
+                                    affordable = item.price <= snapshot.balance,
+                                    onClick = { confirmItem = item },
+                                )
+                            }
+                        }
+                        ShopTab.HISTORY -> {
+                            if (snapshot.periodPurchases.isEmpty()) {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    HistoryEmpty()
+                                }
+                            } else {
+                                val emojiById = items.associate { it.id to it.emoji }
+                                items(snapshot.periodPurchases, key = { it.id }) { purchase ->
+                                    HistoryTile(
+                                        purchase = purchase,
+                                        emoji = emojiById[purchase.itemId] ?: ShopItemContent.DEFAULT_EMOJI,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -311,92 +354,327 @@ fun ShopScreen(
     }
 }
 
-@Composable
-private fun EnvelopeLine(title: String, left: Long) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(text = title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Text(
-            text = if (left >= 0L) {
-                stringResource(R.string.shop_envelope_left, coinsAmount(left))
-            } else {
-                stringResource(R.string.shop_envelope_over, coinsAmount(-left))
-            },
-            style = MaterialTheme.typography.titleMedium,
-        )
-    }
-}
-
-@Composable
-private fun ShopSection(
-    title: String,
-    icon: ImageVector,
-    items: List<ShopItemContent>,
-    weekNeedIds: Set<String>,
-    boughtIds: Set<String>,
-    onBuy: (ShopItemContent) -> Unit,
+/** Вкладка магазина: [emoji] — картинка на плитке вкладки, [category] — какие товары в ней. */
+private enum class ShopTab(
+    val shortRes: Int,
+    val titleRes: Int,
+    val emoji: String,
+    val category: PurchaseCategory?,
 ) {
-    SectionTitle(text = title, accent = SectionAccent.SHOP, icon = icon)
-    items.forEach { item ->
-        ShopItemCard(
-            item = item,
-            weekNeed = item.id in weekNeedIds,
-            bought = item.id in boughtIds,
-            onBuy = onBuy,
+    REQUIRED(R.string.shop_tab_short_required, R.string.shop_tab_required, "🥣", PurchaseCategory.REQUIRED),
+    OPTIONAL(R.string.shop_tab_optional, R.string.shop_tab_optional, "🎈", PurchaseCategory.OPTIONAL),
+    HISTORY(R.string.shop_tab_short_history, R.string.shop_history_title, "🧺", null),
+}
+
+@Composable
+private fun ShopPreview(
+    snapshot: GameSnapshot,
+    planActive: Boolean,
+    requiredLeft: Long,
+    optionalLeft: Long,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        PetSprite(
+            look = snapshot.profile.toPetLook(),
+            stage = snapshot.profile.petStage,
+            modifier = Modifier.size(112.dp),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.shop_balance_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = FinnyColors.TextSecondary,
+            )
+            Text(
+                text = "🪙 " + coinsAmount(snapshot.balance),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = FinnyColors.TextPrimary,
+            )
+            if (planActive) {
+                Text(
+                    text = stringResource(R.string.shop_envelopes_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = FinnyColors.TextSecondary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                PlanPill(label = stringResource(R.string.shop_category_required), left = requiredLeft)
+                PlanPill(label = stringResource(R.string.shop_category_optional), left = optionalLeft)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlanPill(label: String, left: Long) {
+    val over = left < 0L
+    val amount = if (over) {
+        stringResource(R.string.shop_envelope_over, coinsAmount(-left))
+    } else {
+        stringResource(R.string.shop_envelope_left, coinsAmount(left))
+    }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (over) FinnyColors.BadgeAttentionContainer else FinnyColors.Surface)
+            .border(1.dp, FinnyColors.CardBorder, RoundedCornerShape(50))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (over) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                tint = FinnyColors.BadgeAttentionContent,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.shop_plan_line, label, amount),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (over) FinnyColors.BadgeAttentionContent else FinnyColors.TextPrimary,
         )
     }
 }
 
 @Composable
-private fun ShopItemCard(item: ShopItemContent, weekNeed: Boolean, bought: Boolean, onBuy: (ShopItemContent) -> Unit) {
-    Surface(
-        onClick = { onBuy(item) },
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+private fun ShopTabRow(
+    selected: ShopTab,
+    boughtCount: Int,
+    onSelect: (ShopTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .padding(horizontal = 12.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = coinsAmount(item.price),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusBadge(
-                    text = if (item.category == PurchaseCategory.REQUIRED) {
-                        stringResource(R.string.shop_category_required)
-                    } else {
-                        stringResource(R.string.shop_category_optional)
-                    },
-                    icon = if (item.category == PurchaseCategory.REQUIRED) Icons.Filled.Check else Icons.Filled.Star,
-                    kind = BadgeKind.NEUTRAL,
-                )
-                when {
-                    weekNeed && bought -> StatusBadge(
-                        text = stringResource(R.string.shop_need_bought),
-                        icon = Icons.Filled.Done,
-                        kind = BadgeKind.POSITIVE,
-                    )
-                    weekNeed -> StatusBadge(
-                        text = stringResource(R.string.shop_need_week),
-                        icon = Icons.Filled.Warning,
-                        kind = BadgeKind.ATTENTION,
-                    )
-                }
-            }
-            Text(text = item.effect, style = MaterialTheme.typography.bodyLarge)
+        ShopTab.entries.forEach { tab ->
+            ShopTabTile(
+                tab = tab,
+                label = if (tab == ShopTab.HISTORY) {
+                    stringResource(tab.shortRes, boughtCount)
+                } else {
+                    stringResource(tab.shortRes)
+                },
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                modifier = Modifier.weight(1f),
+            )
         }
+    }
+}
+
+@Composable
+private fun ShopTabTile(
+    tab: ShopTab,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier = modifier
+            .heightIn(min = 72.dp)
+            .clip(shape)
+            .background(if (selected) FinnyColors.SoftBlue else FinnyColors.Surface)
+            .border(
+                width = if (selected) 3.dp else 2.dp,
+                color = if (selected) FinnyColors.Primary else FinnyColors.CardBorder,
+                shape = shape,
+            )
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .padding(vertical = 6.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(text = tab.emoji, fontSize = 28.sp)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) FinnyColors.Primary else FinnyColors.TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+@Composable
+private fun ShopItemTile(
+    item: ShopItemContent,
+    weekNeed: Boolean,
+    bought: Boolean,
+    affordable: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(18.dp)
+    val required = item.category == PurchaseCategory.REQUIRED
+    val borderColor = when {
+        bought -> FinnyColors.Success
+        weekNeed -> FinnyColors.Optional
+        else -> FinnyColors.CardBorder
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(0.78f)
+            .clip(shape)
+            .background(FinnyColors.Surface)
+            .border(width = if (bought || weekNeed) 3.dp else 2.dp, color = borderColor, shape = shape)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        TileTag(
+            text = when {
+                bought -> stringResource(R.string.shop_tile_bought)
+                weekNeed -> stringResource(R.string.shop_tile_need_week)
+                required -> stringResource(R.string.shop_category_required)
+                else -> stringResource(R.string.shop_category_optional)
+            },
+            icon = when {
+                bought -> Icons.Filled.Done
+                weekNeed -> Icons.Filled.Warning
+                required -> Icons.Filled.Check
+                else -> Icons.Filled.Star
+            },
+            kind = when {
+                bought -> BadgeKind.POSITIVE
+                weekNeed -> BadgeKind.ATTENTION
+                else -> BadgeKind.NEUTRAL
+            },
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .aspectRatio(1f)
+                .clip(CircleShape)
+                .background(if (required) FinnyColors.SoftGreen else FinnyColors.SoftOrange),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = item.emoji, fontSize = 40.sp)
+        }
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = FinnyColors.TextPrimary,
+            textAlign = TextAlign.Center,
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        PricePill(price = item.price, affordable = affordable)
+    }
+}
+
+@Composable
+private fun PricePill(price: Long, affordable: Boolean) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = if (affordable) FinnyColors.Primary else FinnyColors.BadgeNeutralContainer,
+        contentColor = if (affordable) FinnyColors.OnPrimary else FinnyColors.BadgeNeutralContent,
+    ) {
+        Text(
+            text = "🪙 " + coinsAmount(price),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+        )
+    }
+}
+
+@Composable
+private fun TileTag(text: String, icon: ImageVector, kind: BadgeKind) {
+    val (container: Color, content: Color) = when (kind) {
+        BadgeKind.POSITIVE -> FinnyColors.BadgePositiveContainer to FinnyColors.BadgePositiveContent
+        BadgeKind.ATTENTION -> FinnyColors.BadgeAttentionContainer to FinnyColors.BadgeAttentionContent
+        BadgeKind.NEUTRAL -> FinnyColors.BadgeNeutralContainer to FinnyColors.BadgeNeutralContent
+    }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(container)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = content, modifier = Modifier.size(14.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun HistoryTile(purchase: PurchaseEntity, emoji: String) {
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(FinnyColors.Surface)
+            .border(width = 2.dp, color = FinnyColors.CardBorder, shape = shape)
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(text = emoji, fontSize = 36.sp)
+        Text(
+            text = purchase.title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = FinnyColors.TextPrimary,
+            textAlign = TextAlign.Center,
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text(
+            text = "🪙 " + coinsAmount(purchase.price),
+            style = MaterialTheme.typography.labelLarge,
+            color = FinnyColors.TextSecondary,
+        )
+    }
+}
+
+@Composable
+private fun HistoryEmpty() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(text = "🧺", fontSize = 48.sp)
+        Text(
+            text = stringResource(R.string.shop_history_empty),
+            style = MaterialTheme.typography.bodyLarge,
+            color = FinnyColors.TextSecondary,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -413,6 +691,7 @@ private fun ConfirmPurchaseDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface,
+        icon = { Text(text = item.emoji, fontSize = 48.sp) },
         title = { Text(text = item.title, style = MaterialTheme.typography.headlineSmall) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -461,85 +740,4 @@ private fun ConfirmPurchaseDialog(
         },
         dismissButton = {},
     )
-}
-
-private enum class ShopTab { REQUIRED, OPTIONAL, HISTORY }
-
-@Composable
-private fun PurchaseHistory(snapshot: GameSnapshot) {
-    SectionTitle(
-        text = stringResource(R.string.shop_history_title),
-        accent = SectionAccent.SHOP,
-        icon = Icons.Filled.List,
-    )
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-
-        if (snapshot.periodPurchases.isEmpty()) {
-            Text(
-                text = stringResource(R.string.shop_history_empty),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        } else {
-            snapshot.periodPurchases.forEach { purchase ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = purchase.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = coinsAmount(purchase.price),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShopTabs(selected: ShopTab, boughtCount: Int, onSelect: (ShopTab) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        ShopTab.entries.forEach { tab ->
-            val label = when (tab) {
-                ShopTab.REQUIRED -> stringResource(R.string.shop_tab_short_required)
-                ShopTab.OPTIONAL -> stringResource(R.string.shop_tab_optional)
-                ShopTab.HISTORY -> stringResource(R.string.shop_tab_short_history, boughtCount)
-            }
-            val isSelected = tab == selected
-            Surface(
-                selected = isSelected,
-                onClick = { onSelect(tab) },
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                shape = RoundedCornerShape(50),
-                color = if (isSelected) FinnyColors.Optional else MaterialTheme.colorScheme.surface,
-                contentColor = if (isSelected) FinnyColors.OnPrimary else FinnyColors.TextPrimary,
-                border = BorderStroke(2.dp, if (isSelected) FinnyColors.OptionalEdge else FinnyColors.CardBorder),
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (isSelected) {
-                        Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        }
-    }
 }

@@ -28,6 +28,16 @@ object FinnyColors {
 
     val ProgressYellow = Color(0xFFF6C445)
     val ProgressHighlight = Color(0xFFFFE08A)
+    val ProgressYellowEdge = Color(0xFFC9971F)
+
+    /** Урок на тропинке, который ещё закрыт. */
+    val LockedFace = Color(0xFFE5DACB)
+    val LockedEdge = Color(0xFFC9BBA6)
+
+    /** Ответ «не совсем»: мягкий красный, всегда вместе с иконкой и текстом. */
+    val Wrong = Color(0xFFC0392B)
+    val WrongEdge = Color(0xFF8E2A20)
+    val WrongContainer = Color(0xFFFDE4E1)
     val OnProgressText = Color(0xFF4A3A14)
 
     /** Цвета полосы на стартовом экране (как на макете). */

@@ -59,3 +59,6 @@ SharedPreferences): в приложении нет разрешения на и�
 ## Лицензии
 
 Шрифт Nunito — SIL OFL 1.1 (`app/src/main/res/raw/nunito_ofl.txt`).
+
+Звуки заданий (`res/raw/sfx_*.wav`) синтезированы командой без сэмплов:
+`python3 tools/sounds/task_sounds.py app/src/main/res/raw`.

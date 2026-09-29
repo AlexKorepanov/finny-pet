@@ -37,7 +37,7 @@ class ContentCatalog(
 
     /**
      * Задание открыто, если его неделя уже прошла,
-     * а в текущей неделе наступил его будний день. Демо-режим открывает всё.
+     * а в текущей неделе наступил его день. Демо-режим открывает всё.
      */
     fun isTaskOpen(task: TaskContent, periodIndex: Int, openDay: Int, allOpen: Boolean): Boolean {
         if (allOpen) return true
@@ -45,7 +45,7 @@ class ContentCatalog(
         return when {
             task.week < currentWeek -> true
             task.week > currentWeek -> false
-            else -> task.day <= openDay.coerceIn(1, 5)
+            else -> task.day <= openDay.coerceIn(1, DAYS_IN_WEEK)
         }
     }
 
@@ -75,13 +75,14 @@ class ContentCatalog(
                 }
             }
             val weekTasks = tasks.filter { it.week == week.index }
-            if (weekTasks.size != 25) {
-                problems += "weeks[${week.index}]: нужно 25 заданий (по 5 на будний день), сейчас ${weekTasks.size}"
+            if (weekTasks.size != TASKS_PER_WEEK) {
+                problems += "weeks[${week.index}]: нужно $TASKS_PER_WEEK заданий, сейчас ${weekTasks.size}"
             }
-            (1..5).forEach { day ->
+            (1..DAYS_IN_WEEK).forEach { day ->
                 val count = weekTasks.count { it.day == day }
-                if (count != 5) {
-                    problems += "weeks[${week.index}]: на день $day нужно 5 заданий, сейчас $count"
+                val expected = tasksPerDay(day)
+                if (count != expected) {
+                    problems += "weeks[${week.index}]: на день $day нужно $expected задания(й), сейчас $count"
                 }
             }
         }
@@ -89,7 +90,17 @@ class ContentCatalog(
     }
 }
 
-/** Какой будний день недели уже наступил: 1 в день старта периода, 2 на следующий календарный день. */
+/** Учебная неделя: 1 — понедельник … 7 — воскресенье. */
+const val DAYS_IN_WEEK = 7
+const val WEEKDAY_TASKS = 5
+
+/** В выходные уроки короче. */
+const val WEEKEND_TASKS = 3
+const val TASKS_PER_WEEK = 5 * WEEKDAY_TASKS + 2 * WEEKEND_TASKS
+
+fun tasksPerDay(day: Int): Int = if (day <= 5) WEEKDAY_TASKS else WEEKEND_TASKS
+
+/** Какой день недели уже наступил: 1 в день старта периода, 2 на следующий календарный день. */
 fun openTaskDay(
     periodStartedAt: Long,
     now: Long = System.currentTimeMillis(),
@@ -98,5 +109,5 @@ fun openTaskDay(
     val start = Instant.ofEpochMilli(periodStartedAt).atZone(zone).toLocalDate()
     val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     val passed = ChronoUnit.DAYS.between(start, today).toInt()
-    return (passed + 1).coerceIn(1, 5)
+    return (passed + 1).coerceIn(1, DAYS_IN_WEEK)
 }

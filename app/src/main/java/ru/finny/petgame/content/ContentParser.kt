@@ -158,8 +158,8 @@ object ContentParser {
             local += "$prefix: поле week должно быть не меньше 1"
         }
         val day = if (obj.has("day")) optionalInt(obj, "day", prefix, local) else 1
-        if (day !in 1..5) {
-            local += "$prefix: поле day должно быть от 1 (понедельник) до 5 (пятница)"
+        if (day !in 1..DAYS_IN_WEEK) {
+            local += "$prefix: поле day должно быть от 1 (понедельник) до 7 (воскресенье)"
         }
 
         problems += local
@@ -255,6 +255,7 @@ object ContentParser {
         val effect = requireString(obj, "effect", prefix, local)
         val moodDelta = optionalInt(obj, "moodDelta", prefix, local)
         val satietyDelta = optionalInt(obj, "satietyDelta", prefix, local)
+        val emoji = obj.optString("emoji").trim().ifEmpty { ShopItemContent.DEFAULT_EMOJI }
 
         problems += local
         if (local.isNotEmpty()) return null
@@ -267,6 +268,7 @@ object ContentParser {
             effect = effect!!,
             moodDelta = moodDelta,
             satietyDelta = satietyDelta,
+            emoji = emoji,
         )
     }
 

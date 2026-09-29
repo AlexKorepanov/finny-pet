@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import ru.finny.petgame.audio.BackgroundMusic
+import ru.finny.petgame.audio.SoundEffects
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.economy.EconomyEngine
 import ru.finny.petgame.settings.UiSettings
@@ -20,6 +21,7 @@ import ru.finny.petgame.ui.theme.FinnyPetTheme
 
 class MainActivity : ComponentActivity() {
     private lateinit var music: BackgroundMusic
+    private lateinit var sounds: SoundEffects
     private lateinit var uiSettings: UiSettings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,12 +35,13 @@ class MainActivity : ComponentActivity() {
             engine = EconomyEngine(),
         )
         music = BackgroundMusic(this)
+        sounds = SoundEffects(this).apply { preload() }
         uiSettings = UiSettings(this)
         setContent {
             SideEffect { contentReady = true }
             FinnyPetTheme {
                 CompositionLocalProvider(LocalAnimationsEnabled provides uiSettings.animationsActive) {
-                    PetGameApp(repository = repository, music = music, uiSettings = uiSettings)
+                    PetGameApp(repository = repository, music = music, sounds = sounds, uiSettings = uiSettings)
                 }
             }
         }
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         music.release()
+        sounds.release()
         super.onDestroy()
     }
 }

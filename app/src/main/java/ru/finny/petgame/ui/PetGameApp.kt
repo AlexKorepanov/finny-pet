@@ -47,6 +47,7 @@ import ru.finny.petgame.data.model.GameSnapshot
 import ru.finny.petgame.data.model.PeriodCloseResult
 import ru.finny.petgame.data.model.PeriodStatus
 import ru.finny.petgame.audio.BackgroundMusic
+import ru.finny.petgame.audio.SoundEffects
 import ru.finny.petgame.data.repository.GameRepository
 import ru.finny.petgame.feedback.LeafHaptics
 import ru.finny.petgame.ui.components.LeafCurtain
@@ -104,6 +105,7 @@ enum class AppScreen {
 fun PetGameApp(
     repository: GameRepository,
     music: BackgroundMusic,
+    sounds: SoundEffects,
     uiSettings: UiSettings,
 ) {
     var screen by remember { mutableStateOf(AppScreen.LOADING) }
@@ -394,6 +396,7 @@ fun PetGameApp(
                         repository = repository,
                         snapshot = currentSnapshot,
                         focusedTaskId = focusedTaskId,
+                        onSound = sounds::play,
                         onBack = goBack,
                         onHint = { showHint = true },
                         onTasksChanged = {
@@ -424,6 +427,8 @@ fun PetGameApp(
                 onMusicOnChange = music::updateEnabled,
                 onVolumeChange = music::updateVolume,
                 onVolumeChangeFinished = music::saveVolume,
+                soundsOn = sounds.enabled,
+                onSoundsOnChange = sounds::updateEnabled,
                 animationsOn = uiSettings.animationsEnabled,
                 systemAnimationsOff = uiSettings.systemAnimationsOff,
                 onAnimationsOnChange = uiSettings::updateAnimationsEnabled,

@@ -90,6 +90,10 @@
     <string name="settings_music_switch">Фоновая мелодия</string>
     <string name="settings_music_on">Играет</string>
     <string name="settings_music_off">Выключена</string>
+    <string name="settings_sounds_title">Звуки в заданиях</string>
+    <string name="settings_sounds_switch">Звук ответа</string>
+    <string name="settings_sounds_on">Слышно «верно» и «не совсем»</string>
+    <string name="settings_sounds_off">Выключены</string>
     <string name="settings_volume_value">Громкость: %1$d%%</string>
     <string name="settings_volume_down">Тише</string>
     <string name="settings_volume_up">Громче</string>
@@ -275,6 +279,11 @@
     <string name="shop_not_enough_cheaper">Выбрать что-то дешевле</string>
     <string name="shop_history_title">Покупки за неделю</string>
     <string name="shop_history_empty">Пока покупок не было.</string>
+    <string name="shop_balance_title">У тебя</string>
+    <string name="shop_tap_hint">Нажми на товар, чтобы купить</string>
+    <string name="shop_tile_bought">Куплено</string>
+    <string name="shop_tile_need_week">Нужно сейчас</string>
+    <string name="shop_plan_line">%1$s: %2$s</string>
 
     <string name="plan_first_hint_title">Сначала план</string>
     <string name="plan_first_hint_text">Сначала составь план: реши, сколько монет пойдёт на каждое.</string>
@@ -345,6 +354,8 @@
     <string name="tasks_weekday_3">Ср</string>
     <string name="tasks_weekday_4">Чт</string>
     <string name="tasks_weekday_5">Пт</string>
+    <string name="tasks_weekday_6">Сб</string>
+    <string name="tasks_weekday_7">Вс</string>
     <string name="tasks_day_title">%1$s · %2$s</string>
     <string name="tasks_week_title_short">Неделя %1$d</string>
     <string name="tasks_locked_week">Откроется на неделе %1$d</string>
@@ -354,11 +365,42 @@
     <string name="tasks_day_when_3">в среду</string>
     <string name="tasks_day_when_4">в четверг</string>
     <string name="tasks_day_when_5">в пятницу</string>
+    <string name="tasks_day_when_6">в субботу</string>
+    <string name="tasks_day_when_7">в воскресенье</string>
     <string name="tasks_retry_reward_line">Ты разобрался! Монеты: +%1$d.</string>
     <string name="tasks_try_in_game_hint">Так же можно сделать на этой неделе.</string>
     <string name="tasks_try_plan">Открыть план</string>
     <string name="tasks_try_savings">Открыть копилку</string>
     <string name="tasks_try_shop">Открыть магазин</string>
+    <string name="lesson_close">Закрыть урок</string>
+    <string name="lesson_progress">Решено %1$d из %2$d</string>
+    <string name="lesson_check">Проверить</string>
+    <string name="lesson_next">Дальше</string>
+    <string name="lesson_got_it">Понятно</string>
+    <string-array name="lesson_correct_titles">
+        <item>Отлично!</item>
+        <item>Верно!</item>
+        <item>Здорово!</item>
+        <item>Так держать!</item>
+    </string-array>
+    <string name="lesson_wrong_title">Не совсем</string>
+    <string name="lesson_remember">Запомни: %1$s</string>
+    <string name="lesson_hint">Подсказка: %1$s</string>
+    <string name="lesson_comes_back">Это задание вернётся в конце урока — попробуешь ещё раз.</string>
+    <string name="lesson_practice">Повторение: монеты за это задание уже получены.</string>
+    <string name="lesson_coins">+%1$d</string>
+    <string name="lesson_tip_title">Совет Финни</string>
+    <string name="lesson_start">Начать урок</string>
+    <string name="lesson_done_title">Урок пройден!</string>
+    <string name="lesson_done_coins">Монеты за урок</string>
+    <string name="lesson_done_tasks">Заданий решено</string>
+    <string name="lesson_done_learned">Сегодня ты узнал</string>
+    <string name="lesson_back_to_path">К тропинке</string>
+    <string name="path_start">Начать</string>
+    <string name="path_day_progress">%1$s · %2$d из %3$d</string>
+    <string name="path_week_done">Пройдено</string>
+    <string name="path_node_open">Урок: %1$s, решено %2$d из %3$d</string>
+    <string name="path_node_locked">Урок: %1$s, пока закрыт</string>
 
     <string name="plan_edit_hint">Распредели монеты по трём направлениям.</string>
     <string name="plan_week_title">Неделя %1$d · %2$s</string>

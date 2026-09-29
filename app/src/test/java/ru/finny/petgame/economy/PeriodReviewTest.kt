@@ -25,7 +25,7 @@ class PeriodReviewTest {
     )
 
     private val food = WeekNeed("food_basic", "Корм", 8)
-    private val bath = WeekNeed("bath", "Купание", 15)
+    private val water = WeekNeed("water", "Чистая вода", 15)
 
     @Test
     fun `good period meets all three criteria`() {
@@ -57,15 +57,15 @@ class PeriodReviewTest {
 
     @Test
     fun `week needs decide required coverage`() {
-        val needs = listOf(food, bath)
+        val needs = listOf(food, water)
         val partial = engine.evaluatePeriod(plan(10, 10, 10), fact(8, 0, 10), needs, setOf("food_basic"))
 
         assertFalse(partial.requiredCovered)
-        assertEquals(listOf("Купание"), partial.missingNeeds)
-        assertTrue(partial.explanations.any { it.contains("Купание") })
+        assertEquals(listOf("Чистая вода"), partial.missingNeeds)
+        assertTrue(partial.explanations.any { it.contains("Чистая вода") })
         assertTrue(partial.advice.contains("23 монеты"))
 
-        val full = engine.evaluatePeriod(plan(23, 0, 7), fact(23, 0, 7), needs, setOf("food_basic", "bath"))
+        val full = engine.evaluatePeriod(plan(23, 0, 7), fact(23, 0, 7), needs, setOf("food_basic", "water"))
         assertTrue(full.requiredCovered)
         assertTrue(full.missingNeeds.isEmpty())
         assertEquals(3, full.stars)

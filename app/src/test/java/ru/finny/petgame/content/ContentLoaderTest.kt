@@ -112,17 +112,20 @@ class ContentLoaderTest {
     }
 
     @Test
-    fun `weeks list needs from shop and every week has five weekday tasks`() {
+    fun `weeks list needs from shop and every day of the week has tasks`() {
         val catalog = loader.loadCatalog()
 
         assertEquals(5, catalog.weeks.size)
-        assertEquals(125, catalog.tasks.size)
+        assertEquals(155, catalog.tasks.size)
         assertTrue(catalog.validate().isEmpty())
         catalog.weeks.forEach { week ->
             val weekTasks = catalog.tasksOfWeek(week.index - 1)
-            assertEquals(25, weekTasks.size)
+            assertEquals(31, weekTasks.size)
             (1..5).forEach { day ->
                 assertEquals(5, weekTasks.count { it.day == day })
+            }
+            (6..7).forEach { day ->
+                assertEquals(3, weekTasks.count { it.day == day })
             }
             assertTrue(catalog.needsFor(week.index - 1).any { it.itemId == "food_basic" })
         }
@@ -144,6 +147,9 @@ class ContentLoaderTest {
         assertFalse(catalog.isTaskOpen(lateTuesday, periodIndex = 4, openDay = 1, allOpen = false))
         assertTrue(catalog.isTaskOpen(tuesday, periodIndex = 1, openDay = 1, allOpen = false))
         assertTrue(catalog.isTaskOpen(tuesday, periodIndex = 0, openDay = 1, allOpen = true))
+        val sunday = catalog.tasks.first { it.week == 1 && it.day == 7 }
+        assertFalse(catalog.isTaskOpen(sunday, periodIndex = 0, openDay = 6, allOpen = false))
+        assertTrue(catalog.isTaskOpen(sunday, periodIndex = 0, openDay = 7, allOpen = false))
         assertEquals(catalog.weeks.first(), catalog.weekFor(5))
         assertEquals(2_090L, catalog.accessoryPurse())
     }
@@ -158,6 +164,6 @@ class ContentLoaderTest {
 
         assertEquals(1, openTaskDay(start, laterSameNight, zone))
         assertEquals(2, openTaskDay(start, nextMorning, zone))
-        assertEquals(5, openTaskDay(start, nextWeek, zone))
+        assertEquals(7, openTaskDay(start, nextWeek, zone))
     }
 }

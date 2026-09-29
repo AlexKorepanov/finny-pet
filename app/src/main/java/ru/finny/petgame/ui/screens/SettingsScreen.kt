@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,8 @@ fun SettingsScreen(
     onMusicOnChange: (Boolean) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onVolumeChangeFinished: () -> Unit,
+    soundsOn: Boolean,
+    onSoundsOnChange: (Boolean) -> Unit,
     animationsOn: Boolean,
     systemAnimationsOff: Boolean,
     onAnimationsOnChange: (Boolean) -> Unit,
@@ -119,6 +122,15 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f),
                     )
                 }
+            }
+            AppCard {
+                SectionTitle(text = stringResource(R.string.settings_sounds_title), icon = Icons.Filled.Notifications)
+                SwitchRow(
+                    title = stringResource(R.string.settings_sounds_switch),
+                    status = stringResource(if (soundsOn) R.string.settings_sounds_on else R.string.settings_sounds_off),
+                    checked = soundsOn,
+                    onCheckedChange = onSoundsOnChange,
+                )
             }
             AppCard {
                 SectionTitle(text = stringResource(R.string.settings_animations_title), icon = Icons.Filled.Star)
